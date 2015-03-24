@@ -1,6 +1,5 @@
-
 cmake_minimum_required(VERSION 2.8)
- 
+
 PROJECT(FMRI_TEST)
  
 find_package(ITK REQUIRED)
@@ -12,17 +11,35 @@ include(${VTK_USE_FILE})
 find_package(Qt4 REQUIRED)
 include(${QT_USE_FILE})
 
+include_directories(
+advance_dialog
+brain_strip_atlas
+fmri
+qcustomplot
+registration
+SubWidgetBold
+MainWindow
+)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
-file(GLOB UI_FILES *.ui)
-file(GLOB QT_WRAP *.h)
-file(GLOB CXX_FILES *.cpp)  
+add_subdirectory(advance_dialog)
+add_subdirectory(brain_strip_atlas)
+add_subdirectory(fmri)
+add_subdirectory(qcustomplot)
+add_subdirectory(registration)
+add_subdirectory(SubWidgetBold)
+add_subdirectory(MainWindow)
 
-QT4_WRAP_UI(UISrcs ${UI_FILES})
-QT4_WRAP_CPP(MOCSrcs ${QT_WRAP})
-add_executable(FMRI_TEST MACOSX_BUNDLE ${CXX_FILES} ${UISrcs} ${MOCSrcs})
+add_executable(FMRI_TEST main.cpp)
 
+target_link_libraries(FMRI_TEST widget_bold)
+target_link_libraries(FMRI_TEST Dialog_Advance)
+target_link_libraries(FMRI_TEST qcustomplot)
+target_link_libraries(FMRI_TEST fmriEngine)
+target_link_libraries(FMRI_TEST MainWindow)
 
+#itk_register
+#itkStripTsImageFilter
 if(VTK_LIBRARIES)
   if(${VTK_VERSION} VERSION_LESS "6")
     target_link_libraries(FMRI_TEST ${VTK_LIBRARIES} ${ITK_LIBRARIES} QVTK ${ITK_VERSION_MAJOR} )

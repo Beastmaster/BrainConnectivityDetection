@@ -1628,21 +1628,21 @@ void ActivationThreshold::SimpleExecute(vtkImageData *input, vtkImageData *outpu
 	// get the data array from input image 
 	vtkFloatArray *inputArray = (vtkFloatArray *)this->GetInput(0)->GetPointData()->GetScalars();
 	vtkFloatArray *activation = vtkFloatArray::New();
-			for (unsigned long int i=0; i<size; i++)
-			{
-				if (inputArray->GetValue(i) >= pos_threshold)
-				{
-					activation->InsertNextValue(inputArray->GetValue(i));
-				}
-				else if (inputArray->GetValue(i) <= neg_threshold)
-				{
-					activation->InsertNextValue(inputArray->GetValue(i));
-				}
-				else
-				{
-					activation->InsertNextValue(0.0);
-				}
-			} 
+	for (unsigned long int i=0; i<size; i++)
+	{
+		if (inputArray->GetValue(i) >= pos_threshold)
+		{
+			activation->InsertNextValue(inputArray->GetValue(i));
+		}
+		else if (inputArray->GetValue(i) <= neg_threshold)
+		{
+			activation->InsertNextValue(inputArray->GetValue(i));
+		}
+		else
+		{
+			activation->InsertNextValue(0.0);
+		}
+	} 
 	output->GetPointData()->SetScalars(activation);
 	activation->Delete();
 }

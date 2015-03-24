@@ -1,19 +1,17 @@
-#include "SubWidgetParadigmInBold.h"
-#include "Dialog_Paradigm_Advance.h"
-
+#include "MainWindow.h"
 //
 #include <QApplication>
-#include <QDialog>
+#include <QMainWindow>
 
 int main( int argc, char** argv )
 {
-	QApplication fmri_test(argc,argv);
+	QApplication fmri_main_app(argc,argv);
 
-	SubWidgetParadigmInBold widget_bold;
+	MainWindow fmri_main_window;
 
-	widget_bold.show();
+	fmri_main_window.show();
 
-	return fmri_test.exec();
+	return fmri_main_app.exec();
 }
 
 
