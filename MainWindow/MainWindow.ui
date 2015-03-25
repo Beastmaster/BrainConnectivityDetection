@@ -33,6 +33,9 @@
      <item row="1" column="0">
       <widget class="QVTKWidget" name="sagittal_view_widget"/>
      </item>
+     <item row="0" column="0">
+      <widget class="QVTKWidget" name="axial_view_widget"/>
+     </item>
     </layout>
    </widget>
    <widget class="QPushButton" name="img_load_Btn">
@@ -59,16 +62,6 @@
     </property>
     <property name="text">
      <string>show</string>
-    </property>
-   </widget>
-   <widget class="QVTKWidget" name="axial_view_widget">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>200</y>
-      <width>711</width>
-      <height>531</height>
-     </rect>
     </property>
    </widget>
   </widget>

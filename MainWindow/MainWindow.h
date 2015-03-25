@@ -26,6 +26,12 @@
 #include "vtkImageViewer2.h"
 #include "vtkImageActor.h"
 
+//vtk reslice
+#include "vtkImageReslice.h"
+#include "vtkWindowLevelLookupTable.h"
+#include "vtkImageMapToColors.h"
+
+
 namespace Ui {
 class MainWindow;
 }
@@ -44,6 +50,12 @@ private slots:
 	void on_click_load();
 	void on_click_show();
 
+
+	//display filter
+	void display_in_axial(vtkSmartPointer<vtkImageData>);
+	void display_in_coronal(vtkSmartPointer<vtkImageData>);
+	void display_in_sagittal(vtkSmartPointer<vtkImageData>);
+	double* calculate_img_center(vtkSmartPointer<vtkImageData>);
 private:
 	//GUI
 	Ui::MainWindow	*ui;
@@ -51,10 +63,12 @@ private:
 	//file names
 	QString file_name;
 
-	//vtk image views
-	vtkSmartPointer<vtkImageViewer2> axial_vtk_viewer;
-	vtkSmartPointer<vtkRenderer> axial_vtk_renderer;
 	vtkSmartPointer<vtkImageData> img_to_view;
+
+	//vtk image views
+	vtkSmartPointer<vtkRenderer> axial_renderer;
+	vtkSmartPointer<vtkRenderer> coronal_renderer;
+	vtkSmartPointer<vtkRenderer> sagittal_renderer;
 };
 
 #endif
