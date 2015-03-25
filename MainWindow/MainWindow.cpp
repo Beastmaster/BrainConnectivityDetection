@@ -192,13 +192,28 @@ double* MainWindow::calculate_img_center(vtkSmartPointer<vtkImageData> img)
 
 slice_view_base::slice_view_base(vtkRenderWindow* winx,char a)
 {
+	// init para
 	this->Set_Direction(a);
 	this->Set_Window(winx);
 	this->slice_n = 0;
+	
+	//map vtkaction and qt signal
+	this->m_Connections_mouse_back = vtkSmartPointer<vtkEventQtSlotConnect>::New();
+	m_Connections_mouse_back = vtkSmartPointer<vtkEventQtSlotConnect>::New();
+	m_Connections_mouse_back->Connect(this->view_window->GetInteractor(),
+		vtkCommand::MouseWheelBackwardEvent,this,SLOT(on_scroll_mouse_back(vtkObject*)));
+	this->m_Connections_mouse_forward = vtkSmartPointer<vtkEventQtSlotConnect>::New();
+	m_Connections_mouse_forward = vtkSmartPointer<vtkEventQtSlotConnect>::New();
+	m_Connections_mouse_forward->Connect(this->view_window->GetInteractor(),
+		vtkCommand::MouseWheelForwardEvent,this,SLOT(on_scroll_mouse_forward(vtkObject*)));
 
 	//renderer init
 	new_render = vtkSmartPointer<vtkRenderer>::New();
 	this->view_window->AddRenderer(this->new_render);
+	//set default interact null
+	vtkSmartPointer<new_interactor_style> new_act_style = 
+		vtkSmartPointer<new_interactor_style>::New();
+	this->view_window->GetInteractor()->SetInteractorStyle(new_act_style);
 
 	//view2 init
 	img_viewer2 = vtkSmartPointer<vtkImageViewer2>::New();
@@ -291,6 +306,9 @@ void slice_view_base::Set_View_Img(vtkSmartPointer<vtkImageData> img)
 {
 	this->img_to_view = img;
 	this->img_viewer2->SetInput(img_to_view);
+	this->dimensions = new int[3];
+	this->img_to_view->GetDimensions(this->dimensions);
+	std::cout<<"dimension is :"<<dimensions[0]<<dimensions[1]<<dimensions[2]<<std::endl;
 }
 
 void slice_view_base::Set_Window(vtkRenderWindow* win)
@@ -319,7 +337,137 @@ double* slice_view_base::calculate_img_center(vtkSmartPointer<vtkImageData> img)
 }
 
 
+void slice_view_base::on_scroll_mouse_back(vtkObject* obj)
+{
+	vtkSmartPointer<vtkRenderWindowInteractor> iren = 
+		vtkSmartPointer<vtkRenderWindowInteractor>::New();
+	iren = vtkRenderWindowInteractor::SafeDownCast(obj);
 
+	std::cout<<"direct  "<<this->direction<<"  call mouse scroll  "<<this->slice_n<<std::endl;
 
+	switch(this->direction)
+	{
+	case 'a':
+		{
+			this->slice_n++;
+			if (this->slice_n>this->dimensions[2])
+			{
+				this->slice_n = 0;
+			}
+			else if (this->slice_n<0)
+			{
+				this->slice_n = this->dimensions[2];
+			}
+			break;
+		}
+	case 'c':
+		{
+			this->slice_n++;
+			if (this->slice_n>this->dimensions[0])
+			{
+				this->slice_n = 0;
+			}
+			else if (this->slice_n<0)
+			{
+				this->slice_n = this->dimensions[0];
+			}
+			break;
+		}
+	case 's':
+		{
+			this->slice_n++;
+			if (this->slice_n>this->dimensions[1])
+			{
+				this->slice_n = 0;
+			}
+			else if (this->slice_n<0)
+			{
+				this->slice_n = this->dimensions[1];
+			}
+			break;
+		}
+	default:
+		{
+			this->slice_n++;
+			if (this->slice_n>this->dimensions[0])
+			{
+				this->slice_n = 0;
+			}
+			else if (this->slice_n<0)
+			{
+				this->slice_n = this->dimensions[0];
+			}
+			break;
+		}
+	}
+	this->RenderView(slice_n);
+}
+void slice_view_base::on_scroll_mouse_forward(vtkObject* obj)
+{
+	vtkSmartPointer<vtkRenderWindowInteractor> iren = 
+		vtkSmartPointer<vtkRenderWindowInteractor>::New();
+	iren = vtkRenderWindowInteractor::SafeDownCast(obj);
 
+	std::cout<<"direct  "<<this->direction<<"  call mouse scroll  "<<this->slice_n<<std::endl;
 
+	switch(this->direction)
+	{
+	case 'a':
+		{
+			this->slice_n--;
+			if (this->slice_n>this->dimensions[2])
+			{
+				this->slice_n = 0;
+			}
+			else if (this->slice_n<0)
+			{
+				this->slice_n = this->dimensions[2];
+			}
+			break;
+		}
+	case 'c':
+		{
+			this->slice_n--;
+			if (this->slice_n>this->dimensions[0])
+			{
+				this->slice_n = 0;
+			}
+			else if (this->slice_n<0)
+			{
+				this->slice_n = this->dimensions[0];
+			}
+			break;
+		}
+	case 's':
+		{
+			this->slice_n--;
+			if (this->slice_n>this->dimensions[1])
+			{
+				this->slice_n = 0;
+			}
+			else if (this->slice_n<0)
+			{
+				this->slice_n = this->dimensions[1];
+			}
+			break;
+		}
+	default:
+		{
+			this->slice_n--;
+			if (this->slice_n>this->dimensions[0])
+			{
+				this->slice_n = 0;
+			}
+			else if (this->slice_n<0)
+			{
+				this->slice_n = this->dimensions[0];
+			}
+			break;
+		}
+	}
+	this->RenderView(slice_n);
+}
+
+//this line is badly need to inhert a new class
+//vtkObjectFactory.h must include!
+vtkStandardNewMacro(new_interactor_style);

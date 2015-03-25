@@ -11,10 +11,16 @@
 #include <QMessageBox>
 //qt string class
 #include <QString>
+//change vtk interact handle
+#include "vtkInteractorStyleImage.h"
+#include "vtkDataObject.h"
+#include "vtkObjectFactory.h"
 
 //qt + vtk include
 #include "QVTKWidget.h"
-
+//qt + vtk connect signal and slot
+#include "vtkCommand.h"
+#include "vtkEventQtSlotConnect.h"
 //vtk include files
 #include "vtkSmartPointer.h"
 #include "vtkImageData.h"
@@ -74,9 +80,11 @@ private:
 
 
 
-class slice_view_base
+class slice_view_base : QObject
 {
+	Q_OBJECT
 public:
+	explicit slice_view_base(QWidget *parent = 0);
 	slice_view_base(vtkRenderWindow*,char);
 	~slice_view_base();
 
@@ -84,6 +92,9 @@ public:
 	void Set_View_Img(vtkSmartPointer<vtkImageData>);
 	void RenderView(int x);
 
+	public slots:
+		void on_scroll_mouse_back(vtkObject*);
+		void on_scroll_mouse_forward(vtkObject*);
 private:
 	double* view_dirX;
 	double* view_dirY;
@@ -99,13 +110,25 @@ private:
 	vtkSmartPointer<vtkRenderWindow> view_window;
 	char direction;
 	int  slice_n;
+	int* dimensions;
 	void Set_Direction(char);
 	double* calculate_img_center(vtkSmartPointer<vtkImageData>);
 	void Set_Window(vtkRenderWindow*);
+
+	//qt slot connect
+	vtkSmartPointer<vtkEventQtSlotConnect> m_Connections_mouse_back;
+	vtkSmartPointer<vtkEventQtSlotConnect> m_Connections_mouse_forward;
 };
 
+class new_interactor_style : public vtkInteractorStyleImage
+{
+public:
+	static new_interactor_style* New();
+	vtkTypeMacro(new_interactor_style, vtkInteractorStyleImage);
 
-
+	void OnMouseWheelBackward() {};
+	void OnMouseWheelForward() {};
+};
 
 
 
