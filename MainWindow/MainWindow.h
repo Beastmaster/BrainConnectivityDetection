@@ -2,6 +2,7 @@
 #define MAIN_WINDOW_H
 
 #include <QMainWindow>
+#include <QApplication>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -11,6 +12,9 @@
 #include <QMessageBox>
 //qt string class
 #include <QString>
+//BOLD head
+#include "SubWidgetParadigmInBold.h"
+
 //change vtk interact handle
 #include "vtkInteractorStyleImage.h"
 #include "vtkDataObject.h"
@@ -55,13 +59,13 @@ private slots:
 	//load images
 	void on_click_load();
 	void on_click_show();
-
+	void on_click_bold();
 
 	//display filter
 	void display_in_axial(vtkSmartPointer<vtkImageData>);
 	void display_in_coronal(vtkSmartPointer<vtkImageData>);
 	void display_in_sagittal(vtkSmartPointer<vtkImageData>);
-	double* calculate_img_center(vtkSmartPointer<vtkImageData>);
+	
 private:
 	//GUI
 	Ui::MainWindow	*ui;
@@ -71,13 +75,12 @@ private:
 
 	vtkSmartPointer<vtkImageData> img_to_view;
 
+	double* calculate_img_center(vtkSmartPointer<vtkImageData>);
 	//vtk image views
 	vtkSmartPointer<vtkRenderer> axial_renderer;
 	vtkSmartPointer<vtkRenderer> coronal_renderer;
 	vtkSmartPointer<vtkRenderer> sagittal_renderer;
 };
-
-
 
 
 class slice_view_base : QObject

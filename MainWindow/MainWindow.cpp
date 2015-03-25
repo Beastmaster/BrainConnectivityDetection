@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->setupUi(this);
 	connect(this->ui->show_Btn,SIGNAL(clicked()),this,SLOT(on_click_show()));
 	connect(this->ui->img_load_Btn,SIGNAL(clicked()),this,SLOT(on_click_load()));
+	//connect bold function
+	connect(this->ui->bold_Btn,SIGNAL(clicked()),this,SLOT(on_click_bold()));
 }
 
 MainWindow::~MainWindow()
@@ -50,7 +52,13 @@ void MainWindow::on_click_show()
 	view_saggital->RenderView(10);
 }
 
-
+void MainWindow::on_click_bold()
+{
+	SubWidgetParadigmInBold* bold_win = new SubWidgetParadigmInBold;
+	bold_win->setWindowModality(Qt::ApplicationModal);
+	bold_win->show();
+}
+//these three methods is accomplished in vtk reslice
 void MainWindow::display_in_axial(vtkSmartPointer<vtkImageData> img_to_dis)
 {
 	static double axialX[3] = {1,0,0};
@@ -89,7 +97,6 @@ void MainWindow::display_in_axial(vtkSmartPointer<vtkImageData> img_to_dis)
 	//render 
 	this->ui->axial_view_widget->GetRenderWindow()->Render();
 }
-
 void MainWindow::display_in_coronal(vtkSmartPointer<vtkImageData> img_to_dis)
 {
 	static double coronalX[3] = {1,0,0};
@@ -127,8 +134,6 @@ void MainWindow::display_in_coronal(vtkSmartPointer<vtkImageData> img_to_dis)
 	//render 
 	this->ui->coronal_view_widget->GetRenderWindow()->Render();
 }
-
-
 void MainWindow::display_in_sagittal(vtkSmartPointer<vtkImageData> img_to_dis)
 {
 	static double sagittalX[3] = {0,1,0};
@@ -167,7 +172,7 @@ void MainWindow::display_in_sagittal(vtkSmartPointer<vtkImageData> img_to_dis)
 	this->ui->sagittal_view_widget->GetRenderWindow()->Render();
 	return;
 }
-
+//basic method to calculate center of the image
 double* MainWindow::calculate_img_center(vtkSmartPointer<vtkImageData> img)
 {
 	double spacing[3];
@@ -189,7 +194,7 @@ double* MainWindow::calculate_img_center(vtkSmartPointer<vtkImageData> img)
 
 
 
-
+//--------new slice view class: new view method------//
 slice_view_base::slice_view_base(vtkRenderWindow* winx,char a)
 {
 	// init para
@@ -243,17 +248,16 @@ slice_view_base::slice_view_base(vtkRenderWindow* winx,char a)
 		}
 	}
 }
-
-slice_view_base::~slice_view_base()
-{}
-
+//destructor method: use vtksmartpointer so no need to delete
+slice_view_base::~slice_view_base(){}
+//render the x th slice in a 3D image
 void slice_view_base::RenderView(int x)
 {
 	this->slice_n = x;
 	img_viewer2->SetSlice(this->slice_n);
 	this->img_viewer2->Render();
 }
-
+// private method: set view direction
 void slice_view_base::Set_Direction(char x)
 {
 	this->direction = x ;
@@ -301,7 +305,7 @@ void slice_view_base::Set_Direction(char x)
 		}
 	}
 }
-
+// default method: add imag to view to view widget
 void slice_view_base::Set_View_Img(vtkSmartPointer<vtkImageData> img)
 {
 	this->img_to_view = img;
@@ -310,13 +314,13 @@ void slice_view_base::Set_View_Img(vtkSmartPointer<vtkImageData> img)
 	this->img_to_view->GetDimensions(this->dimensions);
 	std::cout<<"dimension is :"<<dimensions[0]<<dimensions[1]<<dimensions[2]<<std::endl;
 }
-
+//private method: add widget window to render
 void slice_view_base::Set_Window(vtkRenderWindow* win)
 {
 	this->view_window = vtkSmartPointer<vtkRenderWindow>::New();
 	this->view_window = win;
 }
-
+//private method: calculate imge center of a 3D image
 double* slice_view_base::calculate_img_center(vtkSmartPointer<vtkImageData> img)
 {
 	double spacing[3];
@@ -335,8 +339,7 @@ double* slice_view_base::calculate_img_center(vtkSmartPointer<vtkImageData> img)
 
 	return center;
 }
-
-
+//slots: when mouse wheel scroll back, next slice of image show
 void slice_view_base::on_scroll_mouse_back(vtkObject* obj)
 {
 	vtkSmartPointer<vtkRenderWindowInteractor> iren = 
