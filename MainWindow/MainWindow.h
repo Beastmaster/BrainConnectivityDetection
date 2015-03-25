@@ -19,7 +19,7 @@
 #include "vtkSmartPointer.h"
 #include "vtkImageData.h"
 #include "vtkMetaImageReader.h"
-
+#include "vtkDICOMImageReader.h"
 //for visualize
 #include "vtkRenderWindow.h"
 #include "vtkRenderer.h"
@@ -70,6 +70,46 @@ private:
 	vtkSmartPointer<vtkRenderer> coronal_renderer;
 	vtkSmartPointer<vtkRenderer> sagittal_renderer;
 };
+
+
+
+
+class slice_view_base
+{
+public:
+	slice_view_base(vtkRenderWindow*,char);
+	~slice_view_base();
+
+	void SetSlice(int x) {this->slice_n = x;};
+	void Set_View_Img(vtkSmartPointer<vtkImageData>);
+	void RenderView(int x);
+
+private:
+	double* view_dirX;
+	double* view_dirY;
+	double* view_dirZ;
+
+	vtkSmartPointer<vtkImageData> img_to_view;
+	vtkSmartPointer<vtkImageReslice> reslice;
+	vtkSmartPointer<vtkWindowLevelLookupTable> lookup_table;
+	vtkSmartPointer<vtkImageMapToColors> color_map;
+	vtkSmartPointer<vtkRenderer> new_render;
+
+	vtkSmartPointer<vtkImageViewer2> img_viewer2;
+	vtkSmartPointer<vtkRenderWindow> view_window;
+	char direction;
+	int  slice_n;
+	void Set_Direction(char);
+	double* calculate_img_center(vtkSmartPointer<vtkImageData>);
+	void Set_Window(vtkRenderWindow*);
+};
+
+
+
+
+
+
+
 
 #endif
 
