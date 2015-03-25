@@ -1,0 +1,33 @@
+||****************************************||
+Auther: QinShuo
+Date  : 2015.2.25
+Site  : SIAT, Shenzhen, China
+||****************************************||
+
+Project Name: Brain Connection Detection Tool
+Background  : 2015 graduation project of 
+	      School of Electronic Information and Communication
+	      Huazhong University of Science & Technolog
+
+Functions:
+	Medical Image Read
+	Image Display
+	General Linear Model
+	FMRI Activation Area detection
+	Brain Connectivity detection
+		|___Pearson Correlation Method
+		|___Independent Component Analysis
+
+
+Tools:
+	VTK
+	ITK
+	QT
+	
+
+
+
+
+
+
+
