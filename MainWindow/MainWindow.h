@@ -5,11 +5,13 @@
 #include <QApplication>
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
 
 //qt open file_dialog
 #include <QFileDialog>
 //messagebox
 #include <QMessageBox>
+#include <QWheelEvent>
 //qt string class
 #include <QString>
 //BOLD head
@@ -28,6 +30,9 @@
 //vtk include files
 #include "vtkSmartPointer.h"
 #include "vtkImageData.h"
+#include "vtkPointData.h"//cannot use SetInput in color_map if not include
+#include "vtkImageProperty.h"
+#include <vtkImageMapper3D.h>
 #include "vtkMetaImageReader.h"
 #include "vtkDICOMImageReader.h"
 //for visualize
@@ -40,7 +45,16 @@
 #include "vtkImageReslice.h"
 #include "vtkWindowLevelLookupTable.h"
 #include "vtkImageMapToColors.h"
+//image fusion
+#include "vtkImageBlend.h"
 
+//include my image convert class
+#include "ImageConvert.h"
+
+//include my construct
+#include "MarchingCube_construct.h"
+
+class slice_view_base;
 
 namespace Ui {
 class MainWindow;
@@ -59,13 +73,17 @@ private slots:
 	//load images
 	void on_click_load();
 	void on_click_show();
+	void on_click_show3d();
 	void on_click_bold();
+	void on_click_add_mask_file();
+	void on_click_mask();
+	void on_click_del_mask();
+	void on_slider_volume_move(int);
+	void on_slider_opicity_move(int);
+	void info_Panel_Scroll();
+	void mouse_Wheel_move(QWheelEvent *e);
+	void init_Parameters();
 
-	//display filter
-	void display_in_axial(vtkSmartPointer<vtkImageData>);
-	void display_in_coronal(vtkSmartPointer<vtkImageData>);
-	void display_in_sagittal(vtkSmartPointer<vtkImageData>);
-	
 private:
 	//GUI
 	Ui::MainWindow	*ui;
@@ -73,13 +91,36 @@ private:
 	//file names
 	QString file_name;
 
-	vtkSmartPointer<vtkImageData> img_to_view;
-
+	//first: name; second: vtkImageData
+	typedef std::pair<std::string, vtkSmartPointer<vtkImageData> > img_view_base_Type;
+	img_view_base_Type img_to_view;
+	img_view_base_Type mask_img;
+	vector<img_view_base_Type > data_container;
+	//bold widget
+	SubWidgetParadigmInBold* bold_win;
+	//pravite methods
 	double* calculate_img_center(vtkSmartPointer<vtkImageData>);
+	void set_slider_volume_range(int);
+	void set_data_container(vector<img_view_base_Type > );
+	void refresh_view();
+	void print_Info(QString,QString); 
+
+
+	//qt vtk views
+	slice_view_base* view_axial;
+	slice_view_base* view_cornoal;
+	slice_view_base* view_saggital;
+	construct_base* new_3d_view;
+
 	//vtk image views
 	vtkSmartPointer<vtkRenderer> axial_renderer;
 	vtkSmartPointer<vtkRenderer> coronal_renderer;
 	vtkSmartPointer<vtkRenderer> sagittal_renderer;
+
+	//actor for mask
+	vtkSmartPointer<vtkImageActor> axial_mask_Actor;
+	vtkSmartPointer<vtkImageActor> coronal_mask_Actor;
+	vtkSmartPointer<vtkImageActor> sagittal_mask_Actor;
 };
 
 
@@ -93,7 +134,12 @@ public:
 
 	void SetSlice(int x) {this->slice_n = x;};
 	void Set_View_Img(vtkSmartPointer<vtkImageData>);
-	void RenderView(int x);
+	int RenderView(int x);
+	int Slice_Position;
+
+	vtkSmartPointer<vtkRenderer> new_render;
+	vtkSmartPointer<vtkImageViewer2> img_viewer2;
+	vtkSmartPointer<vtkRenderWindow> view_window;
 
 	public slots:
 		void on_scroll_mouse_back(vtkObject*);
@@ -103,14 +149,12 @@ private:
 	double* view_dirY;
 	double* view_dirZ;
 
-	vtkSmartPointer<vtkImageData> img_to_view;
-	vtkSmartPointer<vtkImageReslice> reslice;
-	vtkSmartPointer<vtkWindowLevelLookupTable> lookup_table;
-	vtkSmartPointer<vtkImageMapToColors> color_map;
-	vtkSmartPointer<vtkRenderer> new_render;
 
-	vtkSmartPointer<vtkImageViewer2> img_viewer2;
-	vtkSmartPointer<vtkRenderWindow> view_window;
+	vtkSmartPointer<vtkImageData> img_to_view;
+	//vtkSmartPointer<vtkImageReslice> reslice;
+	//vtkSmartPointer<vtkWindowLevelLookupTable> lookup_table;
+	//vtkSmartPointer<vtkImageMapToColors> color_map;
+
 	char direction;
 	int  slice_n;
 	int* dimensions;

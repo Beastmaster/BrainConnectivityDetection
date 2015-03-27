@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>741</width>
-    <height>788</height>
+    <width>1058</width>
+    <height>797</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,10 +17,10 @@
    <widget class="QWidget" name="gridLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>10</x>
       <y>10</y>
-      <width>511</width>
-      <height>531</height>
+      <width>611</width>
+      <height>591</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
@@ -30,52 +30,143 @@
      <item row="0" column="1">
       <widget class="QVTKWidget" name="coronal_view_widget"/>
      </item>
-     <item row="1" column="0">
-      <widget class="QVTKWidget" name="sagittal_view_widget"/>
-     </item>
      <item row="0" column="0">
       <widget class="QVTKWidget" name="axial_view_widget"/>
      </item>
+     <item row="1" column="0">
+      <widget class="QVTKWidget" name="sagittal_view_widget"/>
+     </item>
     </layout>
    </widget>
-   <widget class="QPushButton" name="img_load_Btn">
+   <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>570</x>
-      <y>40</y>
-      <width>112</width>
-      <height>34</height>
+      <x>20</x>
+      <y>620</y>
+      <width>591</width>
+      <height>31</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Load</string>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Select Volume</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="min_vol_Lab">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="view_vol_Slider">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="max_vol_Lab">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QTextBrowser" name="info_Panel">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>240</y>
+      <width>391</width>
+      <height>481</height>
+     </rect>
     </property>
    </widget>
-   <widget class="QPushButton" name="show_Btn">
+   <widget class="QWidget" name="gridLayoutWidget_2">
     <property name="geometry">
      <rect>
-      <x>570</x>
-      <y>130</y>
-      <width>112</width>
-      <height>34</height>
+      <x>670</x>
+      <y>20</y>
+      <width>321</width>
+      <height>171</height>
      </rect>
     </property>
-    <property name="text">
-     <string>show</string>
-    </property>
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="1" column="0">
+      <widget class="QPushButton" name="show_Btn">
+       <property name="text">
+        <string>show</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QPushButton" name="bold_Btn">
+       <property name="text">
+        <string>Bold</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="img_load_Btn">
+       <property name="text">
+        <string>Load</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QPushButton" name="add_mask_Btn">
+       <property name="text">
+        <string>Add Mask</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QPushButton" name="mask_Btn">
+       <property name="text">
+        <string>Mask</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QPushButton" name="clr_mask_Btn">
+       <property name="text">
+        <string>Clear Mask</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
-   <widget class="QPushButton" name="bold_Btn">
+   <widget class="QWidget" name="horizontalLayoutWidget_2">
     <property name="geometry">
      <rect>
-      <x>580</x>
-      <y>670</y>
-      <width>112</width>
-      <height>34</height>
+      <x>20</x>
+      <y>680</y>
+      <width>591</width>
+      <height>41</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Bold</string>
-    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Overlay Opicity</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="set_opicity_Slider">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -83,7 +174,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>741</width>
+     <width>1058</width>
      <height>31</height>
     </rect>
    </property>

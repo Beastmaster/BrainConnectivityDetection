@@ -20,9 +20,9 @@ Functions:
 
 
 Tools:
-	VTK
-	ITK
-	QT
+	VTK 5.10
+	ITK 4.4
+	QT  4
 	
 
 

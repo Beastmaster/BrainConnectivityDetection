@@ -268,17 +268,17 @@ void SubWidgetParadigmInBold::on_click_loadimage()
 		//-----single .dcm files load from log file------//
 		qDebug()<<"begin parse log file !";
 		//open log file
-#ifdef QS_DEBUG_MODE
+//#ifdef QS_DEBUG_MODE
 		QString log = 
 			QFileDialog::getOpenFileName(this,
 			tr("open log file"),"./",tr("(*)"));
 		if (log.isEmpty()){return;}
 
-#else	//get file name from main window
-		MainWindow* mainwnd_gf = MainWindow::GetMainWindow();
-		QString log = mainwnd_gf->GetDirectory();
-		log.append("\DicomSortList.txt");
-#endif
+//#else	//get file name from main window
+//		MainWindow* mainwnd_gf = MainWindow::GetMainWindow();
+//		QString log = mainwnd_gf->GetDirectory();
+//		log.append("\DicomSortList.txt");
+//#endif
 		qDebug()<<log;
 		//create file handle
 		this->file.setFileName(log);
@@ -583,7 +583,7 @@ void SubWidgetParadigmInBold::on_threshold_changed()
 
 	vtkImageData* threshold_temp = vtkImageData::New();
 		//-------threshold----//
-	if (0)
+	if (out_Lable_Map_flag)
 	{	
 		vtkSmartPointer<vtkIsingActivationThreshold> IsingActivationThreshold= 
 		vtkIsingActivationThreshold::New();
@@ -601,11 +601,10 @@ void SubWidgetParadigmInBold::on_threshold_changed()
 		caster->SetOutputScalarTypeToFloat();
 		caster->Update();
 		//cast pixel type to float type
-		this->ActArea = caster->GetOutput();
+		this->ActArea->DeepCopy(caster->GetOutput());
 		this->ActArea->GetDimensions(di);
 		std::cout<<"act_area info"<<std::endl;
 		std::cout<<di[0]<<di[1]<<di[2]<<std::endl;
-	
 	}
 	else
 	{
@@ -991,7 +990,12 @@ void SubWidgetParadigmInBold::PreProcess()
 	//iterate through the data container
 	int tt=0;
 	for(std::map<int,vtkSmartPointer<vtkImageData> >::iterator it = (this->data_container.begin())++;
-		it!=this->data_container.end();++it)////////////////////////////////
+#ifndef QS_DEBUG_MODE
+		it==this->data_container.end(); //if deine QS_DEBUG_MODE flag, skip register across all data
+#else
+		it!=this->data_container.end();
+#endif
+		++it)////////////////////////////////
 	{
 		//progress change
 		tt++;
@@ -1095,7 +1099,7 @@ void SubWidgetParadigmInBold::PreProcess()
 		vtkSmartPointer<vtkImageThreshold> threshold_h=
 			vtkSmartPointer<vtkImageThreshold>::New();
 		//threshold parameter
-		threshold_h->ThresholdBetween(150,2000);
+		threshold_h->ThresholdBetween(10,9000);
 		threshold_h->ReplaceOutOn();
 		threshold_h->SetOutValue(0.0);
 		threshold_h->SetInput((*it).second);
@@ -1628,21 +1632,21 @@ void ActivationThreshold::SimpleExecute(vtkImageData *input, vtkImageData *outpu
 	// get the data array from input image 
 	vtkFloatArray *inputArray = (vtkFloatArray *)this->GetInput(0)->GetPointData()->GetScalars();
 	vtkFloatArray *activation = vtkFloatArray::New();
-	for (unsigned long int i=0; i<size; i++)
-	{
-		if (inputArray->GetValue(i) >= pos_threshold)
-		{
-			activation->InsertNextValue(inputArray->GetValue(i));
-		}
-		else if (inputArray->GetValue(i) <= neg_threshold)
-		{
-			activation->InsertNextValue(inputArray->GetValue(i));
-		}
-		else
-		{
-			activation->InsertNextValue(0.0);
-		}
-	} 
+			for (unsigned long int i=0; i<size; i++)
+			{
+				if (inputArray->GetValue(i) >= pos_threshold)
+				{
+					activation->InsertNextValue(inputArray->GetValue(i));
+				}
+				else if (inputArray->GetValue(i) <= neg_threshold)
+				{
+					activation->InsertNextValue(inputArray->GetValue(i));
+				}
+				else
+				{
+					activation->InsertNextValue(0.0);
+				}
+			} 
 	output->GetPointData()->SetScalars(activation);
 	activation->Delete();
 }

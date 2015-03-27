@@ -7,170 +7,285 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+	this->init_Parameters();
+	this->set_data_container(this->data_container);
+
+	//axial_renderer->AddActor(axial_mask_Actor);
+	//coronal_renderer->AddActor(coronal_mask_Actor);
+	//sagittal_renderer->AddActor(sagittal_mask_Actor);
+
 	connect(this->ui->show_Btn,SIGNAL(clicked()),this,SLOT(on_click_show()));
+	connect(this->ui->show_Btn,SIGNAL(clicked()),this,SLOT(on_click_show3d()));
 	connect(this->ui->img_load_Btn,SIGNAL(clicked()),this,SLOT(on_click_load()));
 	//connect bold function
 	connect(this->ui->bold_Btn,SIGNAL(clicked()),this,SLOT(on_click_bold()));
+	//slider bar
+	connect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
+	connect(this->ui->set_opicity_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_opicity_move(int)));
+	//connect signal to enable atuo-scroll in info panel
+	connect(this->ui->info_Panel,SIGNAL(cursorPositionChanged()),this,SLOT(info_Panel_Scroll()));
+
+	//connect mask function Btns
+	connect(this->ui->add_mask_Btn,SIGNAL(clicked()),this,SLOT(on_click_add_mask_file()));
+	connect(this->ui->clr_mask_Btn,SIGNAL(clicked()),this,SLOT(on_click_del_mask()));
+	connect(this->ui->mask_Btn,SIGNAL(clicked()),this,SLOT(on_click_mask()));
+
 }
 
 MainWindow::~MainWindow()
 {
+	if (this->bold_win!=NULL)
+	{
+		delete this->bold_win;
+	}
+	if (this->view_axial!=NULL)
+	{
+		delete view_axial;
+	}
+	if (this->view_cornoal!=NULL)
+	{
+		delete view_cornoal;
+	}
+	if (this->view_saggital!=NULL)
+	{
+		delete view_saggital;
+	}
 	delete ui;
+}
+
+void MainWindow::init_Parameters()
+{
+	view_saggital = NULL;
+	view_cornoal  = NULL;
+	view_axial    = NULL;
+	bold_win      = NULL;
+	new_3d_view   = NULL;
+
+	////add render to view
+	//view_saggital = new slice_view_base(this->ui->sagittal_view_widget->GetRenderWindow(),'s');
+	//view_cornoal  = new slice_view_base(this->ui->coronal_view_widget->GetRenderWindow(),'c');
+	//view_axial    = new slice_view_base(this->ui->axial_view_widget->GetRenderWindow(),'a');
+
+	//init opicity slider bar
+	this->ui->set_opicity_Slider->setRange(0,100);
+	this->ui->set_opicity_Slider->setValue(50);
 }
 
 void MainWindow::on_click_load()
 {
+	disconnect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
 	this->file_name = 
 		QFileDialog::getOpenFileName(this,
 		tr("open log file"),"./",tr("(*)"));
 	if (file_name.isEmpty()){return;}
 
 	std::string filenamexx = this->file_name.toStdString();
-	const char* cccc = filenamexx.data();
-	std::cout<<cccc<<std::endl;
+	print_Info("Load Image:  ",file_name);
 
-	vtkSmartPointer<vtkMetaImageReader> img_reader = 
-		vtkSmartPointer<vtkMetaImageReader>::New();
-	img_reader->SetFileName(cccc);
-	img_reader->Update();
+	Image_Convert_Base* img_reader = new Image_Convert_Base;
+	img_reader->SetFileName(filenamexx);
 
-	this->img_to_view = img_reader->GetOutput();
+	img_view_base_Type temp_img;
+	temp_img.first = filenamexx;
+	temp_img.second = img_reader->GetOutput();
+	delete img_reader;
+
+	print_Info("Image Scalar Number: ",QString::number(temp_img.second->GetNumberOfScalarComponents()));
+
+	this->img_to_view = temp_img;
+	this->data_container.push_back(temp_img);
+	this->set_slider_volume_range(this->data_container.size());
+	this->ui->min_vol_Lab->setText("1");
+	this->ui->max_vol_Lab->setText(QString::number(this->data_container.size()));
+
+	connect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
 }
 
 
 
 void MainWindow::on_click_show()
 {
-	slice_view_base* view_axial = new slice_view_base(this->ui->axial_view_widget->GetRenderWindow(),'a');
-	view_axial->Set_View_Img(this->img_to_view);
+	if (this->img_to_view.first.empty())
+	{
+		return;
+	}
+
+	if (view_axial != NULL)
+	{
+		delete view_axial;
+		delete view_cornoal;
+		delete view_saggital;
+	}
+	view_saggital = new slice_view_base(this->ui->sagittal_view_widget->GetRenderWindow(),'s');
+	view_cornoal  = new slice_view_base(this->ui->coronal_view_widget->GetRenderWindow(),'c');
+	view_axial    = new slice_view_base(this->ui->axial_view_widget->GetRenderWindow(),'a');
+
+	view_axial->Set_View_Img(this->img_to_view.second);
+	view_axial->RenderView(0);
+	view_cornoal->Set_View_Img(this->img_to_view.second);
+	view_cornoal->RenderView(0);
+	view_saggital->Set_View_Img(this->img_to_view.second);
+	view_saggital->RenderView(0);
+	ui->gridLayout->setEnabled(true);
+}
+
+void MainWindow::on_click_show3d()
+{
+	if (this->img_to_view.first.empty())
+	{
+		return;
+	}
+	if (new_3d_view != NULL)
+	{
+		delete new_3d_view;
+	}
+	new_3d_view = new construct_base(this->ui->ster_3d_view_widget->GetRenderWindow());
+	new_3d_view->Set_Input_Img(this->img_to_view.second);
+	new_3d_view->Re_Construct();
+}
+
+void MainWindow::refresh_view()
+{
+	//refresh 2d views
+	view_axial->Set_View_Img(this->img_to_view.second);
 	view_axial->RenderView(10);
-	slice_view_base* view_cornoal = new slice_view_base(this->ui->coronal_view_widget->GetRenderWindow(),'c');
-	view_cornoal->Set_View_Img(this->img_to_view);
+	view_cornoal->Set_View_Img(this->img_to_view.second);
 	view_cornoal->RenderView(13);
-	slice_view_base* view_saggital = new slice_view_base(this->ui->sagittal_view_widget->GetRenderWindow(),'s');
-	view_saggital->Set_View_Img(this->img_to_view);
+	view_saggital->Set_View_Img(this->img_to_view.second);
 	view_saggital->RenderView(10);
+	//refresh 3d view
+	new_3d_view->Set_Input_Img(this->img_to_view.second);
+	new_3d_view->Re_Construct();
 }
 
 void MainWindow::on_click_bold()
 {
-	SubWidgetParadigmInBold* bold_win = new SubWidgetParadigmInBold;
+	bold_win = new SubWidgetParadigmInBold;
 	bold_win->setWindowModality(Qt::ApplicationModal);
 	bold_win->show();
 }
-//these three methods is accomplished in vtk reslice
-void MainWindow::display_in_axial(vtkSmartPointer<vtkImageData> img_to_dis)
+
+void MainWindow::on_click_add_mask_file()
 {
-	static double axialX[3] = {1,0,0};
-	static double axialY[3] = {0,1,0};
-	static double axialZ[3] = {0,0,1};
+	print_Info("add a ","mask file");
+	this->file_name = 
+		QFileDialog::getOpenFileName(this,
+		tr("open log file"),"./",tr("(*)"));
+	if (file_name.isEmpty()){return;}
 
-	//assign reslice direction
-	vtkSmartPointer<vtkImageReslice> axi_reslice= 
-		vtkSmartPointer<vtkImageReslice>::New();
-	axi_reslice->SetInput(img_to_dis);
-	axi_reslice->SetOutputDimensionality(2);
-	axi_reslice->SetResliceAxesDirectionCosines(axialX,axialY,axialZ);
-	axi_reslice->SetResliceAxesOrigin(this->calculate_img_center(img_to_dis));
-	axi_reslice->SetInterpolationModeToLinear();
+	std::string filenamexx = this->file_name.toStdString();
+	print_Info("Load Mask Image:  ",file_name);
 
-	//look up table
-	vtkSmartPointer<vtkWindowLevelLookupTable> table = 
-		vtkSmartPointer<vtkWindowLevelLookupTable>::New();
-	table->SetWindow(1000);
-	table->SetLevel(100);
+	Image_Convert_Base* img_reader = new Image_Convert_Base;
+	img_reader->SetFileName(filenamexx);
 
-	vtkSmartPointer<vtkImageMapToColors> color = 
-		vtkSmartPointer<vtkImageMapToColors>::New();
-	color->SetLookupTable(table);
-	color->SetInput(axi_reslice->GetOutput());
+	img_view_base_Type temp_img;
+	temp_img.first = filenamexx;
+	temp_img.second = img_reader->GetOutput();
 
-	vtkSmartPointer<vtkImageActor> actor = 
-		vtkSmartPointer<vtkImageActor>::New();
-	actor->SetInput(color->GetOutput());
-
-	//add a renderer
-	vtkSmartPointer<vtkRenderer> new_render = 
-		vtkSmartPointer<vtkRenderer>::New();
-	new_render->AddActor(actor);
-	this->ui->axial_view_widget->GetRenderWindow()->AddRenderer(new_render);
-	//render 
-	this->ui->axial_view_widget->GetRenderWindow()->Render();
+	this->mask_img = temp_img;
 }
-void MainWindow::display_in_coronal(vtkSmartPointer<vtkImageData> img_to_dis)
-{
-	static double coronalX[3] = {1,0,0};
-	static double coronalY[3] = {0,0,-1};
-	static double coronalZ[3] = {0,1,0};
+void MainWindow::on_click_mask()
+{	
+	print_Info("show ","mask");
 
-	//assign reslice direction
-	vtkSmartPointer<vtkImageReslice> cor_reslice= 
-		vtkSmartPointer<vtkImageReslice>::New();
-	cor_reslice->SetInput(img_to_dis);
-	cor_reslice->SetOutputDimensionality(2);
-	cor_reslice->SetResliceAxesDirectionCosines(coronalX,coronalY,coronalZ);
-	cor_reslice->SetResliceAxesOrigin(this->calculate_img_center(img_to_dis));
-	cor_reslice->SetInterpolationModeToLinear();
-
-	//look up table
-	vtkSmartPointer<vtkWindowLevelLookupTable> table = 
+	vtkSmartPointer<vtkWindowLevelLookupTable> lookup_table = 
 		vtkSmartPointer<vtkWindowLevelLookupTable>::New();
-	table->SetWindow(1000);
-	table->SetLevel(100);
-
-	vtkSmartPointer<vtkImageMapToColors> color = 
+	vtkSmartPointer<vtkImageMapToColors> color_map = 
 		vtkSmartPointer<vtkImageMapToColors>::New();
-	color->SetLookupTable(table);
-	color->SetInput(cor_reslice->GetOutput());
+	
+	//build up look up table
+	lookup_table->SetNumberOfTableValues(3);
+	lookup_table->SetRange(0.0,300.0);
+	lookup_table->SetValueRange(0,1);
+	lookup_table->SetRampToLinear();
+	lookup_table->SetSaturationRange(0.0,0.0);
+	//lookup_table->SetTableValue(0,0.0,0.0,0.0,0.0);//label 0 is transparent
+	//lookup_table->SetTableValue(1,0.0,1.0,0.0,1.0);//label 1 is opaque and green
+	//lookup_table->SetTableValue(2,0.0,1.0,0.0,0.0);//label 2 is opaque and green
+	lookup_table->Build();
+	//setup color map
+	color_map->SetLookupTable(lookup_table);
+	color_map->SetInput(this->mask_img.second);
+	color_map->Update();
 
-	vtkSmartPointer<vtkImageActor> actor = 
-		vtkSmartPointer<vtkImageActor>::New();
-	actor->SetInput(color->GetOutput());
+	vtkSmartPointer<vtkImageBlend> imBlender = 
+		vtkSmartPointer<vtkImageBlend>::New();
+	imBlender->SetOpacity(0,1);
+	imBlender->SetOpacity(1,0.3);
+	imBlender->AddInput(this->img_to_view.second);
+	imBlender->AddInput(color_map->GetOutput());
+	imBlender->Update();
+	vtkSmartPointer<vtkImageData> temp = 
+		vtkSmartPointer<vtkImageData>::New();
+	temp = imBlender->GetOutput();
 
-	vtkSmartPointer<vtkRenderer> new_render = 
-		vtkSmartPointer<vtkRenderer>::New();
-	new_render->AddActor(actor);
-	this->ui->coronal_view_widget->GetRenderWindow()->AddRenderer(new_render);
-	//render 
-	this->ui->coronal_view_widget->GetRenderWindow()->Render();
+	view_axial->Set_View_Img(temp);
+	view_cornoal->Set_View_Img(temp);
+	view_saggital->Set_View_Img(temp);
 }
-void MainWindow::display_in_sagittal(vtkSmartPointer<vtkImageData> img_to_dis)
+void MainWindow::on_click_del_mask()
 {
-	static double sagittalX[3] = {0,1,0};
-	static double sagittalY[3] = {0,0,-1};
-	static double sagittalZ[3] = {-1,0,0};
+	print_Info("del a ","mask");
 
-	//assign reslice direction
-	vtkSmartPointer<vtkImageReslice> sag_reslice= 
-		vtkSmartPointer<vtkImageReslice>::New();
-	sag_reslice->SetInput(img_to_dis);
-	sag_reslice->SetOutputDimensionality(2);
-	sag_reslice->SetResliceAxesDirectionCosines(sagittalX,sagittalY,sagittalZ);
-	sag_reslice->SetResliceAxesOrigin(this->calculate_img_center(img_to_dis));
-	sag_reslice->SetInterpolationModeToLinear();
+}
 
-	//look up table
-	vtkSmartPointer<vtkWindowLevelLookupTable> table = 
-		vtkSmartPointer<vtkWindowLevelLookupTable>::New();
-	table->SetWindow(1000);
-	table->SetLevel(100);
+void MainWindow::on_slider_volume_move(int posxx)
+{
+	int pos = this->ui->view_vol_Slider->value();
+	std::cout<<"position is : "<<pos<<std::endl;
+	print_Info("Position is : ", QString::number(pos));
 
-	vtkSmartPointer<vtkImageMapToColors> color = 
-		vtkSmartPointer<vtkImageMapToColors>::New();
-	color->SetLookupTable(table);
-	color->SetInput(sag_reslice->GetOutput());
+	if (this->data_container.size()==0)
+	{
+		return;
+	}
+	else
+	{
+		this->img_to_view = this->data_container[pos-1];
+		print_Info("Current image is: ",img_to_view.first.data());
+		this->refresh_view();
+	}
+}
 
-	vtkSmartPointer<vtkImageActor> actor = 
-		vtkSmartPointer<vtkImageActor>::New();
-	actor->SetInput(color->GetOutput());
 
-	vtkSmartPointer<vtkRenderer> new_render = 
-		vtkSmartPointer<vtkRenderer>::New();
-	new_render->AddActor(actor);
-	this->ui->sagittal_view_widget->GetRenderWindow()->AddRenderer(new_render);
-	//render 
-	this->ui->sagittal_view_widget->GetRenderWindow()->Render();
-	return;
+void MainWindow::on_slider_opicity_move(int posxx)
+{
+	int pos = this->ui->set_opicity_Slider->value();
+	
+	double opicity = double(pos)/100;
+	print_Info("Opicity is : ", QString::number(opicity));
+
+	if (this->new_3d_view == NULL)   {return;}
+
+	this->new_3d_view->Set_Opicity(opicity);
+	this->ui->ster_3d_view_widget->GetRenderWindow()->Render();
+}
+
+
+void MainWindow::mouse_Wheel_move(QWheelEvent *e)
+{
+	int numDegree = e->delta()/8;
+	int numSteps = numDegree/15;
+	std::cout<<numDegree<<std::endl;
+	print_Info("axial slice is: ",QString::number(this->view_axial->Slice_Position));
+	print_Info("cornoal slice is: ",QString::number(this->view_cornoal->Slice_Position));
+	print_Info("saggital slice is: ",QString::number(this->view_saggital->Slice_Position));
+}
+
+//information scroll in info panel
+void MainWindow::info_Panel_Scroll()
+{
+	QTextCursor text_cursor =  ui->info_Panel->textCursor();
+	text_cursor.movePosition(QTextCursor::End);
+	ui->info_Panel->setTextCursor(text_cursor);
+}
+void MainWindow::print_Info(QString in,QString x)
+{
+	QString temp = in;
+	temp.append(x);
+	temp.append("\n");
+	ui->info_Panel->insertPlainText(temp);
 }
 //basic method to calculate center of the image
 double* MainWindow::calculate_img_center(vtkSmartPointer<vtkImageData> img)
@@ -191,6 +306,27 @@ double* MainWindow::calculate_img_center(vtkSmartPointer<vtkImageData> img)
 
 	return center;
 }
+void MainWindow::set_slider_volume_range(int num)
+{
+	this->ui->view_vol_Slider->setMinimum(1);
+	this->ui->view_vol_Slider->setMaximum(num);
+}
+void MainWindow::set_data_container(vector<img_view_base_Type >  da_con)
+{
+	if (da_con.empty())
+	{
+		return;
+	}
+	else
+	{
+		this->data_container = da_con;
+	}
+}
+
+
+
+
+
 
 
 
@@ -202,6 +338,11 @@ slice_view_base::slice_view_base(vtkRenderWindow* winx,char a)
 	this->Set_Window(winx);
 	this->slice_n = 0;
 	
+	this->dimensions = NULL;
+	this->view_dirX = NULL;
+	this->view_dirY = NULL;
+	this->view_dirZ = NULL;
+
 	//map vtkaction and qt signal
 	this->m_Connections_mouse_back = vtkSmartPointer<vtkEventQtSlotConnect>::New();
 	m_Connections_mouse_back = vtkSmartPointer<vtkEventQtSlotConnect>::New();
@@ -249,13 +390,25 @@ slice_view_base::slice_view_base(vtkRenderWindow* winx,char a)
 	}
 }
 //destructor method: use vtksmartpointer so no need to delete
-slice_view_base::~slice_view_base(){}
+slice_view_base::~slice_view_base()
+{
+	m_Connections_mouse_back->Disconnect(this->view_window->GetInteractor(),
+		vtkCommand::MouseWheelBackwardEvent,this,SLOT(on_scroll_mouse_back(vtkObject*)));
+	m_Connections_mouse_forward->Disconnect(this->view_window->GetInteractor(),
+		vtkCommand::MouseWheelForwardEvent,this,SLOT(on_scroll_mouse_forward(vtkObject*)));
+	delete[] this->dimensions;
+	delete[] this->view_dirX;
+	delete[] this->view_dirY;
+	delete[] this->view_dirZ;
+}
 //render the x th slice in a 3D image
-void slice_view_base::RenderView(int x)
+int slice_view_base::RenderView(int x)
 {
 	this->slice_n = x;
 	img_viewer2->SetSlice(this->slice_n);
 	this->img_viewer2->Render();
+	this->Slice_Position = x;
+	return x;
 }
 // private method: set view direction
 void slice_view_base::Set_Direction(char x)

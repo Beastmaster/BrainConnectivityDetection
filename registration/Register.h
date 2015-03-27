@@ -2,7 +2,7 @@
  * File:   Register.h
  * Author: zhangteng
  *
- * Created on 2014年12月11日, 下午7:39
+ * Created on 2014.12.11., PM. 7:39
  */
 
 #ifndef REGISTER_H

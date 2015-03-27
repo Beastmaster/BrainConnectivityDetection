@@ -5,26 +5,27 @@
 * change flag position:
 *1. QS_DEBUG_MODE
 *2. en_Read_Register_flag
-*3. en_Brain_Strip_flay
+*3. en_Brain_Strip_flag
 *4. en_Visualization
 *5. register all fmri image flag #PreProcess()
 *6. threshold-- label map or t-map
 */
 #define QS_DEBUG_MODE
-#define en_Read_Register_flag  0        //enable = 1
+#define en_Read_Register_flag  1        //enable = 1
 #define en_Brain_Strip_flag    0		//enable = 1
 #define en_Visiualization_flag 0        //enable = 1
+#define out_Lable_Map_flag     1        //enable = 1
 	
 #ifdef QS_DEBUG_MODE
 #define BRAINSTRIP_SRC	"D:/WorkPlace/NeuroAres/brain_strip_atlas/atlasImage.mha"
 #define BRAINSTRIP_MASK "D:/WorkPlace/NeuroAres/brain_strip_atlas/atlasMask.mha"
 #else
-#define BRAINSTRIP_SRC "C:/Users/rc-mic/Desktop/Project-64bit/NeuroAres-223/BET/atlasImage.mha"
-#define BRAINSTRIP_MASK "C:/Users/rc-mic/Desktop/Project-64bit/NeuroAres-223/BET/atlasMask.mha"
+#define BRAINSTRIP_SRC "C:/Users/rc-mic/Desktop/NeuroAres/resources/data/atlasImage.mha"
+#define BRAINSTRIP_MASK "C:/Users/rc-mic/Desktop/NeuroAres/resources/data/atlasMask.mha"
 #endif
 
 #include <QWidget>
-#include "fmri/fMRIEngine_include.h"
+#include "fMRIEngine_include.h"
 #include <QMessageBox>
 #include <QKeyEvent>
 #include <QDebug> 
