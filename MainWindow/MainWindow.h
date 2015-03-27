@@ -14,6 +14,7 @@
 #include <QWheelEvent>
 //qt string class
 #include <QString>
+#include <QStringList>
 //BOLD head
 #include "SubWidgetParadigmInBold.h"
 
@@ -45,8 +46,6 @@
 #include "vtkImageReslice.h"
 #include "vtkWindowLevelLookupTable.h"
 #include "vtkImageMapToColors.h"
-//image fusion
-#include "vtkImageBlend.h"
 
 //include my image convert class
 #include "ImageConvert.h"
@@ -80,6 +79,7 @@ private slots:
 	void on_click_del_mask();
 	void on_slider_volume_move(int);
 	void on_slider_opicity_move(int);
+	void on_slider_strip_val_move(int);
 	void info_Panel_Scroll();
 	void mouse_Wheel_move(QWheelEvent *e);
 	void init_Parameters();
@@ -90,6 +90,7 @@ private:
 
 	//file names
 	QString file_name;
+	QStringList file_name_list;
 
 	//first: name; second: vtkImageData
 	typedef std::pair<std::string, vtkSmartPointer<vtkImageData> > img_view_base_Type;

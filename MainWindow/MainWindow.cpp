@@ -22,6 +22,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	//slider bar
 	connect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
 	connect(this->ui->set_opicity_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_opicity_move(int)));
+	connect(this->ui->strip_val_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_strip_val_move(int)));
+
 	//connect signal to enable atuo-scroll in info panel
 	connect(this->ui->info_Panel,SIGNAL(cursorPositionChanged()),this,SLOT(info_Panel_Scroll()));
 
@@ -69,34 +71,40 @@ void MainWindow::init_Parameters()
 	//init opicity slider bar
 	this->ui->set_opicity_Slider->setRange(0,100);
 	this->ui->set_opicity_Slider->setValue(50);
+	//init strip value slider bar
+	this->ui->strip_val_Slider->setRange(0,1500);
+	this->ui->strip_val_Slider->setValue(1500);
 }
 
 void MainWindow::on_click_load()
 {
 	disconnect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
-	this->file_name = 
-		QFileDialog::getOpenFileName(this,
+	this->file_name_list = 
+		QFileDialog::getOpenFileNames(this,
 		tr("open log file"),"./",tr("(*)"));
-	if (file_name.isEmpty()){return;}
+	if (file_name_list.isEmpty()){return;}
 
-	std::string filenamexx = this->file_name.toStdString();
-	print_Info("Load Image:  ",file_name);
+	for (int i=0;i<file_name_list.size();i++)
+	{
+		this->file_name = file_name_list[i];
+		std::string filenamexx = this->file_name.toStdString();
+		print_Info("Load Image:  ",file_name);
 
-	Image_Convert_Base* img_reader = new Image_Convert_Base;
-	img_reader->SetFileName(filenamexx);
+		Image_Convert_Base* img_reader = new Image_Convert_Base;
+		img_reader->SetFileName(filenamexx);
 
-	img_view_base_Type temp_img;
-	temp_img.first = filenamexx;
-	temp_img.second = img_reader->GetOutput();
-	delete img_reader;
+		img_view_base_Type temp_img;
+		temp_img.first = filenamexx;
+		temp_img.second = img_reader->GetOutput();
+		delete img_reader;
 
-	print_Info("Image Scalar Number: ",QString::number(temp_img.second->GetNumberOfScalarComponents()));
+		print_Info("Image Scalar Number: ",QString::number(temp_img.second->GetNumberOfScalarComponents()));
 
-	this->img_to_view = temp_img;
-	this->data_container.push_back(temp_img);
+		this->img_to_view = temp_img;
+		this->data_container.push_back(temp_img);
+	}
+
 	this->set_slider_volume_range(this->data_container.size());
-	this->ui->min_vol_Lab->setText("1");
-	this->ui->max_vol_Lab->setText(QString::number(this->data_container.size()));
 
 	connect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
 }
@@ -199,30 +207,35 @@ void MainWindow::on_click_mask()
 	lookup_table->SetRange(0.0,300.0);
 	lookup_table->SetValueRange(0,1);
 	lookup_table->SetRampToLinear();
-	lookup_table->SetSaturationRange(0.0,0.0);
-	//lookup_table->SetTableValue(0,0.0,0.0,0.0,0.0);//label 0 is transparent
-	//lookup_table->SetTableValue(1,0.0,1.0,0.0,1.0);//label 1 is opaque and green
-	//lookup_table->SetTableValue(2,0.0,1.0,0.0,0.0);//label 2 is opaque and green
+	//lookup_table->SetSaturationRange(0.0,0.0);
+	lookup_table->SetTableValue(0,0.0,0.0,0.0,0.0);//label 0 is transparent
+	lookup_table->SetTableValue(1,0.0,1.0,0.0,1.0);//label 1 is opaque and green
+	lookup_table->SetTableValue(2,0.0,1.0,0.0,0.0);//label 2 is opaque and green
 	lookup_table->Build();
 	//setup color map
 	color_map->SetLookupTable(lookup_table);
 	color_map->SetInput(this->mask_img.second);
 	color_map->Update();
 
-	vtkSmartPointer<vtkImageBlend> imBlender = 
-		vtkSmartPointer<vtkImageBlend>::New();
-	imBlender->SetOpacity(0,1);
-	imBlender->SetOpacity(1,0.3);
-	imBlender->AddInput(this->img_to_view.second);
-	imBlender->AddInput(color_map->GetOutput());
-	imBlender->Update();
-	vtkSmartPointer<vtkImageData> temp = 
-		vtkSmartPointer<vtkImageData>::New();
-	temp = imBlender->GetOutput();
+	////////////////////
+	vtkSmartPointer<vtkMarchingCubes> marchingCubes 
+		= vtkSmartPointer<vtkMarchingCubes>::New();
+	vtkSmartPointer<vtkActor> actor 
+		= vtkSmartPointer<vtkActor>::New();
 
-	view_axial->Set_View_Img(temp);
-	view_cornoal->Set_View_Img(temp);
-	view_saggital->Set_View_Img(temp);
+	//change information
+	
+
+	marchingCubes->SetInput(this->mask_img.second);
+	marchingCubes->SetValue(0,500);
+	vtkSmartPointer<vtkDataSetMapper> mapper = 
+		vtkSmartPointer<vtkDataSetMapper>::New();
+	mapper->SetInput(this->mask_img.second);
+	actor->SetMapper(mapper);
+	actor->GetProperty()->SetOpacity(0.5);
+	actor->GetProperty()->SetColor(1,1,0);
+	view_axial->img_viewer2->GetRenderer()->AddActor(actor);
+
 }
 void MainWindow::on_click_del_mask()
 {
@@ -261,7 +274,18 @@ void MainWindow::on_slider_opicity_move(int posxx)
 	this->new_3d_view->Set_Opicity(opicity);
 	this->ui->ster_3d_view_widget->GetRenderWindow()->Render();
 }
+void MainWindow::on_slider_strip_val_move(int)
+{
+	int pos = this->ui->strip_val_Slider->value();
+	double strip_val = pos;
+	print_Info("strip value is : ", QString::number(strip_val));
 
+	if (this->new_3d_view == NULL)   {return;}
+
+	this->new_3d_view->Set_Cube_Value(strip_val);
+	this->new_3d_view->Re_Construct();
+	this->ui->ster_3d_view_widget->GetRenderWindow()->Render();
+}
 
 void MainWindow::mouse_Wheel_move(QWheelEvent *e)
 {
@@ -310,6 +334,10 @@ void MainWindow::set_slider_volume_range(int num)
 {
 	this->ui->view_vol_Slider->setMinimum(1);
 	this->ui->view_vol_Slider->setMaximum(num);
+
+	//set display number
+	this->ui->min_vol_Lab->setText("1");
+	this->ui->max_vol_Lab->setText(QString::number(this->data_container.size()));
 }
 void MainWindow::set_data_container(vector<img_view_base_Type >  da_con)
 {

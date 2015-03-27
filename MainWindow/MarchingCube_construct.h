@@ -30,10 +30,12 @@ public:
 	void Set_Input_Img(vtkSmartPointer<vtkImageData>);
 	void Re_Construct();
 	void Set_View_Window(vtkSmartPointer<vtkRenderWindow>);
-	void Set_Opicity(float);
+	void Set_Opicity(double);
+	void Set_Cube_Value(double); 
 
 	//public parameters
-	float opicity;
+	double opicity;
+	double value_cube;
 
 private:
 
