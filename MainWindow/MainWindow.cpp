@@ -160,20 +160,6 @@ void MainWindow::on_click_show()
 	view_saggital_reslice->RenderView();
 	view_axial_reslice->Set_View_Img(this->img_to_view.second);
 	view_axial_reslice->RenderView();
-
-
-	//typedef GetRegionTimecourse
-	vtkGetTimeCourse<float>* get_region_timecourse=new vtkGetTimeCourse<float>;
-	for (int i=0;i<data_container.size();i++)
-	{
-		get_region_timecourse->Add_Data(data_container[i].second);
-	}
-	//get_region_timecourse->SetLabelMap(this->mask_img.second);
-	//get_region_timecourse->SetSearchValue(196);
-	std::vector<float> timecourse;
-	int ccc[3] = {10,30,50};
-	get_region_timecourse->GetTimeCourse(ccc);
-	timecourse = get_region_timecourse->TimeCourse;
 }
 
 void MainWindow::on_click_show3d()

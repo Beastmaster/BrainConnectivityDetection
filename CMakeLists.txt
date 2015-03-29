@@ -29,6 +29,7 @@ add_subdirectory(qcustomplot)
 add_subdirectory(registration)
 add_subdirectory(SubWidgetBold)
 add_subdirectory(MainWindow)
+add_subdirectory(PearsonCorrelation)
 
 add_executable(FMRI_TEST main.cpp)
 
@@ -37,6 +38,7 @@ target_link_libraries(FMRI_TEST Dialog_Advance)
 target_link_libraries(FMRI_TEST qcustomplot)
 target_link_libraries(FMRI_TEST fmriEngine)
 target_link_libraries(FMRI_TEST MainWindow)
+target_link_libraries(FMRI_TESTPearsonCorrelationMethod)
 
 #itk_register
 #itkStripTsImageFilter
