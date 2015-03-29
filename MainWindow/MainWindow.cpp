@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
-
+#include "vtkGetTimecourse.h"
+#include "vtkGetTimecourse.cpp"
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -108,6 +109,14 @@ void MainWindow::on_click_load()
 
 		print_Info("Image Scalar Number: ",QString::number(temp_img.second->GetNumberOfScalarComponents()));
 
+		int* dim = new int[3];
+		temp_img.second->GetDimensions(dim);
+		print_Info("Dimension: ",QString::number(*dim),QString::number(dim[1]),QString::number(dim[2]));
+
+		double* ori = new double[3];
+		temp_img.second->GetOrigin(ori);
+		print_Info("Origin: ",QString::number(*ori),QString::number(ori[1]),QString::number(ori[2]));
+
 		this->img_to_view = temp_img;
 		this->data_container.push_back(temp_img);
 	}
@@ -152,6 +161,19 @@ void MainWindow::on_click_show()
 	view_axial_reslice->Set_View_Img(this->img_to_view.second);
 	view_axial_reslice->RenderView();
 
+
+	//typedef GetRegionTimecourse
+	vtkGetTimeCourse<float>* get_region_timecourse=new vtkGetTimeCourse<float>;
+	for (int i=0;i<data_container.size();i++)
+	{
+		get_region_timecourse->Add_Data(data_container[i].second);
+	}
+	//get_region_timecourse->SetLabelMap(this->mask_img.second);
+	//get_region_timecourse->SetSearchValue(196);
+	std::vector<float> timecourse;
+	int ccc[3] = {10,30,50};
+	get_region_timecourse->GetTimeCourse(ccc);
+	timecourse = get_region_timecourse->TimeCourse;
 }
 
 void MainWindow::on_click_show3d()
@@ -222,11 +244,21 @@ void MainWindow::on_click_add_mask_file()
 	temp_img.first = filenamexx;
 	temp_img.second = img_reader->GetOutput();
 
+	//reslice mask image to adjust 
+	vtkSmartPointer<vtkImageReslice> resample =
+		vtkSmartPointer<vtkImageReslice>::New();
+	resample->SetInput(temp_img.second);
+	resample->SetOutputSpacing(this->img_to_view.second->GetSpacing());
+	resample->SetOutputExtent(this->img_to_view.second->GetExtent());
+	resample->SetInterpolationModeToLinear();
+	resample->Update();
+
 	this->mask_img = temp_img;
-	if (this->view_axial_reslice!=NULL)
-	{
-		this->view_axial_reslice->Set_Mask_Img(this->mask_img.second);
-	}
+
+	print_Info("Load Mask Image:  ",
+		QString::number(*temp_img.second->GetDimensions()),
+		QString::number(*temp_img.second->GetDimensions()+1),
+		QString::number(*temp_img.second->GetDimensions()+2));
 }
 void MainWindow::on_click_mask()
 {	
@@ -252,14 +284,17 @@ void MainWindow::on_click_mask()
 	color_map->SetInput(this->mask_img.second);
 	color_map->Update();
 
+	vtkSmartPointer<vtkImageBlend> imageBlend = vtkSmartPointer<vtkImageBlend>::New();
+	imageBlend->SetInput(0,mask_img.second);
+	mask_img.second->SetOrigin(img_to_view.second->GetOrigin());
 
-	vtkSmartPointer<vtkDataSetMapper> mapper = 
-		vtkSmartPointer<vtkDataSetMapper>::New();
-	mapper->SetInput(this->mask_img.second);
+	imageBlend->SetInput(1,img_to_view.second);
+	imageBlend->SetOpacity(0,0.5);
+	imageBlend->SetOpacity(1,0.5);
+	imageBlend->Update();
+	vtkSmartPointer<vtkImageData> temp = vtkSmartPointer<vtkImageData>::New();
+	img_to_view.second->DeepCopy(imageBlend->GetOutput());
 
-
-	//this->view_axial_reslice->new_render->AddActor(axial_mask_Actor);
-	view_axial_reslice->Set_Mask_Img(mask_img.second);
 	view_axial_reslice->RenderView();
 
 }
@@ -334,6 +369,15 @@ void MainWindow::print_Info(QString in,QString x)
 {
 	QString temp = in;
 	temp.append(x);
+	temp.append("\n");
+	ui->info_Panel->insertPlainText(temp);
+}
+void MainWindow::print_Info(QString in,QString x,QString y,QString z)
+{
+	QString temp = in;
+	temp.append(x);
+	temp.append(y);
+	temp.append(z);
 	temp.append("\n");
 	ui->info_Panel->insertPlainText(temp);
 }

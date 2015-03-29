@@ -46,6 +46,7 @@
 #include "vtkImageReslice.h"
 #include "vtkWindowLevelLookupTable.h"
 #include "vtkImageMapToColors.h"
+
 // my class
 #include "ResliceView.h"
 
@@ -108,7 +109,7 @@ private:
 	void set_data_container(vector<img_view_base_Type > );
 	void refresh_view();
 	void print_Info(QString,QString); 
-
+	void print_Info(QString,QString,QString,QString);
 
 	//qt vtk views
 	vtkimageview2_base* view_axial;

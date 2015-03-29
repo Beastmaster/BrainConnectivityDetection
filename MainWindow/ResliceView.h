@@ -34,11 +34,11 @@ public:
 	reslice_view_base(vtkRenderWindow*,char);
 	~reslice_view_base();
 
-	void SetSlice(int x) {this->slice_n = x;};
+	void SetSlice(int x) {this->slice_n = x;};//useless
 	void Set_View_Img(vtkSmartPointer<vtkImageData>);
-	void Set_Mask_Img(vtkSmartPointer<vtkImageData>);
+	//void Set_Mask_Img(vtkSmartPointer<vtkImageData>);
 	void RenderView();
-	int Slice_Position;
+	int Slice_Position;//useless
 
 	vtkSmartPointer<vtkRenderer> new_render;
 	vtkSmartPointer<vtkRenderWindow> view_window;

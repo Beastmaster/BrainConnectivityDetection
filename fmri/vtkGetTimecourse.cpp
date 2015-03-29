@@ -29,28 +29,30 @@ void vtkGetTimeCourse<PointDataType>::Add_Data(std::vector< vtkSmartPointer < vt
 
 
 template <typename PointDataType>
-std::vector< PointDataType > vtkGetTimeCourse<PointDataType>::GetTimeCourse(int* coor)
+void vtkGetTimeCourse<PointDataType>::GetTimeCourse(int* coor)
 {
 	std::vector< PointDataType > timecourse_temp;
 	//iterator through data container to get time course
-	for (std::vector<int*>::iterator data_ite = this->data_container.begin(); 
+	for (std::vector<vtkSmartPointer<vtkImageData> >::iterator data_ite = this->data_container.begin(); 
 		data_ite!=this->data_container.end(); data_ite++ )
 	{
-		timecourse_temp.push_back(this->AccessPointData(coor));
+		timecourse_temp.push_back(this->AccessPointData(coor,*data_ite));
 	}
-	return timecourse_temp;
+	this->TimeCourse = timecourse_temp;
 }
 
 
 
 template <typename PointDataType>
-std::vector< PointDataType > vtkGetTimeCourse<PointDataType>:: GetTimeCourse(std::vector<int*> coor_vector)
+void  vtkGetTimeCourse<PointDataType>:: GetRegionTimeCourse()
 {
+	std::vector<int*> coor_vector = overlay_region;
+
 	//get region size , used to get mean
 	int region_size = coor_vector.size();
 
 	//temp vector to hold timecourse
-	std::vector< int > timecourse_temp;
+	std::vector< PointDataType > timecourse_temp;
 
 	for (std::vector< vtkSmartPointer<vtkImageData> >::iterator data_tem = data_container.begin();
 		data_tem!=data_container.end();data_tem++)
@@ -63,11 +65,41 @@ std::vector< PointDataType > vtkGetTimeCourse<PointDataType>:: GetTimeCourse(std
 			total_pixel_value += 
 				this->AccessPointData((*coor_tem),*data_tem);
 		}
-		timecourse_temp.push_back(total_pixel_value);
+		timecourse_temp.push_back(total_pixel_value/region_size);
 	}
 
-	return timecourse_temp;
+	this->TimeCourse = timecourse_temp;
 }
+
+template <typename PointDataType>
+void vtkGetTimeCourse<PointDataType>::SetSearchValue(PointDataType value_to_search)
+{
+	int imgDim[3];
+	int vol=0;
+
+	this->label_map->GetDimensions(imgDim);
+
+	for (int kk = 0; kk < imgDim[2]; kk++)
+	{
+		for (int jj = 0; jj < imgDim[1]; jj++)
+		{
+			for (int ii = 0; ii < imgDim[0]; ii++)
+			{
+				float *value =(float *)label_map->GetScalarPointer(ii,jj,kk);
+				if (*value == value_to_search)
+				{
+					int* coor_temp = new int[3];
+					coor_temp[0] = ii;
+					coor_temp[1] = jj;
+					coor_temp[2] = kk;
+					overlay_region.push_back(coor_temp);
+				}
+			}
+		}
+	}
+}
+
+
 
 //get pixel data of a vtkimagedata
 template <typename PointDataType>
@@ -76,13 +108,15 @@ PointDataType vtkGetTimeCourse<PointDataType>::AccessPointData(int* coor,const v
 	int dims[3];
 	data->GetDimensions(dims);
 
+	std::cout<<coor[0]<<coor[1]<<coor[2]<<std::endl;
+
 	//get if out of region
 	for (int i = 0;i<3;i++)
 	{
-		if (coor[i]>dims[i])
+		if (coor[i]>=dims[i])
 		{
 			std::cerr<<"pixel out of range"<<std::endl;
-			return;
+			return 0;
 		}
 	}
 

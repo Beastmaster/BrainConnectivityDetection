@@ -62,21 +62,21 @@ void reslice_view_base::Set_View_Img(vtkSmartPointer<vtkImageData> img)
 	this->calculate_img_center(img_to_view);
 }
 
-void reslice_view_base::Set_Mask_Img(vtkSmartPointer<vtkImageData> img)
-{
-	this->img_to_mask = vtkSmartPointer<vtkImageData>::New();
-	this->img_to_mask = img;
-
-	vtkSmartPointer<vtkImageBlend> imageBlend = vtkSmartPointer<vtkImageBlend>::New();
-	imageBlend->SetInput(0,img_to_mask);
-	imageBlend->SetInput(1,img_to_view);
-	imageBlend->SetOpacity(0,0.5);
-	imageBlend->SetOpacity(1,0.5);
-	imageBlend->Update();
-	vtkSmartPointer<vtkImageData> temp = vtkSmartPointer<vtkImageData>::New();
-	img_to_view->DeepCopy(imageBlend->GetOutput());
-
-}
+//void reslice_view_base::Set_Mask_Img(vtkSmartPointer<vtkImageData> img)
+//{
+//	this->img_to_mask = vtkSmartPointer<vtkImageData>::New();
+//	this->img_to_mask = img;
+//
+//	vtkSmartPointer<vtkImageBlend> imageBlend = vtkSmartPointer<vtkImageBlend>::New();
+//	imageBlend->SetInput(0,img_to_mask);
+//	imageBlend->SetInput(1,img_to_view);
+//	imageBlend->SetOpacity(0,0.5);
+//	imageBlend->SetOpacity(1,0.5);
+//	imageBlend->Update();
+//	vtkSmartPointer<vtkImageData> temp = vtkSmartPointer<vtkImageData>::New();
+//	img_to_view->DeepCopy(imageBlend->GetOutput());
+//
+//}
 
 void reslice_view_base::Set_Window(vtkRenderWindow* win)
 {

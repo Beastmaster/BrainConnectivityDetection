@@ -42,6 +42,11 @@ public:
 	vtkGetTimeCourse();
 	~vtkGetTimeCourse();
 
+	//add label map
+	void SetLabelMap(vtkSmartPointer< vtkImageData > im) {this->label_map = im;};
+	//set label value to search, put coordinate to overlay region
+	void SetSearchValue(PointDataType);
+
 	//add data to data_container
 	void Add_Data( vtkSmartPointer<vtkImageData> xx) {data_container.push_back(xx);};
 	void Add_Data( std::vector< vtkSmartPointer < vtkImageData> > );
@@ -49,9 +54,11 @@ public:
 	//detect empty of data container
 	bool is_Data_Container_Empty() { return  this->data_container.empty();};
 
-	std::vector< PointDataType > GetTimeCourse(int*);
-	std::vector< PointDataType > GetTimeCourse(std::vector<int*>);
-
+	//get time course of a certain point int[3]: coordinate
+	void GetTimeCourse(int*);
+	//std::vector< PointDataType > GetTimeCourse(std::vector<int*>);
+	void GetRegionTimeCourse();
+	std::vector< PointDataType > TimeCourse;
 
 private:
 	PointDataType AccessPointData(int*,const vtkSmartPointer<vtkImageData>);
@@ -59,6 +66,8 @@ private:
 protected:
 	//hold all vtk image data
 	std::vector< vtkSmartPointer<vtkImageData> > data_container;
+	//hold label map
+	vtkSmartPointer< vtkImageData >              label_map;
 	//hold region coordinate
 	std::vector<int*>							 overlay_region;
 };
