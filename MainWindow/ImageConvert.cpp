@@ -39,9 +39,16 @@ vtkSmartPointer<vtkImageData> Image_Convert_Base::GetOutput()
 		i2vConnectorType::Pointer connector = i2vConnectorType::New();
 		connector->SetInput(reader->GetOutput());
 		connector->Update();
+
+		vtkSmartPointer<vtkImageCast> img_caster = 
+			vtkSmartPointer<vtkImageCast>::New();
+		img_caster->SetInput(connector->GetOutput());
+		img_caster->SetOutputScalarTypeToFloat();
+		img_caster->Update();
+
 		vtkSmartPointer<vtkImageData> return_img = 
 			vtkSmartPointer<vtkImageData>::New();
-		return_img->DeepCopy(connector->GetOutput());
+		return_img->DeepCopy(img_caster->GetOutput());
 		return return_img;
 	}
 	else if (file_suffix == ".mha")
@@ -50,9 +57,17 @@ vtkSmartPointer<vtkImageData> Image_Convert_Base::GetOutput()
 			vtkSmartPointer<vtkMetaImageReader>::New();
 		img_reader->SetFileName(file_name.data());
 		img_reader->Update();
+
+		vtkSmartPointer<vtkImageCast> img_caster = 
+			vtkSmartPointer<vtkImageCast>::New();
+		img_caster->SetInput(img_reader->GetOutput());
+		img_caster->SetOutputScalarTypeToFloat();
+		img_caster->Update();
+
 		vtkSmartPointer<vtkImageData> return_img = 
 			vtkSmartPointer<vtkImageData>::New();
-		return_img->DeepCopy(img_reader->GetOutput());
+		return_img->DeepCopy(img_caster->GetOutput());
+
 		return return_img;
 	}
 

@@ -46,6 +46,8 @@
 #include "vtkImageReslice.h"
 #include "vtkWindowLevelLookupTable.h"
 #include "vtkImageMapToColors.h"
+// my class
+#include "ResliceView.h"
 
 //include my image convert class
 #include "ImageConvert.h"
@@ -53,7 +55,8 @@
 //include my construct
 #include "MarchingCube_construct.h"
 
-class slice_view_base;
+
+class vtkimageview2_base;
 
 namespace Ui {
 class MainWindow;
@@ -108,9 +111,17 @@ private:
 
 
 	//qt vtk views
-	slice_view_base* view_axial;
-	slice_view_base* view_cornoal;
-	slice_view_base* view_saggital;
+	vtkimageview2_base* view_axial;
+	vtkimageview2_base* view_cornoal;
+	vtkimageview2_base* view_saggital;
+
+
+	//
+	reslice_view_base* view_axial_reslice;
+	reslice_view_base* view_cornoal_reslice;
+	reslice_view_base* view_saggital_reslice;
+
+	//marching cube class base
 	construct_base* new_3d_view;
 
 	//vtk image views
@@ -125,13 +136,13 @@ private:
 };
 
 
-class slice_view_base : QObject
+class vtkimageview2_base : QObject
 {
 	Q_OBJECT
 public:
-	explicit slice_view_base(QWidget *parent = 0);
-	slice_view_base(vtkRenderWindow*,char);
-	~slice_view_base();
+	explicit vtkimageview2_base(QWidget *parent = 0);
+	vtkimageview2_base(vtkRenderWindow*,char);
+	~vtkimageview2_base();
 
 	void SetSlice(int x) {this->slice_n = x;};
 	void Set_View_Img(vtkSmartPointer<vtkImageData>);
@@ -168,11 +179,11 @@ private:
 	vtkSmartPointer<vtkEventQtSlotConnect> m_Connections_mouse_forward;
 };
 
-class new_interactor_style : public vtkInteractorStyleImage
+class interactor_style_viewer2 : public vtkInteractorStyleImage
 {
 public:
-	static new_interactor_style* New();
-	vtkTypeMacro(new_interactor_style, vtkInteractorStyleImage);
+	static interactor_style_viewer2* New();
+	vtkTypeMacro(interactor_style_viewer2, vtkInteractorStyleImage);
 
 	void OnMouseWheelBackward() {};
 	void OnMouseWheelForward() {};

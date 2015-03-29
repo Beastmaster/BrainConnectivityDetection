@@ -43,15 +43,16 @@ MainWindow::~MainWindow()
 	if (this->view_axial!=NULL)
 	{
 		delete view_axial;
-	}
-	if (this->view_cornoal!=NULL)
-	{
 		delete view_cornoal;
-	}
-	if (this->view_saggital!=NULL)
-	{
 		delete view_saggital;
 	}
+	if (this->view_cornoal_reslice!=NULL)
+	{
+		delete view_axial_reslice;
+		delete view_cornoal_reslice;
+		delete view_saggital_reslice;
+	}
+
 	delete ui;
 }
 
@@ -60,13 +61,20 @@ void MainWindow::init_Parameters()
 	view_saggital = NULL;
 	view_cornoal  = NULL;
 	view_axial    = NULL;
+	
+	view_axial_reslice = NULL;
+	view_cornoal_reslice = NULL;
+	view_saggital_reslice = NULL;
+
+	
 	bold_win      = NULL;
 	new_3d_view   = NULL;
 
-	////add render to view
-	//view_saggital = new slice_view_base(this->ui->sagittal_view_widget->GetRenderWindow(),'s');
-	//view_cornoal  = new slice_view_base(this->ui->coronal_view_widget->GetRenderWindow(),'c');
-	//view_axial    = new slice_view_base(this->ui->axial_view_widget->GetRenderWindow(),'a');
+
+	//actor for mask
+	axial_mask_Actor   = NULL;
+	coronal_mask_Actor = NULL;
+	sagittal_mask_Actor= NULL;
 
 	//init opicity slider bar
 	this->ui->set_opicity_Slider->setRange(0,100);
@@ -124,17 +132,26 @@ void MainWindow::on_click_show()
 		delete view_cornoal;
 		delete view_saggital;
 	}
-	view_saggital = new slice_view_base(this->ui->sagittal_view_widget->GetRenderWindow(),'s');
-	view_cornoal  = new slice_view_base(this->ui->coronal_view_widget->GetRenderWindow(),'c');
-	view_axial    = new slice_view_base(this->ui->axial_view_widget->GetRenderWindow(),'a');
+	if (view_axial_reslice != NULL)
+	{
+		delete view_axial_reslice;
+		delete view_cornoal_reslice;
+		delete view_saggital_reslice;
+	}
+	view_saggital_reslice = new reslice_view_base(this->ui->sagittal_view_widget->GetRenderWindow(),'s');
+	view_cornoal_reslice  = new reslice_view_base(this->ui->coronal_view_widget->GetRenderWindow(),'c');
+	view_axial_reslice    = new reslice_view_base(this->ui->axial_view_widget->GetRenderWindow(),'a');
 
-	view_axial->Set_View_Img(this->img_to_view.second);
-	view_axial->RenderView(0);
-	view_cornoal->Set_View_Img(this->img_to_view.second);
-	view_cornoal->RenderView(0);
-	view_saggital->Set_View_Img(this->img_to_view.second);
-	view_saggital->RenderView(0);
-	ui->gridLayout->setEnabled(true);
+	//add mask first
+	view_cornoal_reslice->Set_View_Img(this->img_to_view.second);
+	view_cornoal_reslice->RenderView();
+	view_cornoal_reslice->Set_View_Img(this->img_to_view.second);
+	view_cornoal_reslice->RenderView();
+	view_saggital_reslice->Set_View_Img(this->img_to_view.second);
+	view_saggital_reslice->RenderView();
+	view_axial_reslice->Set_View_Img(this->img_to_view.second);
+	view_axial_reslice->RenderView();
+
 }
 
 void MainWindow::on_click_show3d()
@@ -155,12 +172,26 @@ void MainWindow::on_click_show3d()
 void MainWindow::refresh_view()
 {
 	//refresh 2d views
-	view_axial->Set_View_Img(this->img_to_view.second);
-	view_axial->RenderView(10);
-	view_cornoal->Set_View_Img(this->img_to_view.second);
-	view_cornoal->RenderView(13);
-	view_saggital->Set_View_Img(this->img_to_view.second);
-	view_saggital->RenderView(10);
+	if (view_axial !=NULL)
+	{
+		view_axial->Set_View_Img(this->img_to_view.second);
+		view_axial->RenderView(10);
+		view_cornoal->Set_View_Img(this->img_to_view.second);
+		view_cornoal->RenderView(13);
+		view_saggital->Set_View_Img(this->img_to_view.second);
+		view_saggital->RenderView(10);
+	}
+	if (view_axial_reslice!=NULL)
+	{
+		view_axial_reslice->Set_View_Img(this->img_to_view.second);
+		view_axial_reslice->RenderView();
+		view_cornoal_reslice->Set_View_Img(this->img_to_view.second);
+		view_cornoal_reslice->RenderView();
+		view_saggital_reslice->Set_View_Img(this->img_to_view.second);
+		view_saggital_reslice->RenderView();
+	}
+	
+	
 	//refresh 3d view
 	new_3d_view->Set_Input_Img(this->img_to_view.second);
 	new_3d_view->Re_Construct();
@@ -192,6 +223,10 @@ void MainWindow::on_click_add_mask_file()
 	temp_img.second = img_reader->GetOutput();
 
 	this->mask_img = temp_img;
+	if (this->view_axial_reslice!=NULL)
+	{
+		this->view_axial_reslice->Set_Mask_Img(this->mask_img.second);
+	}
 }
 void MainWindow::on_click_mask()
 {	
@@ -217,24 +252,15 @@ void MainWindow::on_click_mask()
 	color_map->SetInput(this->mask_img.second);
 	color_map->Update();
 
-	////////////////////
-	vtkSmartPointer<vtkMarchingCubes> marchingCubes 
-		= vtkSmartPointer<vtkMarchingCubes>::New();
-	vtkSmartPointer<vtkActor> actor 
-		= vtkSmartPointer<vtkActor>::New();
 
-	//change information
-	
-
-	marchingCubes->SetInput(this->mask_img.second);
-	marchingCubes->SetValue(0,500);
 	vtkSmartPointer<vtkDataSetMapper> mapper = 
 		vtkSmartPointer<vtkDataSetMapper>::New();
 	mapper->SetInput(this->mask_img.second);
-	actor->SetMapper(mapper);
-	actor->GetProperty()->SetOpacity(0.5);
-	actor->GetProperty()->SetColor(1,1,0);
-	view_axial->img_viewer2->GetRenderer()->AddActor(actor);
+
+
+	//this->view_axial_reslice->new_render->AddActor(axial_mask_Actor);
+	view_axial_reslice->Set_Mask_Img(mask_img.second);
+	view_axial_reslice->RenderView();
 
 }
 void MainWindow::on_click_del_mask()
@@ -359,7 +385,7 @@ void MainWindow::set_data_container(vector<img_view_base_Type >  da_con)
 
 
 //--------new slice view class: new view method------//
-slice_view_base::slice_view_base(vtkRenderWindow* winx,char a)
+vtkimageview2_base::vtkimageview2_base(vtkRenderWindow* winx,char a)
 {
 	// init para
 	this->Set_Direction(a);
@@ -385,8 +411,8 @@ slice_view_base::slice_view_base(vtkRenderWindow* winx,char a)
 	new_render = vtkSmartPointer<vtkRenderer>::New();
 	this->view_window->AddRenderer(this->new_render);
 	//set default interact null
-	vtkSmartPointer<new_interactor_style> new_act_style = 
-		vtkSmartPointer<new_interactor_style>::New();
+	vtkSmartPointer<interactor_style_viewer2> new_act_style = 
+		vtkSmartPointer<interactor_style_viewer2>::New();
 	this->view_window->GetInteractor()->SetInteractorStyle(new_act_style);
 
 	//view2 init
@@ -418,7 +444,7 @@ slice_view_base::slice_view_base(vtkRenderWindow* winx,char a)
 	}
 }
 //destructor method: use vtksmartpointer so no need to delete
-slice_view_base::~slice_view_base()
+vtkimageview2_base::~vtkimageview2_base()
 {
 	m_Connections_mouse_back->Disconnect(this->view_window->GetInteractor(),
 		vtkCommand::MouseWheelBackwardEvent,this,SLOT(on_scroll_mouse_back(vtkObject*)));
@@ -430,7 +456,7 @@ slice_view_base::~slice_view_base()
 	delete[] this->view_dirZ;
 }
 //render the x th slice in a 3D image
-int slice_view_base::RenderView(int x)
+int vtkimageview2_base::RenderView(int x)
 {
 	this->slice_n = x;
 	img_viewer2->SetSlice(this->slice_n);
@@ -439,7 +465,7 @@ int slice_view_base::RenderView(int x)
 	return x;
 }
 // private method: set view direction
-void slice_view_base::Set_Direction(char x)
+void vtkimageview2_base::Set_Direction(char x)
 {
 	this->direction = x ;
 	switch (x)
@@ -487,7 +513,7 @@ void slice_view_base::Set_Direction(char x)
 	}
 }
 // default method: add imag to view to view widget
-void slice_view_base::Set_View_Img(vtkSmartPointer<vtkImageData> img)
+void vtkimageview2_base::Set_View_Img(vtkSmartPointer<vtkImageData> img)
 {
 	this->img_to_view = img;
 	this->img_viewer2->SetInput(img_to_view);
@@ -496,13 +522,13 @@ void slice_view_base::Set_View_Img(vtkSmartPointer<vtkImageData> img)
 	std::cout<<"dimension is :"<<dimensions[0]<<dimensions[1]<<dimensions[2]<<std::endl;
 }
 //private method: add widget window to render
-void slice_view_base::Set_Window(vtkRenderWindow* win)
+void vtkimageview2_base::Set_Window(vtkRenderWindow* win)
 {
 	this->view_window = vtkSmartPointer<vtkRenderWindow>::New();
 	this->view_window = win;
 }
 //private method: calculate imge center of a 3D image
-double* slice_view_base::calculate_img_center(vtkSmartPointer<vtkImageData> img)
+double* vtkimageview2_base::calculate_img_center(vtkSmartPointer<vtkImageData> img)
 {
 	double spacing[3];
 	double origin[3];
@@ -521,7 +547,7 @@ double* slice_view_base::calculate_img_center(vtkSmartPointer<vtkImageData> img)
 	return center;
 }
 //slots: when mouse wheel scroll back, next slice of image show
-void slice_view_base::on_scroll_mouse_back(vtkObject* obj)
+void vtkimageview2_base::on_scroll_mouse_back(vtkObject* obj)
 {
 	vtkSmartPointer<vtkRenderWindowInteractor> iren = 
 		vtkSmartPointer<vtkRenderWindowInteractor>::New();
@@ -586,7 +612,7 @@ void slice_view_base::on_scroll_mouse_back(vtkObject* obj)
 	}
 	this->RenderView(slice_n);
 }
-void slice_view_base::on_scroll_mouse_forward(vtkObject* obj)
+void vtkimageview2_base::on_scroll_mouse_forward(vtkObject* obj)
 {
 	vtkSmartPointer<vtkRenderWindowInteractor> iren = 
 		vtkSmartPointer<vtkRenderWindowInteractor>::New();
@@ -654,4 +680,4 @@ void slice_view_base::on_scroll_mouse_forward(vtkObject* obj)
 
 //this line is badly need to inhert a new class
 //vtkObjectFactory.h must include!
-vtkStandardNewMacro(new_interactor_style);
+vtkStandardNewMacro(interactor_style_viewer2);

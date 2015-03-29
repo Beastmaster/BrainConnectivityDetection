@@ -32,7 +32,8 @@
 #include "vtkImageData.h"
 #include "vtkMetaImageReader.h"
 #include "vtkDICOMImageReader.h"
-
+//cast image to same scalartype
+#include "vtkImageCast.h"
 
 typedef itk::Image< float , 3 >             ImageTypex; //image type pixel:float;dimension:3
 

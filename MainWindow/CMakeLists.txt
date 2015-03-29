@@ -23,6 +23,12 @@ include_directories(
 #include source dir
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
+set(Plain_CXX
+ImageConvert.cpp
+)
+set(Plain_Head
+ImageConvert.h
+)
 
 set(QT_UI_FILES
 MainWindow.ui
@@ -31,16 +37,20 @@ MainWindow.ui
 #qt .h files
 set(QT_HEAD_FILES
 MainWindow.h
+MarchingCube_construct.h
+ResliceView.h
 )
 
 #qt .cxx files
 SET(QT_CXX_FILES
 MainWindow.cpp
+MarchingCube_construct.cpp
+ResliceView.cpp
 )
 
 QT4_WRAP_UI(UISrcs ${QT_UI_FILES})
 QT4_WRAP_CPP(MOCSrcs ${QT_HEAD_FILES})
-add_library(MainWindow ${QT_CXX_FILES} ${UISrcs} ${MOCSrcs} ${QT_HEAD_FILES})
+add_library(MainWindow ${QT_CXX_FILES} ${UISrcs} ${MOCSrcs} ${QT_HEAD_FILES} ${Plain_CXX} ${Plain_Head})
 
 #target_link_libraries(MainWindow widget_bold itk_register qcustomplot fmriEngine itkStripTsImageFilter Dialog_Advance)
 
