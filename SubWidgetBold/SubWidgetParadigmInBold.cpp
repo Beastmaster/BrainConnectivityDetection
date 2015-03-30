@@ -788,17 +788,54 @@ void SubWidgetParadigmInBold::Log2Container(File_info* info,
 	QTextStream in(&this->file);
 	//seek to path
 	in.seek(info->path_position.at(index));
-	//QString to hold file names
-	std::vector< std::vector<std::string> > name_holder(volume_number);
+	//1. put name into a vector
+	std::map<int,std::string> name_to_sort_all;
 	int cnt = 0;
 	while(cnt<slice_number-(slice_number%volume_number))
 	{
+		//example:
+		//C:\Users\USER\Documents\Medical_Images\CHOW,^CHUN^. P8801456_fMRI 10Jun2013\MR_1071.dcm
+		//C:\Users\USER\Documents\Medical_Images\CHOW,^CHUN^. P8801456_fMRI 10Jun2013\MR_1072.dcm
+		//C:/Users/USER/Documents/Medical_Images/Brainpla_281/BOLDacti_3578/MR_10_292357.dcm
+		//C:/Users/USER/Documents/Medical_Images/Brainpla_281/BOLDacti_3578/MR_11_292358.dcm
+		//1. split by "\\", get file name 
+		//2. split file name by ".", get file name without suffix
+		//3. split file name by "_", get order number
 		QString f_name = in.readLine();
-		int xx = cnt%volume_number;
-		name_holder[xx].push_back(f_name.toStdString());
+		QStringList f_name_list;
+		if(f_name.contains("\\"))
+		{
+			f_name_list= f_name.split("\\");
+		}
+		else if (f_name.contains("/"))
+		{
+			f_name_list= f_name.split("/");
+		}
+		else
+		{
+			name_to_sort_all[cnt] = f_name.toStdString();
+			cnt++;
+			return;
+		}
+		QString f_file_name = f_name_list.last().split(".").first();
+		QString f_file_order = f_file_name.split("_").at(1);
+		int order_f = f_file_order.toInt();
+		name_to_sort_all[order_f] = f_name.toStdString();
 		cnt++;
 	}
-	this->file.close();
+	this->file.close();//read DicomSortLists.txt done
+
+
+	//2. put name_to_sort by order
+	std::vector< std::vector<std::string> > name_holder(volume_number);//QString to hold file names
+	int cnt2 = 0;
+	while(cnt2<slice_number-(slice_number%volume_number))
+	{
+		int xx = cnt2%volume_number;
+		name_holder[xx].push_back(name_to_sort_all[cnt2+1]);
+		cnt2++;
+	}
+
 	//to find slice number and volume number match or not
 	if(name_holder.begin()->size()!=name_holder.back().size())
 	{
