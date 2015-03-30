@@ -829,12 +829,19 @@ void SubWidgetParadigmInBold::Log2Container(File_info* info,
 	//2. put name_to_sort by order
 	std::vector< std::vector<std::string> > name_holder(volume_number);//QString to hold file names
 	int cnt2 = 0;
-	while(cnt2<slice_number-(slice_number%volume_number))
+	for (std::map<int,std::string>::iterator it = name_to_sort_all.begin();
+		it!=name_to_sort_all.end();++it)
 	{
-		int xx = cnt2%volume_number;
-		name_holder[xx].push_back(name_to_sort_all[cnt2+1]);
-		cnt2++;
+		if (cnt2<slice_number-(slice_number%volume_number))
+		{
+			int xx = cnt2%volume_number;
+			name_holder[xx].push_back((*it).second);
+			cnt2++;
+		}
+		else
+			continue;
 	}
+
 
 	//to find slice number and volume number match or not
 	if(name_holder.begin()->size()!=name_holder.back().size())
