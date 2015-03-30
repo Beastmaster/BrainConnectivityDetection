@@ -23,15 +23,17 @@ reslice_view_base::reslice_view_base(vtkRenderWindow* winx,char a)
 	this->InteractorStyle = NULL;
 
 	//map vtkaction and qt signal
-	this->m_Connections_mouse_back = vtkSmartPointer<vtkEventQtSlotConnect>::New();
 	m_Connections_mouse_back = vtkSmartPointer<vtkEventQtSlotConnect>::New();
 	m_Connections_mouse_back->Connect(this->view_window->GetInteractor(),
 		vtkCommand::MouseWheelBackwardEvent,this,SLOT(on_scroll_mouse_back(vtkObject*)));
-	this->m_Connections_mouse_forward = vtkSmartPointer<vtkEventQtSlotConnect>::New();
+
 	m_Connections_mouse_forward = vtkSmartPointer<vtkEventQtSlotConnect>::New();
 	m_Connections_mouse_forward->Connect(this->view_window->GetInteractor(),
 		vtkCommand::MouseWheelForwardEvent,this,SLOT(on_scroll_mouse_forward(vtkObject*)));
 
+	m_Connections_mouse_lft_click = vtkSmartPointer<vtkEventQtSlotConnect>::New();
+	m_Connections_mouse_lft_click->Connect(this->view_window->GetInteractor(),
+		vtkCommand::LeftButtonPressEvent, this, SLOT(on_click_mouse_lft(vtkObject*)));
 
 	//renderer init
 	new_render	 = vtkSmartPointer<vtkRenderer>::New();
@@ -324,9 +326,17 @@ void reslice_view_base::on_scroll_mouse_forward(vtkObject* obj)
 	}
 	this->RenderView();
 }
-void reslice_view_base:: on_click_mouse(vtkObject*)
+void reslice_view_base:: on_click_mouse_lft(vtkObject* obj)
 {
+	vtkSmartPointer<vtkRenderWindowInteractor> iren = 
+		vtkSmartPointer<vtkRenderWindowInteractor>::New();
+	//get interactor first
+	iren = vtkRenderWindowInteractor::SafeDownCast(obj);
 
+	int eve_pos[2];
+	iren->GetEventPosition(eve_pos);
+	
+	std::cout<<"click mouse left button "<<eve_pos[0]<<" , "<<eve_pos[1]<<std::endl;
 }
 // private method: set view direction
 void reslice_view_base::Set_Direction(char x)

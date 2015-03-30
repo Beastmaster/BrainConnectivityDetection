@@ -119,8 +119,8 @@ void MainWindow::on_click_load()
 		print_Info("Origin: ",QString::number(*ori),QString::number(ori[1]),QString::number(ori[2]));
 		int* ex = new int [6];
 		temp_img.second->GetExtent(ex);
-		print_Info("Origin: ",QString::number(*ex),QString::number(ex[1]),QString::number(ex[2]));
-		print_Info("Origin: ",QString::number(ex[3]),QString::number(ex[4]),QString::number(ex[5]));
+		print_Info("extent: ",QString::number(*ex),QString::number(ex[1]),QString::number(ex[2]));
+		print_Info("extent: ",QString::number(ex[3]),QString::number(ex[4]),QString::number(ex[5]));
 		
 		this->img_to_view = temp_img;
 		this->data_container.push_back(temp_img);

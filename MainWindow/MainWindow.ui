@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1116</width>
-    <height>811</height>
+    <width>1094</width>
+    <height>822</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -38,80 +38,16 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="horizontalLayoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>620</y>
-      <width>591</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Select Volume</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="min_vol_Lab">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSlider" name="view_vol_Slider">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="max_vol_Lab">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QTextBrowser" name="info_Panel">
-    <property name="geometry">
-     <rect>
-      <x>660</x>
-      <y>220</y>
-      <width>371</width>
-      <height>171</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QWidget" name="gridLayoutWidget_2">
     <property name="geometry">
      <rect>
-      <x>670</x>
+      <x>690</x>
       <y>20</y>
-      <width>321</width>
-      <height>171</height>
+      <width>361</width>
+      <height>231</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout_2">
-     <item row="1" column="0">
-      <widget class="QPushButton" name="show_Btn">
-       <property name="text">
-        <string>show</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QPushButton" name="bold_Btn">
-       <property name="text">
-        <string>Bold</string>
-       </property>
-      </widget>
-     </item>
      <item row="0" column="0">
       <widget class="QPushButton" name="img_load_Btn">
        <property name="text">
@@ -126,6 +62,48 @@
        </property>
       </widget>
      </item>
+     <item row="3" column="1">
+      <widget class="QPushButton" name="clr_mask_Btn">
+       <property name="text">
+        <string>Clear Mask</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QPushButton" name="pushButton">
+       <property name="text">
+        <string>PushButton</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QPushButton" name="register_Btn">
+       <property name="text">
+        <string>Register</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QPushButton" name="bold_Btn">
+       <property name="text">
+        <string>Bold</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QPushButton" name="sel_folder_Btn">
+       <property name="text">
+        <string>SelectDicomFolder</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QPushButton" name="show_Btn">
+       <property name="text">
+        <string>Show</string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="1">
       <widget class="QPushButton" name="mask_Btn">
        <property name="text">
@@ -133,64 +111,147 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QPushButton" name="clr_mask_Btn">
-       <property name="text">
-        <string>Clear Mask</string>
-       </property>
-      </widget>
-     </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="horizontalLayoutWidget_2">
+   <widget class="QWidget" name="verticalLayoutWidget_2">
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>680</y>
-      <width>591</width>
-      <height>41</height>
+      <y>610</y>
+      <width>601</width>
+      <height>151</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Overlay Opicity</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>View Volume</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="min_vol_Lab">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="view_vol_Slider">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="max_vol_Lab">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QSlider" name="set_opicity_Slider">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Strip Value        </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="strip_val_Slider">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Skull Opicity      </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="set_opicity_Slider">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Overlay Opicity  </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="horizontalSlider">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </widget>
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>630</x>
-      <y>190</y>
-      <width>81</width>
-      <height>251</height>
+      <x>690</x>
+      <y>290</y>
+      <width>361</width>
+      <height>221</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
-      <widget class="QLabel" name="label_3">
+      <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>Strip Value</string>
+        <string>File List</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QSlider" name="strip_val_Slider">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
+      <widget class="QListWidget" name="listWidget"/>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="verticalLayoutWidget_3">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>530</y>
+      <width>361</width>
+      <height>221</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Information Panel</string>
        </property>
       </widget>
+     </item>
+     <item>
+      <widget class="QTextBrowser" name="info_Panel"/>
      </item>
     </layout>
    </widget>
@@ -200,7 +261,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1116</width>
+     <width>1094</width>
      <height>31</height>
     </rect>
    </property>

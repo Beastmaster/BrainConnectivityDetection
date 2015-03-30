@@ -46,7 +46,7 @@ public:
 	public slots:
 		void on_scroll_mouse_back(vtkObject*);
 		void on_scroll_mouse_forward(vtkObject*);
-		void on_click_mouse(vtkObject*);
+		void on_click_mouse_lft(vtkObject*);
 private:
 	double view_dirX[3];
 	double view_dirY[3];
@@ -85,6 +85,7 @@ private:
 	//qt slot connect
 	vtkSmartPointer<vtkEventQtSlotConnect> m_Connections_mouse_back;
 	vtkSmartPointer<vtkEventQtSlotConnect> m_Connections_mouse_forward;
+	vtkSmartPointer<vtkEventQtSlotConnect> m_Connections_mouse_lft_click;
 };
 
 
@@ -99,6 +100,7 @@ public:
 
 	void OnMouseWheelBackward() {};
 	void OnMouseWheelForward() {};
+	void OnLeftButtonDown() {};
 };
 
 
