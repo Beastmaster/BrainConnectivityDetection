@@ -1035,9 +1035,9 @@ void SubWidgetParadigmInBold::PreProcess()
 	int tt=0;
 	for(std::map<int,vtkSmartPointer<vtkImageData> >::iterator it = (this->data_container.begin())++;
 #ifndef QS_DEBUG_MODE
-		it==this->data_container.end(); //if deine QS_DEBUG_MODE flag, skip register across all data
+		it!=this->data_container.end(); 
 #else
-		it!=this->data_container.end();
+		it==this->data_container.end();//if deine QS_DEBUG_MODE flag, skip register across all data
 #endif
 		++it)////////////////////////////////
 	{
