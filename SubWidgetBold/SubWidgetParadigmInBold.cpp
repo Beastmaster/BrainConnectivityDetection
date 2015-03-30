@@ -1,3 +1,8 @@
+/****************
+*Copy from NeuroArea CUHK
+*Author:    Qin Shuo
+*Reference: 3D Slicer
+***************/
 #include "SubWidgetParadigmInBold.h"
 #include "ui_SubWidgetParadigmInBold.h"
 

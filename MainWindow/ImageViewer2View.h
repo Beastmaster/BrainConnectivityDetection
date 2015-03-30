@@ -1,3 +1,10 @@
+/******************************************
+*This base class is not use in this project
+*It is created for test 
+*Use ImageReslice Instead
+*This base class use vtkImageViewer2
+*******************************************/
+
 #ifndef _ImageViewer2View__H_
 #define _ImageViewer2View__H_
 

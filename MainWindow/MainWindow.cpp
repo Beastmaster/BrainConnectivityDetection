@@ -261,6 +261,7 @@ void MainWindow::on_click_mask()
 
 	if (this->mask_img.first.empty())
 	{
+		print_Info("Please add a ","mask");
 		return;
 	}
 
@@ -275,6 +276,11 @@ void MainWindow::on_click_mask()
 void MainWindow::on_click_del_mask()
 {
 	print_Info("del a ","mask");
+	if (mask_img.first.empty())
+	{
+		print_Info("No Mask ","to del");
+		return;
+	}
 
 	//remove from view
 	this->view_axial_reslice->RemoveMask();

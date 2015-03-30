@@ -1,5 +1,10 @@
-#ifndef MAIN_WINDOW_H
-#define MAIN_WINDOW_H
+/*****************************
+*By	Qin Shuo
+*HUST  Graduation Project MainWindow
+*Date: 2015.3.10
+******************************/
+#ifndef _MAIN_WINDOW_H_
+#define _MAIN_WINDOW_H_
 
 #include <QMainWindow>
 #include <QApplication>
@@ -128,6 +133,9 @@ private:
 	vtkSmartPointer<vtkImageActor> coronal_mask_Actor;
 	vtkSmartPointer<vtkImageActor> sagittal_mask_Actor;
 };
+
+
+
 
 
 
