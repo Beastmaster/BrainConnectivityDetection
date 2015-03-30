@@ -119,7 +119,7 @@ private:
 
 	//
 	reslice_view_base* view_axial_reslice;
-	reslice_view_base* view_cornoal_reslice;
+	reslice_view_base* view_coronal_reslice;
 	reslice_view_base* view_saggital_reslice;
 
 	//marching cube class base

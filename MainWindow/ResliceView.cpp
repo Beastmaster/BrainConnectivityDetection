@@ -9,12 +9,18 @@ reslice_view_base::reslice_view_base(vtkRenderWindow* winx,char a)
 	this->Set_Window(winx);
 	this->slice_n = 0;
 
+	this->img_to_mask = NULL;
+	this->img_to_view = NULL;
+
 	this->dimensions = NULL;
 	//this->view_dirX = NULL;
 	//this->view_dirY = NULL;
 	//this->view_dirZ = NULL;
 	this->img_to_mask = NULL;
 	this->mask_actor  = NULL;
+	this->new_render  = NULL;
+	this->Interactor      = NULL;
+	this->InteractorStyle = NULL;
 
 	//map vtkaction and qt signal
 	this->m_Connections_mouse_back = vtkSmartPointer<vtkEventQtSlotConnect>::New();
@@ -28,14 +34,24 @@ reslice_view_base::reslice_view_base(vtkRenderWindow* winx,char a)
 
 
 	//renderer init
-	new_render = vtkSmartPointer<vtkRenderer>::New();
-	actor      = vtkSmartPointer<vtkImageActor>::New();
-	this->view_window->AddRenderer(this->new_render);
-	new_render->AddActor(this->actor);
-	//set default interact null
+	new_render	 = vtkSmartPointer<vtkRenderer>::New();
+	actor		 = vtkSmartPointer<vtkImageActor>::New();
+	mask_actor   = vtkSmartPointer<vtkImageActor>::New();
+	WindowLevel1 = vtkSmartPointer<vtkImageMapToWindowLevelColors>::New();
+	WindowLevel2 = vtkSmartPointer<vtkImageMapToWindowLevelColors>::New();
+	this->InteractorStyle = vtkSmartPointer<reslice_interactor_style>::New();
+	this->Interactor      = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+
+	//this->view_window->AddRenderer(this->new_render);
+	//new_render->AddActor(this->actor);
+	////set default interact null
 	vtkSmartPointer<reslice_interactor_style> new_act_style = 
 		vtkSmartPointer<reslice_interactor_style>::New();
 	this->view_window->GetInteractor()->SetInteractorStyle(new_act_style);
+	this->InstallPipeline();
+
+	this->actor->SetOpacity(0.5);
+	this->mask_actor->SetOpacity(0.5);
 }
 
 reslice_view_base::~reslice_view_base()
@@ -49,34 +65,72 @@ reslice_view_base::~reslice_view_base()
 	//delete[] this->view_dirY;
 	//delete[] this->view_dirZ;
 }
+void reslice_view_base::InstallPipeline()
+{
+	if (this->view_window && this->new_render)
+	{
+		this->view_window->AddRenderer(this->new_render);
+	}
+
+	if (this->new_render && this->actor)
+	{
+		this->new_render->AddViewProp(this->actor);
+	}
+
+	if (this->actor && this->WindowLevel1)
+	{
+		this->actor->SetInput(this->WindowLevel1->GetOutput());
+	}
+}
 
 
 
 void reslice_view_base::Set_View_Img(vtkSmartPointer<vtkImageData> img)
 {
+	this->img_to_view = vtkSmartPointer<vtkImageData>::New();
 	this->img_to_view = img;
 	this->dimensions = new int[3];
 	this->img_to_view->GetDimensions(this->dimensions);
 	std::cout<<"dimension is :"<<dimensions[0]<<dimensions[1]<<dimensions[2]<<std::endl;
-
 	this->calculate_img_center(img_to_view);
 }
 
-//void reslice_view_base::Set_Mask_Img(vtkSmartPointer<vtkImageData> img)
-//{
-//	this->img_to_mask = vtkSmartPointer<vtkImageData>::New();
-//	this->img_to_mask = img;
-//
-//	vtkSmartPointer<vtkImageBlend> imageBlend = vtkSmartPointer<vtkImageBlend>::New();
-//	imageBlend->SetInput(0,img_to_mask);
-//	imageBlend->SetInput(1,img_to_view);
-//	imageBlend->SetOpacity(0,0.5);
-//	imageBlend->SetOpacity(1,0.5);
-//	imageBlend->Update();
-//	vtkSmartPointer<vtkImageData> temp = vtkSmartPointer<vtkImageData>::New();
-//	img_to_view->DeepCopy(imageBlend->GetOutput());
-//
-//}
+void reslice_view_base::Set_Mask_Img(vtkSmartPointer<vtkImageData> img)
+{
+	this->img_to_mask = vtkSmartPointer<vtkImageData>::New();
+	this->img_to_mask = img;
+
+	//vtkSmartPointer<vtkImageBlend> imageBlend = vtkSmartPointer<vtkImageBlend>::New();
+	//imageBlend->SetInput(0,img_to_mask);
+	//imageBlend->SetInput(1,img_to_view);
+	//imageBlend->SetOpacity(0,0.5);
+	//imageBlend->SetOpacity(1,0.5);
+	//imageBlend->Update();
+	//vtkSmartPointer<vtkImageData> temp = vtkSmartPointer<vtkImageData>::New();
+	//img_to_view->DeepCopy(imageBlend->GetOutput());
+}
+
+void reslice_view_base::RemoveMask()
+{
+	if (this->img_to_mask == NULL)
+	{
+		return;
+	}
+
+	//uninsatall pipeline
+	if (this->new_render && this->mask_actor)
+	{
+		this->new_render->RemoveViewProp(this->mask_actor);
+	}
+
+	if (this->mask_actor && this->WindowLevel2)
+	{
+		this->mask_actor->SetInput(NULL);
+	}
+
+	//delete this mask
+	this->img_to_mask = NULL;
+}
 
 void reslice_view_base::Set_Window(vtkRenderWindow* win)
 {
@@ -93,10 +147,33 @@ void reslice_view_base::RenderView()
 	this->reslice->SetResliceAxesDirectionCosines(this->view_dirX,this->view_dirY,this->view_dirZ);
 	this->reslice->SetResliceAxesOrigin(center);
 	this->reslice->SetInterpolationModeToLinear();
+	this->WindowLevel1->SetInput(this->reslice->GetOutput());
 
-	//add reslice output to actor
-	this->actor->SetInput(this->reslice->GetOutput());
-	//render view
+	if (this->img_to_mask != NULL)
+	{
+		//install pipline here
+		if (this->new_render && this->mask_actor)
+		{
+			this->new_render->AddViewProp(this->mask_actor);
+		}
+		if (this->mask_actor && this->WindowLevel2)
+		{
+			this->mask_actor->SetInput(this->WindowLevel2->GetOutput());
+		}
+		this->mask_reslice = vtkSmartPointer<vtkImageReslice>::New();
+		this->mask_reslice->SetInput(this->img_to_mask);
+		this->mask_reslice->SetOutputDimensionality(2);
+		this->mask_reslice->SetResliceAxesDirectionCosines(this->view_dirX,this->view_dirY,this->view_dirZ);
+		this->mask_reslice->SetResliceAxesOrigin(center);
+		this->mask_reslice->SetInterpolationModeToLinear();
+		this->WindowLevel2->SetInput(this->mask_reslice->GetOutput());
+	}
+
+
+	//vtkSmartPointer<vtkImageData> input_temp = 
+	//	vtkImageData::SafeDownCast(this->WindowLevel1->GetInput());
+
+	this->new_render->ResetCamera();
 	this->view_window->Render();
 }
 
@@ -123,8 +200,8 @@ void reslice_view_base::on_scroll_mouse_back(vtkObject* obj)
 			{
 				this->slice_n = this->extent_m[5];
 			}
-			//center[2] = origin[2]+spacing[2]*this->slice_n;
-			center[2] = spacing[2]*this->slice_n;
+			center[2] = origin[2]+spacing[2]*this->slice_n;
+			//center[2] = spacing[2]*this->slice_n;
 			break;
 		}
 	case 'c':
@@ -138,8 +215,8 @@ void reslice_view_base::on_scroll_mouse_back(vtkObject* obj)
 			{
 				this->slice_n = this->extent_m[3];
 			}
-			//center[1] = origin[1]+spacing[1]*this->slice_n;
-			center[1] = spacing[1]*this->slice_n;
+			center[1] = origin[1]+spacing[1]*this->slice_n;
+			//center[1] = spacing[1]*this->slice_n;
 			break;
 		}
 	case 's':
@@ -153,8 +230,8 @@ void reslice_view_base::on_scroll_mouse_back(vtkObject* obj)
 			{
 				this->slice_n = this->extent_m[1];
 			}
-			//center[0] = origin[0]+spacing[0]*this->slice_n;
-			center[0] = spacing[0]*this->slice_n;
+			center[0] = origin[0]+spacing[0]*this->slice_n;
+			//center[0] = spacing[0]*this->slice_n;
 			break;
 		}
 	default:
@@ -168,8 +245,8 @@ void reslice_view_base::on_scroll_mouse_back(vtkObject* obj)
 			{
 				this->slice_n = this->extent_m[1];
 			}
-			//center[0] = origin[0]+spacing[0]*this->slice_n;
-			center[0] = spacing[0]*this->slice_n;
+			center[0] = origin[0]+spacing[0]*this->slice_n;
+			//center[0] = spacing[0]*this->slice_n;
 			break;
 		}
 	}
@@ -196,8 +273,8 @@ void reslice_view_base::on_scroll_mouse_forward(vtkObject* obj)
 			{
 				this->slice_n = this->extent_m[5];
 			}
-			//center[2] = origin[2]+spacing[2]*this->slice_n;
-			center[2] = spacing[2]*this->slice_n;
+			center[2] = origin[2]+spacing[2]*this->slice_n;
+			//center[2] = spacing[2]*this->slice_n;
 			break;
 		}
 	case 'c':
@@ -211,8 +288,8 @@ void reslice_view_base::on_scroll_mouse_forward(vtkObject* obj)
 			{
 				this->slice_n = this->extent_m[3];
 			}
-			//center[1] = origin[1]+spacing[1]*this->slice_n;
-			center[1] = spacing[1]*this->slice_n;
+			center[1] = origin[1]+spacing[1]*this->slice_n;
+			//center[1] = spacing[1]*this->slice_n;
 			break;
 		}
 	case 's':
@@ -226,8 +303,8 @@ void reslice_view_base::on_scroll_mouse_forward(vtkObject* obj)
 			{
 				this->slice_n = this->extent_m[1];
 			}
-			//center[0] = origin[0]+spacing[0]*this->slice_n;
-			center[0] = spacing[0]*this->slice_n;
+			center[0] = origin[0]+spacing[0]*this->slice_n;
+			//center[0] = spacing[0]*this->slice_n;
 			break;
 		}
 	default:
@@ -247,7 +324,10 @@ void reslice_view_base::on_scroll_mouse_forward(vtkObject* obj)
 	}
 	this->RenderView();
 }
+void reslice_view_base:: on_click_mouse(vtkObject*)
+{
 
+}
 // private method: set view direction
 void reslice_view_base::Set_Direction(char x)
 {
@@ -256,13 +336,9 @@ void reslice_view_base::Set_Direction(char x)
 	{
 	case 'a':
 		{
-			//this->view_dirX = new double[3];
-			//this->view_dirY = new double[3];
-			//this->view_dirZ = new double[3];
-
-			double axialX[3] = {1,0,0};
-			double axialY[3] = {0,1,0};
-			double axialZ[3] = {0,0,1};
+			double axialX[3] = {-1,0,0};
+			double axialY[3] = {0,-1,0};
+			double axialZ[3] = {0,0,-1};
 
 			for (int i=0;i<3;i++)
 			{
@@ -275,12 +351,8 @@ void reslice_view_base::Set_Direction(char x)
 		}
 	case 'c':
 		{
-			//this->view_dirX = new double[3];
-			//this->view_dirY = new double[3];
-			//this->view_dirZ = new double[3];
-
-			double coronalX[3] = {1,0,0};
-			double coronalY[3] = {0,0,-1};
+			double coronalX[3] = {-1,0,0};
+			double coronalY[3] = {0,0,1};
 			double coronalZ[3] = {0,1,0};
 
 			for (int i=0;i<3;i++)
@@ -293,12 +365,9 @@ void reslice_view_base::Set_Direction(char x)
 		}
 	case 's':
 		{
-			//this->view_dirX = new double[3];
-			//this->view_dirY = new double[3];
-			//this->view_dirZ = new double[3];
 			double sagittalX[3] = {0,1,0};
-			double sagittalY[3] = {0,0,-1};
-			double sagittalZ[3] = {-1,0,0};
+			double sagittalY[3] = {0,0,1};
+			double sagittalZ[3] = {1,0,0};
 			for (int i=0;i<3;i++)
 			{
 				this->view_dirX[i] = sagittalX[i];
@@ -309,10 +378,6 @@ void reslice_view_base::Set_Direction(char x)
 		}
 	default:
 		{
-			//this->view_dirX = new double[3];
-			//this->view_dirY = new double[3];
-			//this->view_dirZ = new double[3];
-
 			double axialX[3] = {1,0,0};
 			double axialY[3] = {0,1,0};
 			double axialZ[3] = {0,0,1};

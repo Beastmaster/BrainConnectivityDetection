@@ -47,10 +47,10 @@ MainWindow::~MainWindow()
 		delete view_cornoal;
 		delete view_saggital;
 	}
-	if (this->view_cornoal_reslice!=NULL)
+	if (this->view_coronal_reslice!=NULL)
 	{
 		delete view_axial_reslice;
-		delete view_cornoal_reslice;
+		delete view_coronal_reslice;
 		delete view_saggital_reslice;
 	}
 
@@ -59,12 +59,13 @@ MainWindow::~MainWindow()
 
 void MainWindow::init_Parameters()
 {
+
 	view_saggital = NULL;
 	view_cornoal  = NULL;
 	view_axial    = NULL;
 	
 	view_axial_reslice = NULL;
-	view_cornoal_reslice = NULL;
+	view_coronal_reslice = NULL;
 	view_saggital_reslice = NULL;
 
 	
@@ -116,7 +117,11 @@ void MainWindow::on_click_load()
 		double* ori = new double[3];
 		temp_img.second->GetOrigin(ori);
 		print_Info("Origin: ",QString::number(*ori),QString::number(ori[1]),QString::number(ori[2]));
-
+		int* ex = new int [6];
+		temp_img.second->GetExtent(ex);
+		print_Info("Origin: ",QString::number(*ex),QString::number(ex[1]),QString::number(ex[2]));
+		print_Info("Origin: ",QString::number(ex[3]),QString::number(ex[4]),QString::number(ex[5]));
+		
 		this->img_to_view = temp_img;
 		this->data_container.push_back(temp_img);
 	}
@@ -144,21 +149,25 @@ void MainWindow::on_click_show()
 	if (view_axial_reslice != NULL)
 	{
 		delete view_axial_reslice;
-		delete view_cornoal_reslice;
+		delete view_coronal_reslice;
 		delete view_saggital_reslice;
 	}
 	view_saggital_reslice = new reslice_view_base(this->ui->sagittal_view_widget->GetRenderWindow(),'s');
-	view_cornoal_reslice  = new reslice_view_base(this->ui->coronal_view_widget->GetRenderWindow(),'c');
+	view_coronal_reslice  = new reslice_view_base(this->ui->coronal_view_widget->GetRenderWindow(),'c');
 	view_axial_reslice    = new reslice_view_base(this->ui->axial_view_widget->GetRenderWindow(),'a');
 
-	//add mask first
-	view_cornoal_reslice->Set_View_Img(this->img_to_view.second);
-	view_cornoal_reslice->RenderView();
-	view_cornoal_reslice->Set_View_Img(this->img_to_view.second);
-	view_cornoal_reslice->RenderView();
+	////add mask first
+	view_coronal_reslice->Set_View_Img(this->img_to_view.second);
+	//view_cornoal_reslice->Set_Mask_Img(this->mask_img.second);
+	view_coronal_reslice->RenderView();
+	view_coronal_reslice->Set_View_Img(this->img_to_view.second);
+	//view_cornoal_reslice->Set_Mask_Img(this->mask_img.second);
+	view_coronal_reslice->RenderView();
 	view_saggital_reslice->Set_View_Img(this->img_to_view.second);
+//	view_saggital_reslice->Set_Mask_Img(this->mask_img.second);
 	view_saggital_reslice->RenderView();
 	view_axial_reslice->Set_View_Img(this->img_to_view.second);
+//	view_axial_reslice->Set_Mask_Img(this->mask_img.second);
 	view_axial_reslice->RenderView();
 }
 
@@ -193,8 +202,8 @@ void MainWindow::refresh_view()
 	{
 		view_axial_reslice->Set_View_Img(this->img_to_view.second);
 		view_axial_reslice->RenderView();
-		view_cornoal_reslice->Set_View_Img(this->img_to_view.second);
-		view_cornoal_reslice->RenderView();
+		view_coronal_reslice->Set_View_Img(this->img_to_view.second);
+		view_coronal_reslice->RenderView();
 		view_saggital_reslice->Set_View_Img(this->img_to_view.second);
 		view_saggital_reslice->RenderView();
 	}
@@ -250,44 +259,31 @@ void MainWindow::on_click_mask()
 {	
 	print_Info("show ","mask");
 
-	vtkSmartPointer<vtkWindowLevelLookupTable> lookup_table = 
-		vtkSmartPointer<vtkWindowLevelLookupTable>::New();
-	vtkSmartPointer<vtkImageMapToColors> color_map = 
-		vtkSmartPointer<vtkImageMapToColors>::New();
-	
-	//build up look up table
-	lookup_table->SetNumberOfTableValues(3);
-	lookup_table->SetRange(0.0,300.0);
-	lookup_table->SetValueRange(0,1);
-	lookup_table->SetRampToLinear();
-	//lookup_table->SetSaturationRange(0.0,0.0);
-	lookup_table->SetTableValue(0,0.0,0.0,0.0,0.0);//label 0 is transparent
-	lookup_table->SetTableValue(1,0.0,1.0,0.0,1.0);//label 1 is opaque and green
-	lookup_table->SetTableValue(2,0.0,1.0,0.0,0.0);//label 2 is opaque and green
-	lookup_table->Build();
-	//setup color map
-	color_map->SetLookupTable(lookup_table);
-	color_map->SetInput(this->mask_img.second);
-	color_map->Update();
+	if (this->mask_img.first.empty())
+	{
+		return;
+	}
 
-	vtkSmartPointer<vtkImageBlend> imageBlend = vtkSmartPointer<vtkImageBlend>::New();
-	imageBlend->SetInput(0,mask_img.second);
-	mask_img.second->SetOrigin(img_to_view.second->GetOrigin());
+	view_saggital_reslice->Set_Mask_Img(this->mask_img.second);
+	view_coronal_reslice->Set_Mask_Img(this->mask_img.second);
+	view_axial_reslice->Set_Mask_Img(this->mask_img.second);
 
-	imageBlend->SetInput(1,img_to_view.second);
-	imageBlend->SetOpacity(0,0.5);
-	imageBlend->SetOpacity(1,0.5);
-	imageBlend->Update();
-	vtkSmartPointer<vtkImageData> temp = vtkSmartPointer<vtkImageData>::New();
-	img_to_view.second->DeepCopy(imageBlend->GetOutput());
-
+	view_saggital_reslice->RenderView();
+	view_coronal_reslice->RenderView();
 	view_axial_reslice->RenderView();
-
 }
 void MainWindow::on_click_del_mask()
 {
 	print_Info("del a ","mask");
 
+	//remove from view
+	this->view_axial_reslice->RemoveMask();
+	this->view_coronal_reslice->RemoveMask();
+	this->view_saggital_reslice->RemoveMask();
+
+	//delete mask from data container
+	this->mask_img.first.clear();
+	this->mask_img.second = NULL;
 }
 
 void MainWindow::on_slider_volume_move(int posxx)

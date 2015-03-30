@@ -24,7 +24,9 @@
 
 //blend two images
 #include "vtkImageBlend.h"
+#include "vtkImageMapToWindowLevelColors.h"
 
+class reslice_interactor_style;
 
 class reslice_view_base : QObject
 {
@@ -36,16 +38,15 @@ public:
 
 	void SetSlice(int x) {this->slice_n = x;};//useless
 	void Set_View_Img(vtkSmartPointer<vtkImageData>);
-	//void Set_Mask_Img(vtkSmartPointer<vtkImageData>);
+	void Set_Mask_Img(vtkSmartPointer<vtkImageData>);
 	void RenderView();
+	void RemoveMask();
 	int Slice_Position;//useless
-
-	vtkSmartPointer<vtkRenderer> new_render;
-	vtkSmartPointer<vtkRenderWindow> view_window;
 
 	public slots:
 		void on_scroll_mouse_back(vtkObject*);
 		void on_scroll_mouse_forward(vtkObject*);
+		void on_click_mouse(vtkObject*);
 private:
 	double view_dirX[3];
 	double view_dirY[3];
@@ -62,8 +63,15 @@ private:
 	vtkSmartPointer<vtkImageReslice> mask_reslice;
 	vtkSmartPointer<vtkWindowLevelLookupTable> lookup_table;
 	vtkSmartPointer<vtkImageMapToColors> color_map;
-	vtkSmartPointer<vtkImageActor> actor;
-	vtkSmartPointer<vtkImageActor> mask_actor;
+	//two actors
+	vtkSmartPointer<vtkImageActor>					 actor;
+	vtkSmartPointer<vtkImageActor>					 mask_actor;
+	vtkSmartPointer<vtkImageMapToWindowLevelColors>  WindowLevel1;
+	vtkSmartPointer<vtkImageMapToWindowLevelColors>  WindowLevel2;
+	vtkSmartPointer<vtkRenderer>				     new_render;
+	vtkSmartPointer<vtkRenderWindow>				 view_window;
+	vtkSmartPointer<vtkRenderWindowInteractor>       Interactor;
+	vtkSmartPointer<reslice_interactor_style>        InteractorStyle;
 
 	char direction;
 	int  slice_n;
@@ -72,7 +80,7 @@ private:
 
 	double* calculate_img_center(vtkSmartPointer<vtkImageData>);
 	void Set_Window(vtkRenderWindow*);
-
+	void InstallPipeline();
 
 	//qt slot connect
 	vtkSmartPointer<vtkEventQtSlotConnect> m_Connections_mouse_back;
