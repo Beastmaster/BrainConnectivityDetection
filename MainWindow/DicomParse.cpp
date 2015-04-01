@@ -614,9 +614,16 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 
 
 
-void Call_dcm2nii_func()
+void Call_dcm2nii_func(std::string cmd_path,std::string folder_path)
 {
+	std::string space_space = " ";
+	std::string full_cmd;
 
+	full_cmd.append(cmd_path);
+	full_cmd.append(space_space);
+	full_cmd.append(folder_path);
+
+	system(full_cmd.c_str());
 }
 
 

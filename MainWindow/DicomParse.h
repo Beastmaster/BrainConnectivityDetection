@@ -8,6 +8,8 @@
 #ifndef _DICOMPARSE_H_
 #define _DICOMPARSE_H_
 
+//use windows.h to call system function
+#include <windows.h>
 
 #include "itkImageSeriesReader.h"
 #include "itkGDCMImageIO.h"
@@ -95,7 +97,7 @@ void Log2Container_inDicomParse(QString log_name,
 				   std::vector<std::string>&);
 
 //call dcm2nii function to convert dicom images to nii
-void Call_dcm2nii_func();
+void Call_dcm2nii_func(std::string cmd_path,std::string folder_path);
 
 
 ////--------------ui___dialog for tree widget----------------//

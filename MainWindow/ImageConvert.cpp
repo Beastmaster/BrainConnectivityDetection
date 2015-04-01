@@ -88,7 +88,11 @@ vtkSmartPointer<vtkImageData> Image_Convert_Base::GetOutput()
 	}
 	else if	(file_suffix == ".hdr")
 	{
-
+		return NULL;
+	}
+	else
+	{
+		return NULL;
 	}
 
 }

@@ -88,6 +88,10 @@ private slots:
 	void on_click_del_mask();
 	void on_click_sel_dicom();
 	void on_click_del_file();
+	void on_click_add_refer();
+	void on_click_add_src();
+	void on_click_register();
+	void on_clear_register();
 	void on_slider_volume_move(int);
 	void on_slider_opicity_move(int);
 	void on_slider_strip_val_move(int);
@@ -108,7 +112,10 @@ private:
 	typedef std::pair<std::string, vtkSmartPointer<vtkImageData> > img_view_base_Type;
 	img_view_base_Type img_to_view;
 	img_view_base_Type mask_img;
+	img_view_base_Type reference_img;
 	vector<img_view_base_Type > data_container;
+	vector<img_view_base_Type > register_container;
+
 	//bold widget
 	SubWidgetParadigmInBold* bold_win;
 	//pravite methods

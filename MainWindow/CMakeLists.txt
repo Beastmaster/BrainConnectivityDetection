@@ -19,6 +19,7 @@ include_directories(
 ../fmri
 ../qcustomplot
 ../SubWidgetBold
+../registration
 )
 #include source dir
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
@@ -26,10 +27,14 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 set(Plain_CXX
 ImageConvert.cpp
 DicomParse.cpp
+RegistrationProcess.cpp
 )
 set(Plain_Head
 ImageConvert.h
 DicomParse.h
+RegistrationProcess.h
+../registration/Register.h
+../registration/Register.hpp
 )
 
 set(QT_UI_FILES

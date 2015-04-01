@@ -10,10 +10,10 @@
 *5. register all fmri image flag #PreProcess()
 *6. threshold-- label map or t-map
 */
-#define QS_DEBUG_MODE
+//#define QS_DEBUG_MODE
 #define en_Read_Register_flag  1        //enable = 1
-#define en_Brain_Strip_flag    0		//enable = 1
-#define en_Visiualization_flag 0        //enable = 1
+#define en_Brain_Strip_flag    1		//enable = 1
+#define en_Visiualization_flag 1        //enable = 1
 #define out_Lable_Map_flag     0        //enable = 1
 	
 #ifdef QS_DEBUG_MODE

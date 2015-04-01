@@ -36,6 +36,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(this->ui->sel_folder_Btn,SIGNAL(clicked()),this,SLOT(on_click_sel_dicom()));
 	//connect file list focus
 	connect(this->ui->file_listWidget,SIGNAL(currentRowChanged(int)),this,SLOT(on_file_list_focus_change(int)));
+
+	//registration function
+	connect(this->ui->register_Btn,SIGNAL(clicked()),this,SLOT(on_click_register()));
+	connect(this->ui->add_refer_Btn,SIGNAL(clicked()),this,SLOT(on_click_add_refer()));
+	connect(this->ui->add_src_Btn,SIGNAL(clicked()),this,SLOT(on_click_add_src()));
+	//connect(,SIGNAL(clicked()),this,SLOT(on_click_clear_src()));
 }
 
 MainWindow::~MainWindow()
@@ -83,10 +89,10 @@ void MainWindow::init_Parameters()
 
 	//init opicity slider bar
 	this->ui->set_opicity_Slider->setRange(0,100);
-	this->ui->set_opicity_Slider->setValue(50);
+	this->ui->set_opicity_Slider->setValue(100);
 	//init strip value slider bar
 	this->ui->strip_val_Slider->setRange(0,1500);
-	this->ui->strip_val_Slider->setValue(1500);
+	this->ui->strip_val_Slider->setValue(500);
 }
 
 void MainWindow::on_click_load()
@@ -109,6 +115,11 @@ void MainWindow::on_click_load()
 		img_view_base_Type temp_img;
 		temp_img.first = filenamexx;
 		temp_img.second	= vtkSmartPointer<vtkImageData>::New();
+		if (img_reader->GetOutput() == NULL)
+		{
+			delete img_reader;
+			return;
+		}
 		temp_img.second = img_reader->GetOutput();
 		//temp_img.second = xx_temp;
 		delete img_reader;
@@ -183,6 +194,12 @@ void MainWindow::on_click_show()
 
 void MainWindow::on_click_show3d()
 {
+	//check if enable re-construct
+	if (!this->ui->en_cst_Check->isChecked())
+	{
+		return;
+	}
+
 	if (this->img_to_view.first.empty())
 	{
 		return;
@@ -220,6 +237,10 @@ void MainWindow::refresh_view()
 	
 	
 	//refresh 3d view
+	if (! this->ui->en_cst_Check->isChecked())
+	{
+		return;
+	}
 	new_3d_view->Set_Input_Img(this->img_to_view.second);
 	new_3d_view->Re_Construct();
 }
@@ -309,34 +330,42 @@ void MainWindow::on_click_sel_dicom()
 
 	if (dicom_dir.isEmpty())  return;
 
-	Seek_Dicom_Folder(dicom_dir);
-	dicom_dir.append("\\DicomSortList.txt");
-	std::cout<<"Reading"<<dicom_dir.toStdString()<<std::endl;
-	std::vector< vtkSmartPointer<vtkImageData> > temp_container;
-	std::vector< std::string >                   temp_name_container;
-	Load_File_from_log(dicom_dir,temp_container,temp_name_container);
-	//put data to global container
-	
-	for (int i = 0;i<temp_name_container.size();i++)
+	std::string dcm2nii_dir = "C:/Users/USER/Desktop/MRIcron/dcm2nii.exe";
+	if (this->ui->use_dcm2nii_check->isChecked())
 	{
-		img_view_base_Type pair_temp;
-		pair_temp.second = vtkSmartPointer<vtkImageData>::New();
-		pair_temp.first  = temp_name_container[i];
-		pair_temp.second->DeepCopy(temp_container[i]);
-		this->data_container.push_back(pair_temp);
-		this->img_to_view = pair_temp;
-		//add list item to listview
-		QListWidgetItem* new_item =
-			new QListWidgetItem(pair_temp.first.c_str(),this->ui->file_listWidget);
-		this->ui->file_listWidget->addItem(new_item);
+		Call_dcm2nii_func(dcm2nii_dir,dicom_dir.toStdString());
 	}
+	else
+	{
+		Seek_Dicom_Folder(dicom_dir);
+		dicom_dir.append("\\DicomSortList.txt");
+		std::cout<<"Reading"<<dicom_dir.toStdString()<<std::endl;
+		std::vector< vtkSmartPointer<vtkImageData> > temp_container;
+		std::vector< std::string >                   temp_name_container;
+		Load_File_from_log(dicom_dir,temp_container,temp_name_container);
+		//put data to global container
+	
+		for (int i = 0;i<temp_name_container.size();i++)
+		{
+			img_view_base_Type pair_temp;
+			pair_temp.second = vtkSmartPointer<vtkImageData>::New();
+			pair_temp.first  = temp_name_container[i];
+			pair_temp.second->DeepCopy(temp_container[i]);
+			this->data_container.push_back(pair_temp);
+			this->img_to_view = pair_temp;
+			//add list item to listview
+			QListWidgetItem* new_item =
+				new QListWidgetItem(pair_temp.first.c_str(),this->ui->file_listWidget);
+			this->ui->file_listWidget->addItem(new_item);
+		}
 
-	int xxx = this->data_container.size();
-	//update volume select slide bar!!disconnect first or will be error
-	disconnect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
-	this->set_slider_volume_range(xxx);
-	connect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
-	this->on_click_show();
+		int xxx = this->data_container.size();
+		//update volume select slide bar!!disconnect first or will be error
+		disconnect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
+		this->set_slider_volume_range(xxx);
+		connect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
+		this->on_click_show();
+	}
 }
 
 //delete file in file list
@@ -353,7 +382,6 @@ void MainWindow::on_click_del_file()
 		return;
 	}
 
-	
 	//3. remove data
 	this->data_container.erase(this->data_container.begin()+cur_row);
 
@@ -504,6 +532,58 @@ void MainWindow::on_file_list_focus_change(int row)
 	this->img_to_view = this->data_container[row];
 	this->ui->view_vol_Slider->setValue(row+1);
 }
+
+void MainWindow::on_click_add_refer()
+{
+	int index = this->ui->file_listWidget->currentRow();
+
+	if ( index < 0)
+	{
+		return;
+	}
+	//if there is no item, then create a item
+	if (this->ui->reg_refer_List->takeItem(0) == 0)
+	{
+		QListWidgetItem* new_item =
+			new QListWidgetItem(data_container[index].first.c_str(),this->ui->reg_refer_List);
+		this->ui->reg_refer_List->addItem(new_item);
+	}
+	//if there is a item, change its name
+	else
+	{
+		QListWidgetItem* new_item =
+		new QListWidgetItem(data_container[index].first.c_str(),this->ui->reg_refer_List);
+		this->ui->reg_refer_List->addItem(new_item);
+		this->reference_img = data_container[index];
+	}
+}
+
+void MainWindow::on_click_add_src()
+{
+	int index = this->ui->reg_src_List->currentRow();
+
+	if ( index < 0)
+	{
+		return;
+	}
+	QListWidgetItem* new_item =
+		new QListWidgetItem(data_container[index].first.c_str(),this->ui->reg_src_List);
+	this->ui->reg_src_List->addItem(new_item);
+
+	this->register_container.push_back(data_container[index]);
+}
+void MainWindow::on_clear_register()
+{
+	this->ui->reg_refer_List->clear();
+	this->ui->reg_src_List->clear();
+	this->register_container.clear();
+}
+
+void MainWindow::on_click_register()
+{
+
+}
+
 
 
 
