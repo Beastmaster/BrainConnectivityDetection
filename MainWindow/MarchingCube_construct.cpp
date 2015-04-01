@@ -31,6 +31,10 @@ construct_base::~construct_base()
 
 void construct_base::Re_Construct()
 {
+	if (this->img_to_Construct->GetDataDimension()!=3)
+	{
+		return;
+	}
 	marchingCubes->SetInput(this->img_to_Construct);
 	//marchingCubes->SetNumberOfContours(2);
 	marchingCubes->SetValue(0,this->value_cube);

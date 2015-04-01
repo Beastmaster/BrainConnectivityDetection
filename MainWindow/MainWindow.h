@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <functional>
 
 //qt open file_dialog
 #include <QFileDialog>
@@ -54,8 +55,14 @@
 //include my construct
 #include "MarchingCube_construct.h"
 
+//
+#include "DicomParse.h"
+
+
+#include "vtkGetTimecourse.cpp"
 
 class vtkimageview2_base;
+
 
 namespace Ui {
 class MainWindow;
@@ -79,12 +86,15 @@ private slots:
 	void on_click_add_mask_file();
 	void on_click_mask();
 	void on_click_del_mask();
+	void on_click_sel_dicom();
+	void on_click_del_file();
 	void on_slider_volume_move(int);
 	void on_slider_opicity_move(int);
 	void on_slider_strip_val_move(int);
 	void info_Panel_Scroll();
 	void mouse_Wheel_move(QWheelEvent *e);
 	void init_Parameters();
+	void on_file_list_focus_change(int row);
 
 private:
 	//GUI

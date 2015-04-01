@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1094</width>
+    <width>1153</width>
     <height>822</height>
    </rect>
   </property>
@@ -43,7 +43,7 @@
      <rect>
       <x>690</x>
       <y>20</y>
-      <width>361</width>
+      <width>402</width>
       <height>231</height>
      </rect>
     </property>
@@ -90,13 +90,6 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QPushButton" name="sel_folder_Btn">
-       <property name="text">
-        <string>SelectDicomFolder</string>
-       </property>
-      </widget>
-     </item>
      <item row="3" column="0">
       <widget class="QPushButton" name="show_Btn">
        <property name="text">
@@ -110,6 +103,24 @@
         <string>Mask</string>
        </property>
       </widget>
+     </item>
+     <item row="1" column="0">
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QCheckBox" name="use_dcm2nii_check">
+         <property name="text">
+          <string>Dcm2nii</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="sel_folder_Btn">
+         <property name="text">
+          <string>SelectDicomFolder</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </widget>
@@ -171,6 +182,13 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QLabel" name="label_strip_value">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
@@ -229,7 +247,18 @@
       </widget>
      </item>
      <item>
-      <widget class="QListWidget" name="listWidget"/>
+      <widget class="QListWidget" name="file_listWidget"/>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <item>
+        <widget class="QPushButton" name="del_file_Btn">
+         <property name="text">
+          <string>Delete</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </widget>
@@ -255,13 +284,18 @@
      </item>
     </layout>
    </widget>
+   <zorder>gridLayoutWidget_2</zorder>
+   <zorder>verticalLayoutWidget_2</zorder>
+   <zorder>verticalLayoutWidget</zorder>
+   <zorder>verticalLayoutWidget_3</zorder>
+   <zorder>gridLayoutWidget</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1094</width>
+     <width>1153</width>
      <height>31</height>
     </rect>
    </property>

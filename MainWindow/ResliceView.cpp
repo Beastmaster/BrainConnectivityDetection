@@ -52,7 +52,7 @@ reslice_view_base::reslice_view_base(vtkRenderWindow* winx,char a)
 	this->view_window->GetInteractor()->SetInteractorStyle(new_act_style);
 	this->InstallPipeline();
 
-	this->actor->SetOpacity(0.5);
+	this->actor->SetOpacity(1);
 	this->mask_actor->SetOpacity(0.5);
 }
 

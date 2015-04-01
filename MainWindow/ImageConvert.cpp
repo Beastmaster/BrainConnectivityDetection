@@ -32,13 +32,29 @@ vtkSmartPointer<vtkImageData> Image_Convert_Base::GetOutput()
 		ReaderType_b::Pointer reader = ReaderType_b::New();
 		reader->SetImageIO(niftiIO);
 		reader->SetFileName(this->file_name);
-		reader->Update();
+		try
+		{
+			reader->Update();
+		}
+		catch (itk::ExceptionObject& e)
+		{
+			std::cout<<"read nii error"<<std::endl;
+			std::cerr<<e;
+		}
 
 		//itk-vtk connector
 		//typedef itk::ImageToVTKImageFilter<ImageType> ConnectorType;
 		i2vConnectorType::Pointer connector = i2vConnectorType::New();
 		connector->SetInput(reader->GetOutput());
+		try
+		{
 		connector->Update();
+		}
+		catch (itk::ExceptionObject& e)
+		{
+			std::cout<<"connect itk vtk error"<<std::endl;
+			std::cerr<<e;
+		}
 
 		vtkSmartPointer<vtkImageCast> img_caster = 
 			vtkSmartPointer<vtkImageCast>::New();
@@ -84,7 +100,7 @@ void Image_Convert_Base::Get_Name_Suffix()
 	}
 	else
 	{
-		std::size_t pos = file_name.find(".");
+		std::size_t pos = file_name.find_last_of(".");
 		this->file_suffix = file_name.substr(pos);
 	}
 }

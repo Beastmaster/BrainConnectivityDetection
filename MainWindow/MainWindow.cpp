@@ -1,7 +1,6 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
-#include "vtkGetTimecourse.h"
-#include "vtkGetTimecourse.cpp"
+#include <windows.h>
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -18,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(this->ui->show_Btn,SIGNAL(clicked()),this,SLOT(on_click_show()));
 	connect(this->ui->show_Btn,SIGNAL(clicked()),this,SLOT(on_click_show3d()));
 	connect(this->ui->img_load_Btn,SIGNAL(clicked()),this,SLOT(on_click_load()));
+	connect(this->ui->del_file_Btn,SIGNAL(clicked()),this,SLOT(on_click_del_file()));
 	//connect bold function
 	connect(this->ui->bold_Btn,SIGNAL(clicked()),this,SLOT(on_click_bold()));
 	//slider bar
@@ -32,7 +32,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(this->ui->add_mask_Btn,SIGNAL(clicked()),this,SLOT(on_click_add_mask_file()));
 	connect(this->ui->clr_mask_Btn,SIGNAL(clicked()),this,SLOT(on_click_del_mask()));
 	connect(this->ui->mask_Btn,SIGNAL(clicked()),this,SLOT(on_click_mask()));
-
+	//read dicom folder
+	connect(this->ui->sel_folder_Btn,SIGNAL(clicked()),this,SLOT(on_click_sel_dicom()));
+	//connect file list focus
+	connect(this->ui->file_listWidget,SIGNAL(currentRowChanged(int)),this,SLOT(on_file_list_focus_change(int)));
 }
 
 MainWindow::~MainWindow()
@@ -105,7 +108,9 @@ void MainWindow::on_click_load()
 
 		img_view_base_Type temp_img;
 		temp_img.first = filenamexx;
+		temp_img.second	= vtkSmartPointer<vtkImageData>::New();
 		temp_img.second = img_reader->GetOutput();
+		//temp_img.second = xx_temp;
 		delete img_reader;
 
 		print_Info("Image Scalar Number: ",QString::number(temp_img.second->GetNumberOfScalarComponents()));
@@ -124,6 +129,11 @@ void MainWindow::on_click_load()
 		
 		this->img_to_view = temp_img;
 		this->data_container.push_back(temp_img);
+
+		//create new file list item and add to file list
+		QListWidgetItem* new_item =
+			new QListWidgetItem(temp_img.first.c_str(),this->ui->file_listWidget);
+		this->ui->file_listWidget->addItem(new_item);
 	}
 
 	this->set_slider_volume_range(this->data_container.size());
@@ -292,18 +302,91 @@ void MainWindow::on_click_del_mask()
 	this->mask_img.second = NULL;
 }
 
+void MainWindow::on_click_sel_dicom()
+{
+	QString dicom_dir = QFileDialog::getExistingDirectory(this, tr("Open Dicom Directory"),
+		"C:/Users/user/Desktop",QFileDialog::ShowDirsOnly);
+
+	if (dicom_dir.isEmpty())  return;
+
+	Seek_Dicom_Folder(dicom_dir);
+	dicom_dir.append("\\DicomSortList.txt");
+	std::cout<<"Reading"<<dicom_dir.toStdString()<<std::endl;
+	std::vector< vtkSmartPointer<vtkImageData> > temp_container;
+	std::vector< std::string >                   temp_name_container;
+	Load_File_from_log(dicom_dir,temp_container,temp_name_container);
+	//put data to global container
+	
+	for (int i = 0;i<temp_name_container.size();i++)
+	{
+		img_view_base_Type pair_temp;
+		pair_temp.second = vtkSmartPointer<vtkImageData>::New();
+		pair_temp.first  = temp_name_container[i];
+		pair_temp.second->DeepCopy(temp_container[i]);
+		this->data_container.push_back(pair_temp);
+		this->img_to_view = pair_temp;
+		//add list item to listview
+		QListWidgetItem* new_item =
+			new QListWidgetItem(pair_temp.first.c_str(),this->ui->file_listWidget);
+		this->ui->file_listWidget->addItem(new_item);
+	}
+
+	int xxx = this->data_container.size();
+	//update volume select slide bar!!disconnect first or will be error
+	disconnect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
+	this->set_slider_volume_range(xxx);
+	connect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
+	this->on_click_show();
+}
+
+//delete file in file list
+void MainWindow::on_click_del_file()
+{
+	int cur_row = this->ui->file_listWidget->currentRow();
+
+	//1. first: disconnect signal and slot first
+	disconnect(this->ui->file_listWidget,SIGNAL(currentRowChanged(int)),this,SLOT(on_file_list_focus_change(int)));
+
+	//2. delete item
+	if (this->ui->file_listWidget->takeItem(cur_row) == 0)
+	{
+		return;
+	}
+
+	
+	//3. remove data
+	this->data_container.erase(this->data_container.begin()+cur_row);
+
+	//4. update volume number sliader bar
+	this->set_slider_volume_range(this->data_container.size());
+
+	//last: connect back the signal and slots
+	connect(this->ui->file_listWidget,SIGNAL(currentRowChanged(int)),this,SLOT(on_file_list_focus_change(int)));
+}
+
+
 void MainWindow::on_slider_volume_move(int posxx)
 {
+	// strange bug: no on_click_show() called error will occur
+	if (this->view_axial_reslice == NULL)
+	{
+		return;
+	}
+
 	int pos = this->ui->view_vol_Slider->value();
 	std::cout<<"position is : "<<pos<<std::endl;
 	print_Info("Position is : ", QString::number(pos));
 
-	if (this->data_container.size()==0)
+	if (this->data_container.empty())
 	{
 		return;
 	}
 	else
 	{
+		if (pos<1)
+		{
+			return;
+		}
 		this->img_to_view = this->data_container[pos-1];
 		print_Info("Current image is: ",img_to_view.first.data());
 		this->refresh_view();
@@ -327,7 +410,8 @@ void MainWindow::on_slider_strip_val_move(int)
 {
 	int pos = this->ui->strip_val_Slider->value();
 	double strip_val = pos;
-	print_Info("strip value is : ", QString::number(strip_val));
+	//print_Info("strip value is : ", );
+	this->ui->label_strip_value->setText(QString::number(strip_val));
 
 	if (this->new_3d_view == NULL)   {return;}
 
@@ -408,6 +492,20 @@ void MainWindow::set_data_container(vector<img_view_base_Type >  da_con)
 		this->data_container = da_con;
 	}
 }
+
+
+void MainWindow::on_file_list_focus_change(int row)
+{
+	if (this->view_axial_reslice == NULL)
+	{
+		return;
+	}
+	std::cout<<"row is "<<row<<std::endl;
+	this->img_to_view = this->data_container[row];
+	this->ui->view_vol_Slider->setValue(row+1);
+}
+
+
 
 
 
