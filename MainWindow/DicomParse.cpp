@@ -504,6 +504,21 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 			std::cerr<<e;
 			return;
 		}
+		//save .nii files for test
+		WriterType_b::Pointer nii_writer_parse = 
+			WriterType_b::New();
+		nii_writer_parse->SetInput(itk_reader->GetOutput());
+		std::string name1 = info->description.at(index).toStdString();
+		if (name1.compare(name1.size()-4,4,".nii") == 0)
+		{}//do nothing
+		else
+		{
+			name1.append(".nii");
+		}
+		nii_writer_parse->SetFileName(name1);
+		//nii_writer_parse->Update();
+		nii_writer_parse->Write();
+
 		//get information from dicom tags( thickness among slices)
 		const  DictionaryType & dictionary = dicomIO->GetMetaDataDictionary();
 		DictionaryType::ConstIterator itr = dictionary.Begin();
@@ -564,32 +579,31 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 			vtkSmartPointer<vtkImageData>::New();
 		buff = connector->GetOutput();
 		std::cout<<"converter: "<<i<<" done!"<<std::endl;
-		if(1)
-		{		
-			//-----------change information(origin and spacing)--------------//
-			//get information :origin
-			//it seems that there is no need to change origin
-			double origin[3]={0,0,0};
-			buff->GetOrigin(origin);
-			std::cout<<"origin:"<<origin[0]<<origin[1]<<origin[2]<<std::endl;
 
-			double spacing[3]={0,0,0};
-			buff->GetSpacing(spacing);
-			spacing[2] = slice_thickness;
+		//-----------change information(origin and spacing)--------------//
+		//get information :origin
+		//it seems that there is no need to change origin
+		double origin[3]={0,0,0};
+		buff->GetOrigin(origin);
+		std::cout<<"origin:"<<origin[0]<<origin[1]<<origin[2]<<std::endl;
 
-			vtkSmartPointer<vtkImageChangeInformation> changer = 
-				vtkSmartPointer<vtkImageChangeInformation>::New();
-			changer->SetOutputSpacing(spacing);
-			//change 
-			changer->SetInput(buff);
-			//changer->SetOutputOrigin(origin);
-			changer->Update();
+		double spacing[3]={0,0,0};
+		buff->GetSpacing(spacing);
+		spacing[2] = slice_thickness;
 
-			vtkSmartPointer<vtkImageData>temp_con_con = vtkSmartPointer<vtkImageData>::New();
-			temp_con_con->DeepCopy(changer->GetOutput());
-			container.push_back(temp_con_con);
-			file_names.push_back(info->name.at(index).toStdString());
-		}
+		vtkSmartPointer<vtkImageChangeInformation> changer = 
+			vtkSmartPointer<vtkImageChangeInformation>::New();
+		changer->SetOutputSpacing(spacing);
+		//change 
+		changer->SetInput(buff);
+		//changer->SetOutputOrigin(origin);
+		changer->Update();
+
+		vtkSmartPointer<vtkImageData>temp_con_con = vtkSmartPointer<vtkImageData>::New();
+		temp_con_con->DeepCopy(changer->GetOutput());
+		container.push_back(temp_con_con);
+		file_names.push_back(info->description.at(index).toStdString());
+		
 		//change process bar
 		dialogLoading_File->setValue(i);
 		// if cancel read image, stop and clear all
@@ -630,58 +644,10 @@ void Call_dcm2nii_func(std::string cmd_path,std::string folder_path)
 
 
 
-/***************
-//----------tree widget-------------//
-Tree_Dialog_in_DicomParse::Tree_Dialog_in_DicomParse(QWidget *parent): QDialog(parent)
-{
-	setWindowTitle("Select Index");
-	index_tree = new QTreeWidget(this);
-	index_tree->setObjectName(QString::fromUtf8("index_tree"));
-	index_tree->setGeometry(QRect(20, 10, 351, 271));
 
-	QStringList head;
-	head<<"Name"<<"Volume";
-	index_tree->setHeaderLabels(head);
-}
 
-Tree_Dialog_in_DicomParse::~Tree_Dialog_in_DicomParse()
-{
-}
 
-void Tree_Dialog_in_DicomParse::on_click_item(QTreeWidgetItem* item,int column)
-{
 
-	int col = this->index_tree->indexOfTopLevelItem(item);
 
-	std::cout<<"selected col:"<<col;
 
-	*this->index = col;
-	this->done(100);
-	this->hide();
-}
-
-void Tree_Dialog_in_DicomParse::SetInfo(File_info_in_DicomParse* in_info, int * select_index)
-{
-	infox = in_info;
-	index = select_index;
-	if(infox->description.size() == 0)
-	{
-		QStringList item_list;
-		item_list<<"nothing"<<"nothing";
-		QTreeWidgetItem * child = new QTreeWidgetItem(index_tree,item_list);
-		QMessageBox::about(NULL, "ERROR", "read log failed!");
-		this->close();
-	}
-	else
-	{
-		for (int i = 0;i<infox->name.size();i++)
-		{
-			QStringList item_list;
-			item_list<<infox->description.at(i)<<infox->temperal_number.at(i);
-			QTreeWidgetItem* child = new QTreeWidgetItem(index_tree,item_list);
-			index_tree->addTopLevelItem(child);
-		}
-	}
-}
-**********/
 

@@ -18,11 +18,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(this->ui->show_Btn,SIGNAL(clicked()),this,SLOT(on_click_show3d()));
 	connect(this->ui->img_load_Btn,SIGNAL(clicked()),this,SLOT(on_click_load()));
 	connect(this->ui->del_file_Btn,SIGNAL(clicked()),this,SLOT(on_click_del_file()));
-	//connect bold function
-	connect(this->ui->bold_Btn,SIGNAL(clicked()),this,SLOT(on_click_bold()));
+	//connect bold function=============
+	//connect(this->ui->bold_Btn,SIGNAL(clicked()),this,SLOT(on_click_bold()));
 	//slider bar
 	connect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
-	connect(this->ui->set_opicity_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_opicity_move(int)));
+	connect(this->ui->set_opacity_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_opacity_move(int)));
 	connect(this->ui->strip_val_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_strip_val_move(int)));
 
 	//connect signal to enable atuo-scroll in info panel
@@ -41,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(this->ui->register_Btn,SIGNAL(clicked()),this,SLOT(on_click_register()));
 	connect(this->ui->add_refer_Btn,SIGNAL(clicked()),this,SLOT(on_click_add_refer()));
 	connect(this->ui->add_src_Btn,SIGNAL(clicked()),this,SLOT(on_click_add_src()));
-	//connect(,SIGNAL(clicked()),this,SLOT(on_click_clear_src()));
+	connect(this->ui->bold_Btn,SIGNAL(clicked()),this,SLOT(on_clear_register()));
 }
 
 MainWindow::~MainWindow()
@@ -87,12 +87,15 @@ void MainWindow::init_Parameters()
 	coronal_mask_Actor = NULL;
 	sagittal_mask_Actor= NULL;
 
-	//init opicity slider bar
-	this->ui->set_opicity_Slider->setRange(0,100);
-	this->ui->set_opicity_Slider->setValue(100);
+	//init opacity slider bar
+	this->ui->set_opacity_Slider->setRange(0,100);
+	this->ui->set_opacity_Slider->setValue(100);
 	//init strip value slider bar
 	this->ui->strip_val_Slider->setRange(0,1500);
 	this->ui->strip_val_Slider->setValue(500);
+	//init overlay opacity slider bar
+	this->ui->overlay_opacity_Slider->setRange(0,100);
+	this->ui->overlay_opacity_Slider->setValue(100);
 }
 
 void MainWindow::on_click_load()
@@ -120,7 +123,12 @@ void MainWindow::on_click_load()
 			delete img_reader;
 			return;
 		}
-		temp_img.second = img_reader->GetOutput();
+		vtkSmartPointer<vtkImageCast> caster = 
+			vtkSmartPointer<vtkImageCast>::New();
+		caster->SetInput(img_reader->GetOutput());
+		caster->SetOutputScalarTypeToFloat();
+		caster->Update();
+		temp_img.second->DeepCopy( caster->GetOutput());
 		//temp_img.second = xx_temp;
 		delete img_reader;
 
@@ -146,6 +154,13 @@ void MainWindow::on_click_load()
 			new QListWidgetItem(temp_img.first.c_str(),this->ui->file_listWidget);
 		this->ui->file_listWidget->addItem(new_item);
 	}
+
+	//for (int i;i<this->data_container.size();i++)
+	//{
+	//	vtkSmartPointer<vtkImageData> test_temp = 
+	//		vtkSmartPointer<vtkImageData>::New();
+	//	test_temp->DeepCopy(this->data_container[i].second);
+	//}
 
 	this->set_slider_volume_range(this->data_container.size());
 
@@ -422,16 +437,17 @@ void MainWindow::on_slider_volume_move(int posxx)
 }
 
 
-void MainWindow::on_slider_opicity_move(int posxx)
+void MainWindow::on_slider_opacity_move(int posxx)
 {
-	int pos = this->ui->set_opicity_Slider->value();
+	int pos = this->ui->set_opacity_Slider->value();
 	
-	double opicity = double(pos)/100;
-	print_Info("Opicity is : ", QString::number(opicity));
+	double opacity = double(pos)/100;
+	//print_Info("Opacity is : ", QString::number(opacity));
+	this->ui->label_opacity->setText(QString::number(opacity));
 
 	if (this->new_3d_view == NULL)   {return;}
 
-	this->new_3d_view->Set_Opicity(opicity);
+	this->new_3d_view->Set_Opicity(opacity);
 	this->ui->ster_3d_view_widget->GetRenderWindow()->Render();
 }
 void MainWindow::on_slider_strip_val_move(int)
@@ -529,8 +545,10 @@ void MainWindow::on_file_list_focus_change(int row)
 		return;
 	}
 	std::cout<<"row is "<<row<<std::endl;
+	this->data_container.size();
 	this->img_to_view = this->data_container[row];
 	this->ui->view_vol_Slider->setValue(row+1);
+	this->refresh_view();
 }
 
 void MainWindow::on_click_add_refer()
@@ -547,6 +565,9 @@ void MainWindow::on_click_add_refer()
 		QListWidgetItem* new_item =
 			new QListWidgetItem(data_container[index].first.c_str(),this->ui->reg_refer_List);
 		this->ui->reg_refer_List->addItem(new_item);
+		this->reference_img.first = data_container[index].first;
+		this->reference_img.second = vtkSmartPointer<vtkImageData>::New();
+		this->reference_img.second->DeepCopy(data_container[index].second);
 	}
 	//if there is a item, change its name
 	else
@@ -554,13 +575,14 @@ void MainWindow::on_click_add_refer()
 		QListWidgetItem* new_item =
 		new QListWidgetItem(data_container[index].first.c_str(),this->ui->reg_refer_List);
 		this->ui->reg_refer_List->addItem(new_item);
-		this->reference_img = data_container[index];
+		this->reference_img.first = data_container[index].first;
+		this->reference_img.second->DeepCopy(data_container[index].second);
 	}
 }
 
 void MainWindow::on_click_add_src()
 {
-	int index = this->ui->reg_src_List->currentRow();
+	int index = this->ui->file_listWidget->currentRow();
 
 	if ( index < 0)
 	{
@@ -581,7 +603,28 @@ void MainWindow::on_clear_register()
 
 void MainWindow::on_click_register()
 {
-
+	if (register_container.size() == 0)
+	{
+		return;
+	}
+	if (this->reference_img.first.empty())
+	{
+		return;
+	}
+	print_Info("Registering Process","  Running");
+	for (int i=0;i<register_container.size();i++)
+	{
+		std::string name = register_container[i].first;
+		if (name.compare(name.size()-4,4,".nii") == 0)
+		{	
+		}
+		else
+		{
+			name.append(".nii");
+		}
+		Registration_Process(this->reference_img.second,register_container[i].second,name);
+	}
+	print_Info("Registering Process"," Done!!");
 }
 
 

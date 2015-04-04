@@ -4,6 +4,7 @@
 *Copyright: Mr Luo Jiaxi
 *Changed by: Qin Shuo
 *Date: 2015.3.30
+*Additional: Write DICOM Series Function
 ******************************************/
 #ifndef _DICOMPARSE_H_
 #define _DICOMPARSE_H_
@@ -100,22 +101,12 @@ void Log2Container_inDicomParse(QString log_name,
 void Call_dcm2nii_func(std::string cmd_path,std::string folder_path);
 
 
-////--------------ui___dialog for tree widget----------------//
-//class Tree_Dialog_in_DicomParse : public QDialog
-//{
-//	Q_OBJECT
-//public:
-//	Tree_Dialog_in_DicomParse(QWidget *parent	= 0);
-//	~Tree_Dialog_in_DicomParse();
-//
-//	void SetInfo(File_info_in_DicomParse*, int *);
-//	QTreeWidget* index_tree;
-//	private slots:
-//		void on_click_item(QTreeWidgetItem* item,int column);
-//private:
-//	int* index;
-//	File_info_in_DicomParse* infox;
-//};
+
+
+
+
+
+
 
 
 #endif

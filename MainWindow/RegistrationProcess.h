@@ -37,7 +37,7 @@ typedef vtkSmartPointer<vtkImageData> Reg_Image_Type;
 
 
 
-Reg_Image_Type Registration_Process(Reg_Image_Type,Reg_Image_Type);
+Reg_Image_Type Registration_Process(Reg_Image_Type ,Reg_Image_Type , std::string);
 
 
 

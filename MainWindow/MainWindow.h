@@ -57,7 +57,7 @@
 
 //
 #include "DicomParse.h"
-
+#include "RegistrationProcess.h"
 
 #include "vtkGetTimecourse.cpp"
 
@@ -93,7 +93,7 @@ private slots:
 	void on_click_register();
 	void on_clear_register();
 	void on_slider_volume_move(int);
-	void on_slider_opicity_move(int);
+	void on_slider_opacity_move(int);
 	void on_slider_strip_val_move(int);
 	void info_Panel_Scroll();
 	void mouse_Wheel_move(QWheelEvent *e);
