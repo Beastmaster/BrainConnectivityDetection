@@ -644,6 +644,95 @@ void Call_dcm2nii_func(std::string cmd_path,std::string folder_path)
 
 
 
+void WiteToDicomSeries(vtkSmartPointer<vtkImageData> in_img)
+{
+	std::string OutputDir;
+	//create output directory
+	//itksys::SystemTools::MakeDirectory( OutputDir ); 
+
+	//typdefs for output files. image type: 2D dimension
+	typedef itk::Image< float , 2 >      OutputImageType;
+	typedef itk::ImageSeriesWriter<ImageType,OutputImageType> 
+										 SeriesWriterType;
+	typedef itk::NumericSeriesFileNames  NamesGeneratorType;   
+	typedef itk::GDCMImageIO             GDCMIOType;
+
+	//connect vtkimage to itk iamge
+	v2iConnectorType::Pointer connector = v2iConnectorType::New();
+	connector->SetInput(in_img);
+	try
+	{
+		connector->Update();
+	}
+	catch (itk::ExceptionObject& e)
+	{
+		std::cout<<"connect vtk to itk error"<<std::endl;
+		std::cerr<<e;
+	}
+	ImageType::Pointer src_itk_img = ImageType::New();
+	src_itk_img = connector->GetOutput();
+
+
+	//generate dicom dict (dicom tags informations)
+	GDCMIOType::Pointer gdcmIO = GDCMIOType::New();
+	itk::MetaDataDictionary & dict = gdcmIO->GetMetaDataDictionary(); //get gdcmIO
+	std::string tagkey, value;
+
+	//tagkey and descriptions
+	tagkey = "0008|0060"; // Modality   - this tag is ignored? 
+	value = "CT"; 
+	itk::EncapsulateMetaData<std::string>(dict, tagkey, value ); 
+
+	tagkey = "0008|0008"; // Image Type 
+	value = "DERIVED\\SECONDARY"; 
+	itk::EncapsulateMetaData<std::string>(dict, tagkey, value); 
+
+	tagkey = "0010|0010"; // Patient Name 
+	value = "Pseudo_CT_B032"; 
+	itk::EncapsulateMetaData<std::string>(dict, tagkey, value); 
+
+	tagkey = "0008|0064"; // Conversion Type 
+	value = "DV"; 
+	itk::EncapsulateMetaData<std::string>(dict, tagkey, value); 
+	//another solution from itk manual:
+	//seriesWriter->SetMetaDataDictionaryArray(reader->GetMetaDataDictionaryArray() )
+
+	//generate file names
+	NamesGeneratorType::Pointer namesGenerator = NamesGeneratorType::New();
+	//generate names according to image size
+	ImageType::RegionType region = src_itk_img->GetLargestPossibleRegion();
+	ImageType::IndexType  start = region.GetIndex();
+	ImageType::SizeType   size  = region.GetSize();
+	std::string format = OutputDir;
+	format += "/%3d.dcm";
+	namesGenerator->SetSeriesFormat(format.c_str());
+	namesGenerator->SetStartIndex(start[2]);
+	namesGenerator->SetEndIndex(start[2]+size[2]-1);
+	namesGenerator->SetIncrementIndex(1);
+
+	//write to series
+	SeriesWriterType::Pointer seriesWriter = 
+		SeriesWriterType::New();
+	seriesWriter->SetInput(src_itk_img);
+	seriesWriter->SetImageIO(gdcmIO); //add dict here!! 
+	seriesWriter->SetFileNames(namesGenerator->GetFileNames());
+	try
+	{
+		seriesWriter->Update();
+	}
+	catch(itk::ExceptionObject & e)
+	{
+		std::cerr<<"Exception Caught: series writer error"<<std::endl;
+		std::cerr<<e<<std::endl;
+		return;
+	}
+
+}
+
+
+
+
+
 
 
 

@@ -17,6 +17,10 @@
 //read dcm file
 #include "itkGDCMImageIO.h"
 #include "itkGDCMSeriesFileNames.h"
+//write dcm series
+#include "itkMetaDataObject.h"
+#include "itkImageSeriesWriter.h"
+#include "itkNumericSeriesFileNames.h"
 //read .nii and .hdr/img file
 #include "itkNiftiImageIO.h"
 //itk image file reader
@@ -102,8 +106,9 @@ void Call_dcm2nii_func(std::string cmd_path,std::string folder_path);
 
 
 
-
-
+//Function: Convert vtkiamge to a dicom series
+//IO:  input: vtkImageData
+void WiteToDicomSeries(vtkSmartPointer<vtkImageData>);
 
 
 
