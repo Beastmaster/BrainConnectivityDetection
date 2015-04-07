@@ -124,7 +124,7 @@
        <item>
         <widget class="QLabel" name="label_opacity">
          <property name="text">
-          <string>  </string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -149,7 +149,7 @@
        <item>
         <widget class="QLabel" name="overlay_opacity_Label">
          <property name="text">
-          <string>   </string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -350,7 +350,7 @@
      <item row="4" column="0">
       <widget class="QPushButton" name="bold_Btn">
        <property name="text">
-        <string>Bold</string>
+        <string>Clear Registration Images</string>
        </property>
       </widget>
      </item>

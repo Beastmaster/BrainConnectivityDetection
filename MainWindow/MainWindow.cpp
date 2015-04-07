@@ -24,6 +24,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
 	connect(this->ui->set_opacity_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_opacity_move(int)));
 	connect(this->ui->strip_val_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_strip_val_move(int)));
+	connect(this->ui->overlay_opacity_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_overlay_move(int)));
 
 	//connect signal to enable atuo-scroll in info panel
 	connect(this->ui->info_Panel,SIGNAL(cursorPositionChanged()),this,SLOT(info_Panel_Scroll()));
@@ -303,6 +304,11 @@ void MainWindow::on_click_add_mask_file()
 }
 void MainWindow::on_click_mask()
 {	
+	if (this->view_axial_reslice == NULL)
+	{
+		print_Info("ERROR ","SHOW first!");
+		return;
+	}
 	print_Info("show ","mask");
 
 	if (this->mask_img.first.empty())
@@ -353,11 +359,12 @@ void MainWindow::on_click_sel_dicom()
 	else
 	{
 		Seek_Dicom_Folder(dicom_dir);
-		dicom_dir.append("\\DicomSortList.txt");
-		std::cout<<"Reading"<<dicom_dir.toStdString()<<std::endl;
+		QString dicom_list = dicom_dir;
+		dicom_list.append("\\DicomSortList.txt");
+		std::cout<<"Reading"<<dicom_list.toStdString()<<std::endl;
 		std::vector< vtkSmartPointer<vtkImageData> > temp_container;
 		std::vector< std::string >                   temp_name_container;
-		Load_File_from_log(dicom_dir,temp_container,temp_name_container);
+		Load_File_from_log(dicom_list,temp_container,temp_name_container);
 		//put data to global container
 	
 		for (int i = 0;i<temp_name_container.size();i++)
@@ -365,6 +372,9 @@ void MainWindow::on_click_sel_dicom()
 			img_view_base_Type pair_temp;
 			pair_temp.second = vtkSmartPointer<vtkImageData>::New();
 			pair_temp.first  = temp_name_container[i];
+			//add dicom dir!!
+			pair_temp.first.insert(0,"\\");
+			pair_temp.first.insert(0,dicom_dir.toStdString());
 			pair_temp.second->DeepCopy(temp_container[i]);
 			this->data_container.push_back(pair_temp);
 			this->img_to_view = pair_temp;
@@ -372,6 +382,34 @@ void MainWindow::on_click_sel_dicom()
 			QListWidgetItem* new_item =
 				new QListWidgetItem(pair_temp.first.c_str(),this->ui->file_listWidget);
 			this->ui->file_listWidget->addItem(new_item);
+
+			//write for test
+			//save .nii files for test
+			v2iConnectorType::Pointer connector = v2iConnectorType::New();
+			connector->SetInput(pair_temp.second);
+			try
+			{
+				connector->Update();
+			}
+			catch (itk::ExceptionObject& e)
+			{
+				std::cout<<"connect itk vtk error"<<std::endl;
+				std::cerr<<e;
+			}
+
+			WriterType_b::Pointer nii_writer_parse = 
+				WriterType_b::New();
+			nii_writer_parse->SetInput(connector->GetOutput());
+			std::string name1 = pair_temp.first;
+			if (name1.compare(name1.size()-4,4,".nii") == 0)
+			{}//do nothing
+			else
+			{
+				name1.append(".nii");
+			}
+			nii_writer_parse->SetFileName(name1);
+			//nii_writer_parse->Update();
+			nii_writer_parse->Write();
 		}
 
 		int xxx = this->data_container.size();
@@ -436,6 +474,36 @@ void MainWindow::on_slider_volume_move(int posxx)
 	}
 }
 
+void MainWindow::on_slider_overlay_move(int)
+{
+	// strange bug: no on_click_show() called error will occur
+	if (this->view_axial_reslice == NULL)
+	{
+		return;
+	}
+
+	int pos = this->ui->overlay_opacity_Slider->value();
+	double opicity = double(pos)/100;
+	this->ui->overlay_opacity_Label->setText(QString::number(opicity));
+
+	if (this->mask_img.first.empty())
+	{
+		return;
+	}
+	else
+	{
+		if (pos<1)
+		{
+			return;
+		}
+		this->view_axial_reslice->SetMaskOpacity(opicity);
+		this->view_coronal_reslice->SetMaskOpacity(opicity);
+		this->view_saggital_reslice->SetMaskOpacity(opicity);
+		this->view_axial_reslice->RenderView();
+		this->view_coronal_reslice->RenderView();
+		this->view_saggital_reslice->RenderView();
+	}
+}
 
 void MainWindow::on_slider_opacity_move(int posxx)
 {
@@ -463,6 +531,10 @@ void MainWindow::on_slider_strip_val_move(int)
 	this->new_3d_view->Re_Construct();
 	this->ui->ster_3d_view_widget->GetRenderWindow()->Render();
 }
+
+
+
+
 
 void MainWindow::mouse_Wheel_move(QWheelEvent *e)
 {

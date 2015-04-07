@@ -95,6 +95,7 @@ private slots:
 	void on_slider_volume_move(int);
 	void on_slider_opacity_move(int);
 	void on_slider_strip_val_move(int);
+	void on_slider_overlay_move(int);
 	void info_Panel_Scroll();
 	void mouse_Wheel_move(QWheelEvent *e);
 	void init_Parameters();

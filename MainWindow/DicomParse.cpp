@@ -25,11 +25,24 @@ void Seek_Dicom_Folder(QString m_strDir)
 		strlstAllDir.append(it.next());
 	}
 
+
+	//progress bar
+	QProgressDialog* dialogLoading_load_file = new QProgressDialog("Parse....", "", 0, strlstAllDir.size());
+	dialogLoading_load_file->setWindowModality(Qt::WindowModal);
+	dialogLoading_load_file->setCancelButton(0);
+	QLabel* label_temp_lf = new QLabel (dialogLoading_load_file);
+	label_temp_lf->setStyleSheet("color: rgb(255, 255, 255);");
+	dialogLoading_load_file->setLabel(label_temp_lf);
+	dialogLoading_load_file->setMinimumDuration(0);
+	dialogLoading_load_file->setLabelText("Loading files..");
+	dialogLoading_load_file->setValue(1);
+
 	for (int i=0;i<strlstAllDir.size();i++)
 	{
 		ParseParseParse(strlstAllDir.at(i),m_strDir);
+		dialogLoading_load_file->setValue(i);
 	}
-
+	delete dialogLoading_load_file;
 }
 
 // first para: path      ---- single dicom file full path
@@ -69,6 +82,8 @@ void ParseParseParse(QString path, QString m_strDir)
 		catch (itk::ExceptionObject& e)
 		{
 			std::cerr<<e;
+			std::cerr<<"ITK reader fiaild... Returning!"<<std::endl;
+			return;
 		}
 
 		typedef itk::MetaDataDictionary   DictionaryType;
@@ -288,7 +303,14 @@ void Load_File_from_log(QString log_name,
 	for (int select_index = 0;select_index<total_vol;select_index++)
 	{
 		//parse from log and add data to container
-		Log2Container_inDicomParse(log_name,info,container,select_index,img_names);
+		if (info->description[select_index].contains("pd") && info->description[select_index].contains("t2"))
+		{
+			Log2Container_inDicomParse_Stereo(log_name,info,container,select_index,img_names);
+		}
+		else
+		{
+			Log2Container_inDicomParse(log_name,info,container,select_index,img_names);
+		}
 	}
 
 	std::cout<<"load files successfully!!"<<std::endl;
@@ -504,20 +526,20 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 			std::cerr<<e;
 			return;
 		}
-		//save .nii files for test
-		WriterType_b::Pointer nii_writer_parse = 
-			WriterType_b::New();
-		nii_writer_parse->SetInput(itk_reader->GetOutput());
-		std::string name1 = info->description.at(index).toStdString();
-		if (name1.compare(name1.size()-4,4,".nii") == 0)
-		{}//do nothing
-		else
-		{
-			name1.append(".nii");
-		}
-		nii_writer_parse->SetFileName(name1);
-		//nii_writer_parse->Update();
-		nii_writer_parse->Write();
+		////save .nii files for test
+		//WriterType_b::Pointer nii_writer_parse = 
+		//	WriterType_b::New();
+		//nii_writer_parse->SetInput(itk_reader->GetOutput());
+		//std::string name1 = info->description.at(index).toStdString();
+		//if (name1.compare(name1.size()-4,4,".nii") == 0)
+		//{}//do nothing
+		//else
+		//{
+		//	name1.append(".nii");
+		//}
+		//nii_writer_parse->SetFileName(name1);
+		////nii_writer_parse->Update();
+		//nii_writer_parse->Write();
 
 		//get information from dicom tags( thickness among slices)
 		const  DictionaryType & dictionary = dicomIO->GetMetaDataDictionary();
@@ -602,7 +624,14 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 		vtkSmartPointer<vtkImageData>temp_con_con = vtkSmartPointer<vtkImageData>::New();
 		temp_con_con->DeepCopy(changer->GetOutput());
 		container.push_back(temp_con_con);
-		file_names.push_back(info->description.at(index).toStdString());
+		
+		std::string filename_temp = info->description.at(index).toStdString();
+		//exclude '/' from name
+		if (filename_temp.find("/")!=std::string::npos)
+		{
+			filename_temp.replace(filename_temp.find("/"),1,"-");
+		}
+		file_names.push_back(filename_temp);
 		
 		//change process bar
 		dialogLoading_File->setValue(i);
@@ -623,6 +652,399 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 	}
 	//delete progress dialog
 	delete dialogLoading_File;
+}
+
+void Log2Container_inDicomParse_Exception(QString log_name, File_info_in_DicomParse* info, std::vector<vtkSmartPointer<vtkImageData> >& container, int index, std::vector<std::string>& file_names)
+{
+	int size = 0;
+	int slice_number = 0;
+	int volume_number= 0;
+	//find number of item in QStringList
+	size = info->description.size();
+	slice_number = info->slice_number.at(index).toInt();
+	volume_number= info->temperal_number.at(index).toInt();
+
+	std::cout<<"volume info:"
+		<<info->description.at(index).toStdString()
+		<<info->slice_number.at(index).toInt()
+		<<info->temperal_number.at(index).toInt()
+		<<std::endl;
+
+	QFile log_file;
+	log_file.setFileName(log_name);
+	//--read log again to find file path--//
+	//read file line by line
+	if(!log_file.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+	//use text stream to read line
+	QTextStream in(&log_file);
+	//seek to path
+	in.seek(info->path_position.at(index));
+	//1. put name into a vector
+	//divide these filenames by half
+	std::vector< std::vector<std::string> > name_holder(2);
+	int cnt = 0;
+	while(cnt<int(slice_number/2))
+	{
+		QString f_name = in.readLine();
+		name_holder[0].push_back(f_name.toStdString());
+		cnt++;
+	}
+	while(cnt<slice_number)
+	{
+		QString f_name = in.readLine();
+		name_holder[1].push_back(f_name.toStdString());
+		cnt++;
+	}
+
+	log_file.close();//read DicomSortLists.txt done
+	
+	if ( name_holder[1].empty() && name_holder[1].empty() )
+	{
+		return;
+	}
+
+
+	//define itk reader
+	//typedef itk::Image< float , 3 >             ImageType; //image type pixel:float;dimension:3
+	//typedef itk::ImageSeriesReader< ImageType > ReaderType;
+	ReaderType_b::Pointer itk_reader = ReaderType_b::New();
+	DicomIOType::Pointer  dicomIO = DicomIOType::New();
+	itk_reader->SetImageIO(dicomIO);
+
+
+	for(int i = 0;i<2;i++)
+	{
+		if (name_holder[i].empty())
+		{
+			return;
+		}
+		itk_reader->SetFileNames(name_holder[i]);
+		try
+		{
+			itk_reader->Update();
+		}
+		catch (itk::ExceptionObject& e)
+		{
+			std::cerr<<e;
+			return;
+		}
+
+		//get information from dicom tags( thickness among slices)
+		const  DictionaryType & dictionary = dicomIO->GetMetaDataDictionary();
+		DictionaryType::ConstIterator itr = dictionary.Begin();
+		DictionaryType::ConstIterator end = dictionary.End();
+
+		std::string sliceThicknessID = "0018|0050";
+		std::string sliceOriginID    = "0020|0032";
+		std::string pixelSpacingID   = "0028|0030";
+		DictionaryType::ConstIterator Thickness_tagItr   = dictionary.Find( sliceThicknessID );
+		DictionaryType::ConstIterator Origin_tagItr      = dictionary.Find( sliceOriginID );
+		DictionaryType::ConstIterator PixeSpacing_tagItr = dictionary.Find(pixelSpacingID);
+
+		if( Thickness_tagItr == end | Origin_tagItr == end | PixeSpacing_tagItr == end)
+		{
+			std::cerr << "Tag " << sliceThicknessID<<"or"<<"sliceOriginID";
+			std::cerr << " not found in the DICOM header" << std::endl;
+			return;
+		}
+		MetaDataStringType::ConstPointer Thickness_entryvalue = 
+			dynamic_cast<const MetaDataStringType *>( Thickness_tagItr->second.GetPointer() );
+		MetaDataStringType::ConstPointer Origin_entryvalue = 
+			dynamic_cast<const MetaDataStringType *>( Origin_tagItr->second.GetPointer() );
+		MetaDataStringType::ConstPointer Spacing_entryvalue = 
+			dynamic_cast<const MetaDataStringType *>( PixeSpacing_tagItr->second.GetPointer() );
+
+
+		std::string Thickness_tagvalue;
+		std::string Origin_tagvalue;
+		std::string PixelSpacing_tagvalue;
+
+		if( Thickness_entryvalue || Origin_entryvalue)
+		{
+			Thickness_tagvalue    = Thickness_entryvalue->GetMetaDataObjectValue();
+			Origin_tagvalue       = Origin_entryvalue   ->GetMetaDataObjectValue();
+			PixelSpacing_tagvalue = Spacing_entryvalue  ->GetMetaDataObjectValue();
+			std::cout << "slice thickness is (" << sliceThicknessID <<  ") ";
+			std::cout << " is: " << Thickness_tagvalue << std::endl;
+			std::cout << "origin is (" << sliceOriginID <<  ") ";
+			std::cout << " is: " << Origin_tagvalue << std::endl;
+			std::cout << "spacing is (" << pixelSpacingID <<  ") ";
+			std::cout << " is: " << PixelSpacing_tagvalue << std::endl;
+		}
+		else
+		{
+			std::cerr << "Entry was not of string type" << std::endl;
+			return ;
+		}
+		double slice_thickness = std::stod(Thickness_tagvalue);
+		double pixel_spacing   = std::stod(PixelSpacing_tagvalue);
+		double img_origin      = std::stod(Origin_tagvalue);
+
+		//typedef itk::ImageToVTKImageFilter<ImageType> ConnectorType;
+		i2vConnectorType::Pointer connector = i2vConnectorType::New();
+		//connect
+		connector->SetInput(itk_reader->GetOutput());
+		connector->Update();
+		//output vtkimagedata to data_container
+		//vtksmartpointer act as buff
+		vtkSmartPointer<vtkImageData> buff =
+			vtkSmartPointer<vtkImageData>::New();
+		buff = connector->GetOutput();
+		std::cout<<"converter: "<<i<<" done!"<<std::endl;
+
+		//-----------change information(origin and spacing)--------------//
+		//get information :origin
+		//it seems that there is no need to change origin
+		double origin[3]={0,0,0};
+		buff->GetOrigin(origin);
+		std::cout<<"origin:"<<origin[0]<<origin[1]<<origin[2]<<std::endl;
+
+		double spacing[3]={0,0,0};
+		buff->GetSpacing(spacing);
+		spacing[2] = slice_thickness;
+
+		vtkSmartPointer<vtkImageChangeInformation> changer = 
+			vtkSmartPointer<vtkImageChangeInformation>::New();
+		changer->SetOutputSpacing(spacing);
+		//change 
+		changer->SetInput(buff);
+		//changer->SetOutputOrigin(origin);
+		changer->Update();
+
+		vtkSmartPointer<vtkImageData>temp_con_con = vtkSmartPointer<vtkImageData>::New();
+		temp_con_con->DeepCopy(changer->GetOutput());
+		container.push_back(temp_con_con);
+		if (i == 0)
+		{
+			std::string filename_temp = info->description.at(index).toStdString();
+			if (filename_temp.find("/")!=std::string::npos)
+			{
+				filename_temp.replace(filename_temp.find("/"),1,"-");
+			}
+			file_names.push_back(filename_temp.append("-pd"));
+		}
+		else
+		{
+			std::string filename_temp = info->description.at(index).toStdString();
+			if (filename_temp.find("/")!=std::string::npos)
+			{
+				filename_temp.replace(filename_temp.find("/"),1,"-");
+			}
+			file_names.push_back(filename_temp.append("-t2"));
+		}
+	}
+	if (log_file.isOpen())
+	{
+		log_file.close();
+	}
+
+}
+
+
+void Log2Container_inDicomParse_Stereo(QString log_name, File_info_in_DicomParse* info, std::vector<vtkSmartPointer<vtkImageData> >& container, int index, std::vector<std::string>& file_names)
+{
+	int size = 0;
+	int slice_number = 0;
+	int volume_number= 0;
+	//find number of item in QStringList
+	size = info->description.size();
+	slice_number = info->slice_number.at(index).toInt();
+	volume_number= info->temperal_number.at(index).toInt();
+
+	std::cout<<"volume info:"
+		<<info->description.at(index).toStdString()
+		<<info->slice_number.at(index).toInt()
+		<<info->temperal_number.at(index).toInt()
+		<<std::endl;
+
+	QFile log_file;
+	log_file.setFileName(log_name);
+	//--read log again to find file path--//
+	//read file line by line
+	if(!log_file.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+	//use text stream to read line
+	QTextStream in(&log_file);
+	//seek to path
+	in.seek(info->path_position.at(index));
+	//1. put name into a vector
+	//divide these filenames by half
+	std::vector< std::vector<std::string> > name_holder(2);
+	int cnt = 0;
+	while(cnt<int(slice_number/2))
+	{
+		QString f_name = in.readLine();
+		name_holder[0].push_back(f_name.toStdString());
+		cnt++;
+	}
+	while(cnt<slice_number)
+	{
+		QString f_name = in.readLine();
+		name_holder[1].push_back(f_name.toStdString());
+		cnt++;
+	}
+
+	//reverse the name holder
+	std::vector< std::vector<std::string> > name_holder2(2);
+	for (int x=0;x<name_holder[0].size();x++)
+	{
+		name_holder2[0].push_back(name_holder[0].back());
+		name_holder[0].pop_back();
+	}
+	for (int x=0;x<name_holder[1].size();x++)
+	{
+		name_holder2[1].push_back(name_holder[1].back());
+		name_holder[1].pop_back();
+	}
+
+	log_file.close();//read DicomSortLists.txt done
+
+	if ( name_holder2[1].empty() && name_holder2[1].empty() )
+	{
+		return;
+	}
+
+
+	//define itk reader
+	//typedef itk::Image< float , 3 >             ImageType; //image type pixel:float;dimension:3
+	//typedef itk::ImageSeriesReader< ImageType > ReaderType;
+	ReaderType_b::Pointer itk_reader = ReaderType_b::New();
+	DicomIOType::Pointer  dicomIO = DicomIOType::New();
+	itk_reader->SetImageIO(dicomIO);
+
+
+	for(int i = 0;i<2;i++)
+	{
+		if (name_holder2[i].empty())
+		{
+			return;
+		}
+		itk_reader->SetFileNames(name_holder2[i]);
+		try
+		{
+			itk_reader->Update();
+		}
+		catch (itk::ExceptionObject& e)
+		{
+			std::cerr<<e;
+			return;
+		}
+
+		//get information from dicom tags( thickness among slices)
+		const  DictionaryType & dictionary = dicomIO->GetMetaDataDictionary();
+		DictionaryType::ConstIterator itr = dictionary.Begin();
+		DictionaryType::ConstIterator end = dictionary.End();
+
+		std::string sliceThicknessID = "0018|0050";
+		std::string sliceOriginID    = "0020|0032";
+		std::string pixelSpacingID   = "0028|0030";
+		DictionaryType::ConstIterator Thickness_tagItr   = dictionary.Find( sliceThicknessID );
+		DictionaryType::ConstIterator Origin_tagItr      = dictionary.Find( sliceOriginID );
+		DictionaryType::ConstIterator PixeSpacing_tagItr = dictionary.Find(pixelSpacingID);
+
+		if( Thickness_tagItr == end | Origin_tagItr == end | PixeSpacing_tagItr == end)
+		{
+			std::cerr << "Tag " << sliceThicknessID<<"or"<<"sliceOriginID";
+			std::cerr << " not found in the DICOM header" << std::endl;
+			return;
+		}
+		MetaDataStringType::ConstPointer Thickness_entryvalue = 
+			dynamic_cast<const MetaDataStringType *>( Thickness_tagItr->second.GetPointer() );
+		MetaDataStringType::ConstPointer Origin_entryvalue = 
+			dynamic_cast<const MetaDataStringType *>( Origin_tagItr->second.GetPointer() );
+		MetaDataStringType::ConstPointer Spacing_entryvalue = 
+			dynamic_cast<const MetaDataStringType *>( PixeSpacing_tagItr->second.GetPointer() );
+
+
+		std::string Thickness_tagvalue;
+		std::string Origin_tagvalue;
+		std::string PixelSpacing_tagvalue;
+
+		if( Thickness_entryvalue || Origin_entryvalue)
+		{
+			Thickness_tagvalue    = Thickness_entryvalue->GetMetaDataObjectValue();
+			Origin_tagvalue       = Origin_entryvalue   ->GetMetaDataObjectValue();
+			PixelSpacing_tagvalue = Spacing_entryvalue  ->GetMetaDataObjectValue();
+			std::cout << "slice thickness is (" << sliceThicknessID <<  ") ";
+			std::cout << " is: " << Thickness_tagvalue << std::endl;
+			std::cout << "origin is (" << sliceOriginID <<  ") ";
+			std::cout << " is: " << Origin_tagvalue << std::endl;
+			std::cout << "spacing is (" << pixelSpacingID <<  ") ";
+			std::cout << " is: " << PixelSpacing_tagvalue << std::endl;
+		}
+		else
+		{
+			std::cerr << "Entry was not of string type" << std::endl;
+			return ;
+		}
+		double slice_thickness = std::stod(Thickness_tagvalue);
+		double pixel_spacing   = std::stod(PixelSpacing_tagvalue);
+		double img_origin      = std::stod(Origin_tagvalue);
+
+		//typedef itk::ImageToVTKImageFilter<ImageType> ConnectorType;
+		i2vConnectorType::Pointer connector = i2vConnectorType::New();
+		//connect
+		connector->SetInput(itk_reader->GetOutput());
+		connector->Update();
+		//output vtkimagedata to data_container
+		//vtksmartpointer act as buff
+		vtkSmartPointer<vtkImageData> buff =
+			vtkSmartPointer<vtkImageData>::New();
+		buff = connector->GetOutput();
+		std::cout<<"converter: "<<i<<" done!"<<std::endl;
+
+		//-----------change information(origin and spacing)--------------//
+		//get information :origin
+		//it seems that there is no need to change origin
+		double origin[3]={0,0,0};
+		buff->GetOrigin(origin);
+		std::cout<<"origin:"<<origin[0]<<origin[1]<<origin[2]<<std::endl;
+
+		double spacing[3]={0,0,0};
+		buff->GetSpacing(spacing);
+		spacing[2] = slice_thickness;
+
+		vtkSmartPointer<vtkImageChangeInformation> changer = 
+			vtkSmartPointer<vtkImageChangeInformation>::New();
+		changer->SetOutputSpacing(spacing);
+		//change 
+		changer->SetInput(buff);
+		//changer->SetOutputOrigin(origin);
+		changer->Update();
+
+		vtkSmartPointer<vtkImageData>temp_con_con = vtkSmartPointer<vtkImageData>::New();
+		temp_con_con->DeepCopy(changer->GetOutput());
+		container.push_back(temp_con_con);
+		if (i == 0)
+		{
+			std::string filename_temp = info->description.at(index).toStdString();
+			size_t num_slash = filename_temp.find("/");
+			if (num_slash == std::string::npos)
+			{
+				file_names.push_back(filename_temp.append("-pd"));
+			}
+			else
+			{
+				filename_temp.replace(filename_temp.find("/"),1,"-");
+				file_names.push_back(filename_temp.append("-pd"));
+			}
+		}
+		else
+		{
+			std::string filename_temp = info->description.at(index).toStdString();
+			if (filename_temp.find("/")!=std::string::npos)
+			{
+				filename_temp.replace(filename_temp.find("/"),1,"-");
+			}
+			file_names.push_back(filename_temp.append("-t2"));
+		}
+	}
+	if (log_file.isOpen())
+	{
+		log_file.close();
+	}
+
 }
 
 

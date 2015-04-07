@@ -93,6 +93,7 @@ void reslice_view_base::Set_View_Img(vtkSmartPointer<vtkImageData> img)
 	this->img_to_view = img;
 	this->dimensions = new int[3];
 	this->img_to_view->GetDimensions(this->dimensions);
+	this->slice_n = int(dimensions[0]/2);
 	std::cout<<"dimension is :"<<dimensions[0]<<dimensions[1]<<dimensions[2]<<std::endl;
 	this->calculate_img_center(img_to_view);
 }

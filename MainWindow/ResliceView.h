@@ -37,6 +37,7 @@ public:
 	~reslice_view_base();
 
 	void SetSlice(int x) {this->slice_n = x;};//useless
+	void SetMaskOpacity(double op) {mask_actor->SetOpacity(op);};
 	void Set_View_Img(vtkSmartPointer<vtkImageData>);
 	void Set_Mask_Img(vtkSmartPointer<vtkImageData>);
 	void RenderView();
