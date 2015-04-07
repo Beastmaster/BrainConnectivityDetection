@@ -21,14 +21,6 @@ Reg_Image_Type Registration_Process(Reg_Image_Type fix, Reg_Image_Type src, std:
 		return NULL;
 	}
 	ImageTypex::Pointer itk_temp_fixed_image = v2iconnector_pre_temp->GetOutput();
-	////write for test
-	//typedef itk::ImageFileWriter  < ImageTypex > WriterType_reg;
-	//WriterType_reg::Pointer nii_writerxx1 = 
-	//	WriterType_reg::New();
-	//nii_writerxx1->SetInput(itk_temp_fixed_image);
-	//std::string name1 = "fix.nii";
-	//nii_writerxx1->SetFileName(name1);
-	//nii_writerxx1->Update();
 
 	//2. connect source image to ITK data type
 	vtkSmartPointer<vtkImageData> temp_src_image = 
@@ -47,14 +39,6 @@ Reg_Image_Type Registration_Process(Reg_Image_Type fix, Reg_Image_Type src, std:
 		return NULL;
 	}
 	ImageTypex::Pointer itk_temp_src_image = v2iconnector_pre_temp1->GetOutput();
-
-	//typedef itk::ImageFileWriter  < ImageTypex > WriterType_reg;
-	//WriterType_reg::Pointer nii_writerxx = 
-	//	WriterType_reg::New();
-	//nii_writerxx->SetInput(itk_temp_src_image);
-	//std::string name2 = "source.nii";
-	//nii_writerxx->SetFileName(name2);
-	//nii_writerxx->Update();
 
 	//3. resample images 
 	typedef itk::ResampleImageFilter<ImageTypex,ImageTypex> ResampleFilterType;
@@ -96,14 +80,14 @@ Reg_Image_Type Registration_Process(Reg_Image_Type fix, Reg_Image_Type src, std:
 	std::string new_name = name;
 	new_name.insert(new_name.find_last_of("."),"-rspd");
 	nii_writerx->SetFileName(new_name);
-	nii_writerx->Update();
+	//nii_writerx->Update();
 
 
 	//4. run register process
 	ImageTypex::Pointer  registered_img= ImageTypex::New();
 	typedef Register< float, float, float > RegisterType_process;
 	RegisterType_process * reg_hd = new RegisterType_process;    
-	reg_hd->SetFixedImage( itk_temp_fixed_image );/////////////////////////////
+	reg_hd->SetFixedImage( resampled_itk_temp_fixed_image );/////////////////////////////
 	reg_hd->SetMovingImage( itk_temp_src_image );
 	reg_hd->GenerateTranformMatrix();    
 	reg_hd->GetRegisteredMovingImage( registered_img );
@@ -134,18 +118,5 @@ Reg_Image_Type Registration_Process(Reg_Image_Type fix, Reg_Image_Type src, std:
 		return NULL;
 	}
 
-	////5. get output
-	//v2iConnectorType::Pointer v2iconvet = v2iConnectorType::New();
-	//v2iconvet->SetInput(i2vconnector_lag_temp->GetOutput());
-	//try
-	//{
-	//	v2iconvet->Update();
-	//}
-	//catch( itk::ExceptionObject &err )
-	//{
-	//	std::cerr << "**Error converting ITK type to VTK type" << std::endl;
-	//	std::cerr << err << std::endl;
-	//	return NULL;
-	//}
 	return i2vconnector_lag_temp->GetOutput();
 }

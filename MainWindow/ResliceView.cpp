@@ -96,6 +96,12 @@ void reslice_view_base::Set_View_Img(vtkSmartPointer<vtkImageData> img)
 	this->slice_n = int(dimensions[0]/2);
 	std::cout<<"dimension is :"<<dimensions[0]<<dimensions[1]<<dimensions[2]<<std::endl;
 	this->calculate_img_center(img_to_view);
+
+	//get vtkimagedata range
+	float valuesRange[2];
+//	vtkFloatArray::SafeDownCast(this->img_to_view->GetPointData()->GetArray("ImageScalars"))->GetValueRange(valuesRange);
+
+	//set window level
 }
 
 void reslice_view_base::Set_Mask_Img(vtkSmartPointer<vtkImageData> img)

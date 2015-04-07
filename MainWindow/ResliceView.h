@@ -21,7 +21,9 @@
 #include "vtkObject.h"
 #include "vtkDataObject.h"
 #include "vtkObjectFactory.h"
-
+//get value range
+#include "vtkFloatArray.h"
+#include "vtkPointData.h"
 //blend two images
 #include "vtkImageBlend.h"
 #include "vtkImageMapToWindowLevelColors.h"

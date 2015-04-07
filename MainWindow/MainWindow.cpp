@@ -351,6 +351,8 @@ void MainWindow::on_click_sel_dicom()
 
 	if (dicom_dir.isEmpty())  return;
 
+	print_Info("Begin Parsing Dicom files!"," Please Wait...");
+
 	std::string dcm2nii_dir = "C:/Users/USER/Desktop/MRIcron/dcm2nii.exe";
 	if (this->ui->use_dcm2nii_check->isChecked())
 	{
@@ -418,6 +420,7 @@ void MainWindow::on_click_sel_dicom()
 		this->set_slider_volume_range(xxx);
 		connect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
 		this->on_click_show();
+		print_Info("Pare Dicom files"," Done!");
 	}
 }
 

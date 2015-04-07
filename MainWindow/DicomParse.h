@@ -112,6 +112,11 @@ void Log2Container_inDicomParse_Stereo(QString log_name,
 										  int index,
 										  std::vector<std::string>&);
 
+void Log2Container_inDicomParse_Stereo_Only(QString log_name, 
+											File_info_in_DicomParse* info, 
+											std::vector<vtkSmartPointer<vtkImageData> >& container,
+											int index,
+											std::vector<std::string>&);
 
 //call dcm2nii function to convert dicom images to nii
 void Call_dcm2nii_func(std::string cmd_path,std::string folder_path);
