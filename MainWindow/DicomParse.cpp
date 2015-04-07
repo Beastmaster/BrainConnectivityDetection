@@ -305,7 +305,14 @@ void Load_File_from_log(QString log_name,
 		//parse from log and add data to container
 		if (info->description[select_index].contains("pd") && info->description[select_index].contains("t2"))
 		{
-			Log2Container_inDicomParse_Stereo(log_name,info,container,select_index,img_names);
+			if (info->description[select_index].contains("Stereo"))
+			{
+				Log2Container_inDicomParse_Stereo(log_name,info,container,select_index,img_names);
+			}
+			else
+			{
+				Log2Container_inDicomParse_Exception(log_name,info,container,select_index,img_names);
+			}
 		}
 		else
 		{
@@ -654,6 +661,10 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 	delete dialogLoading_File;
 }
 
+
+//split a volume into 2 volumes
+//because they whole volume contain pd+t2 images
+//if normal t2+pd image, re-construct them in ordinary order
 void Log2Container_inDicomParse_Exception(QString log_name, File_info_in_DicomParse* info, std::vector<vtkSmartPointer<vtkImageData> >& container, int index, std::vector<std::string>& file_names)
 {
 	int size = 0;
@@ -841,7 +852,9 @@ void Log2Container_inDicomParse_Exception(QString log_name, File_info_in_DicomPa
 
 }
 
-
+//split a volume into 2 volumes
+//because they whole volume contain pd+t2 images
+//if it is Stereo volume!!! Do re-construct slices in reverse order!!! God!!!
 void Log2Container_inDicomParse_Stereo(QString log_name, File_info_in_DicomParse* info, std::vector<vtkSmartPointer<vtkImageData> >& container, int index, std::vector<std::string>& file_names)
 {
 	int size = 0;
