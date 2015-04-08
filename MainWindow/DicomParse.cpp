@@ -904,12 +904,14 @@ void Log2Container_inDicomParse_Stereo(QString log_name, File_info_in_DicomParse
 
 	//reverse the name holder
 	std::vector< std::vector<std::string> > name_holder2(2);
-	for (int x=0;x<name_holder[0].size();x++)
+	int size_name_holder_0 = name_holder[0].size();
+	for (int x=0;x<size_name_holder_0;x++)
 	{
 		name_holder2[0].push_back(name_holder[0].back());
 		name_holder[0].pop_back();
 	}
-	for (int x=0;x<name_holder[1].size();x++)
+	int size_name_holder_1 = name_holder[1].size();
+	for (int x=0;x<size_name_holder_1;x++)
 	{
 		name_holder2[1].push_back(name_holder[1].back());
 		name_holder[1].pop_back();
@@ -1105,7 +1107,8 @@ void Log2Container_inDicomParse_Stereo_Only(QString log_name, File_info_in_Dicom
 
 	//reverse the name holder
 	std::vector< std::vector<std::string> > name_holder2(1);
-	for (int x=0;x<name_holder[0].size();x++)
+	int size_name_holder = name_holder[0].size();
+	for (int x=0;x<size_name_holder;x++)
 	{
 		name_holder2[0].push_back(name_holder[0].back());
 		name_holder[0].pop_back();
@@ -1129,11 +1132,11 @@ void Log2Container_inDicomParse_Stereo_Only(QString log_name, File_info_in_Dicom
 
 	for(int i = 0;i<1;i++)
 	{
-		if (name_holder[i].empty())
+		if (name_holder2[i].empty())
 		{
 			return;
 		}
-		itk_reader->SetFileNames(name_holder[i]);
+		itk_reader->SetFileNames(name_holder2[i]);
 		try
 		{
 			itk_reader->Update();
