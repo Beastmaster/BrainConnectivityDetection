@@ -27,6 +27,10 @@
 //blend two images
 #include "vtkImageBlend.h"
 #include "vtkImageMapToWindowLevelColors.h"
+//pick pixel in image view
+#include "vtkPropPicker.h"
+#include "vtkAssemblyPath.h"
+#include "vtkMath.h"
 
 class reslice_interactor_style;
 

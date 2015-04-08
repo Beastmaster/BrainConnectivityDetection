@@ -339,11 +339,47 @@ void reslice_view_base:: on_click_mouse_lft(vtkObject* obj)
 		vtkSmartPointer<vtkRenderWindowInteractor>::New();
 	//get interactor first
 	iren = vtkRenderWindowInteractor::SafeDownCast(obj);
+	vtkSmartPointer<vtkInteractorStyle> style = 
+		vtkSmartPointer<vtkInteractorStyle>::New();
+	style = vtkInteractorStyle::SafeDownCast(iren->GetInteractorStyle());
 
 	int eve_pos[2];
-	iren->GetEventPosition(eve_pos);
-	
-	std::cout<<"click mouse left button "<<eve_pos[0]<<" , "<<eve_pos[1]<<std::endl;
+	iren->GetEventPosition(eve_pos);// here we pick the world coordinate which is not suitable, we should get pixel position
+
+	//use vtkPropPicker 
+	vtkSmartPointer<vtkPropPicker> propPicker = 
+		vtkSmartPointer<vtkPropPicker>::New();
+	propPicker->PickFromListOn();
+	propPicker->AddPickList(this->actor);
+
+	propPicker->Pick(iren->GetEventPosition()[0],
+					 iren->GetEventPosition()[1],
+					 0.0,
+					 this->new_render);
+	// There could be other props assigned to this picker, so 
+	// make sure we picked the image actor
+	vtkAssemblyPath* path = propPicker->GetPath();
+	bool validPick = false;
+	if (path)
+	{
+		vtkCollectionSimpleIterator sit;
+		path->InitTraversal(sit);
+		vtkAssemblyNode *node;
+		for (int i = 0; i < path->GetNumberOfItems() && !validPick; ++i)
+		{
+			node = path->GetNextNode(sit);
+			if (actor == vtkImageActor::SafeDownCast(node->GetViewProp()))
+			{
+				validPick = true;
+			}
+		}
+	}
+
+	double pos[3];
+	propPicker->GetPickPosition(pos);
+
+	std::cout<<"click mouse left button "<<eve_pos[0]<<" , "<<eve_pos[1]<<" , "<<this->slice_n<<std::endl;
+	std::cout<<"click mouse left button "<<vtkMath::Round(pos[0])<<" , "<<pos[1]<<" , "<<pos[2]<<std::endl;
 }
 // private method: set view direction
 void reslice_view_base::Set_Direction(char x)
