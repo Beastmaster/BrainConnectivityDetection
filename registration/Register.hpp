@@ -147,7 +147,7 @@ int Register<FixedImagePixelType, MovingImagePixelType, ThirdImagePixelType>::Ge
     
     optimizer->SetMaximumStepLength( 0.2000 );//
     optimizer->SetMinimumStepLength( 0.0010 );
-    optimizer->SetNumberOfIterations( 50 );
+    optimizer->SetNumberOfIterations( 500 );
     
     typename CommandIterationUpdate::Pointer observer = CommandIterationUpdate::New();
     optimizer->AddObserver( itk::IterationEvent(), observer );
