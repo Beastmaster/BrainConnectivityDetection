@@ -1067,7 +1067,7 @@ void Log2Container_inDicomParse_Stereo(QString log_name, File_info_in_DicomParse
 }
 
 
-
+// no need to reverse here
 void Log2Container_inDicomParse_Stereo_Only(QString log_name, File_info_in_DicomParse* info, std::vector<vtkSmartPointer<vtkImageData> >& container, int index, std::vector<std::string>& file_names)
 {
 	int size = 0;
@@ -1106,12 +1106,14 @@ void Log2Container_inDicomParse_Stereo_Only(QString log_name, File_info_in_Dicom
 	}
 
 	//reverse the name holder
+	//this step is useless !!!!!!!!!!!!!!!!!!!
+	//do nothing, for sake of convenience
 	std::vector< std::vector<std::string> > name_holder2(1);
 	int size_name_holder = name_holder[0].size();
 	for (int x=0;x<size_name_holder;x++)
 	{
 		name_holder2[0].push_back(name_holder[0].back());
-		name_holder[0].pop_back();
+		//name_holder[0].pop_back();
 	}
 
 	log_file.close();//read DicomSortLists.txt done
@@ -1132,11 +1134,11 @@ void Log2Container_inDicomParse_Stereo_Only(QString log_name, File_info_in_Dicom
 
 	for(int i = 0;i<1;i++)
 	{
-		if (name_holder2[i].empty())
+		if (name_holder[i].empty())
 		{
 			return;
 		}
-		itk_reader->SetFileNames(name_holder2[i]);
+		itk_reader->SetFileNames(name_holder[i]);
 		try
 		{
 			itk_reader->Update();

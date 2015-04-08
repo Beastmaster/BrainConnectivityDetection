@@ -21,6 +21,8 @@
 //qt string class
 #include <QString>
 #include <QStringList>
+//enable multi thread!
+#include <QThread>
 //BOLD head
 #include "SubWidgetParadigmInBold.h"
 
@@ -62,7 +64,7 @@
 #include "vtkGetTimecourse.cpp"
 
 class vtkimageview2_base;
-
+class multi_thread ;
 
 namespace Ui {
 class MainWindow;
@@ -71,6 +73,8 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT
+
+	friend class multi_thread;
 public:
 	explicit MainWindow(QWidget *parent = 0);
 	~MainWindow();
@@ -150,11 +154,23 @@ private:
 	vtkSmartPointer<vtkImageActor> axial_mask_Actor;
 	vtkSmartPointer<vtkImageActor> coronal_mask_Actor;
 	vtkSmartPointer<vtkImageActor> sagittal_mask_Actor;
+
+	//multi thread!!!
+	multi_thread* register_thread[1];
 };
 
 
 
-
+class multi_thread : public QThread
+{
+	Q_OBJECT
+public:
+	multi_thread(MainWindow*);
+	~multi_thread();
+	void run();
+protected:
+	MainWindow* main_win;
+};
 
 
 

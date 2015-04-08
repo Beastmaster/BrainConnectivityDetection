@@ -64,6 +64,12 @@ MainWindow::~MainWindow()
 		delete view_saggital_reslice;
 	}
 
+	//delete multi thread
+	if (this->register_thread[0] != NULL)
+	{
+		delete this->register_thread ;
+	}
+
 	delete ui;
 }
 
@@ -97,6 +103,9 @@ void MainWindow::init_Parameters()
 	//init overlay opacity slider bar
 	this->ui->overlay_opacity_Slider->setRange(0,100);
 	this->ui->overlay_opacity_Slider->setValue(100);
+
+	//for multi thread
+	this->register_thread[0] = NULL;
 }
 
 void MainWindow::on_click_load()
@@ -686,20 +695,21 @@ void MainWindow::on_click_register()
 	{
 		return;
 	}
+
 	print_Info("Registering Process","  Running");
-	for (int i=0;i<register_container.size();i++)
+	//start register process
+	if (register_thread[0] != NULL)
 	{
-		std::string name = register_container[i].first;
-		if (name.compare(name.size()-4,4,".nii") == 0)
-		{	
-		}
-		else
-		{
-			name.append(".nii");
-		}
-		Registration_Process(this->reference_img.second,register_container[i].second,name);
+		delete register_thread[0];
 	}
-	print_Info("Registering Process"," Done!!");
+	register_thread[0] = new multi_thread(this);
+	register_thread[0]->start();
+
+	////enable some buttons
+	//this->ui->bold_Btn->setEnabled(true);//name clear(temp)
+	//this->ui->register_Btn->setEnabled(true);
+	//this->ui->add_src_Btn->setEnabled(true);
+	//this->ui->add_refer_Btn->setEnabled(true);
 }
 
 
@@ -709,4 +719,35 @@ void MainWindow::on_click_register()
 
 
 
+
+
+multi_thread::multi_thread(MainWindow* win)
+{
+	this->main_win = win;
+}
+
+multi_thread::~multi_thread()
+{
+
+}
+
+void multi_thread::run()
+{
+	//start register process
+	this->main_win->print_Info("Registering Process","  Running");
+	for (int i=0;i<this->main_win->register_container.size();i++)
+	{
+		std::string name =this->main_win->register_container[i].first;
+		if (name.compare(name.size()-4,4,".nii") == 0)
+		{	
+		}
+		else
+		{
+			name.append(".nii");
+		}
+		Registration_Process(this->main_win->reference_img.second,this->main_win->register_container[i].second,name);
+	}
+	main_win->print_Info("Registering Process"," Done!!");
+
+}
 
