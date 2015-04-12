@@ -17,63 +17,6 @@
 #include "RenderView2D.h"
 #endif
 
-int GetDicomTag_InstanceNumber(std::string slice_name)
-{
-	typedef float			   PixelType;
-	const unsigned int         Dimension = 2;
-
-	typedef itk::Image< PixelType, Dimension >      ImageType;
-	typedef itk::ImageFileReader< ImageType >     ReaderType;
-
-	ReaderType::Pointer reader = ReaderType::New();
-
-	typedef itk::GDCMImageIO       ImageIOType;
-	ImageIOType::Pointer dicomIO = ImageIOType::New();
-
-	reader->SetFileName( slice_name );
-	reader->SetImageIO( dicomIO );
-
-	try
-	{
-		reader->Update();
-	}
-	catch (itk::ExceptionObject &ex)
-	{
-		std::cout << ex << std::endl;
-		return EXIT_FAILURE;
-	}
-
-	typedef itk::MetaDataDictionary   DictionaryType;
-
-	const  DictionaryType & dictionary = dicomIO->GetMetaDataDictionary();
-
-	typedef itk::MetaDataObject< std::string > MetaDataStringType;
-
-	DictionaryType::ConstIterator itr = dictionary.Begin();
-	DictionaryType::ConstIterator end = dictionary.End();
-
-	//Instance Number
-	std::string InstanceNumberTag = "0020|0013";
-	DictionaryType::ConstIterator tagItr = dictionary.Find( InstanceNumberTag );
-	int InstanceNumber = 0;
-	if( tagItr != end )
-	{
-		MetaDataStringType::ConstPointer entryvalue =
-			dynamic_cast<const MetaDataStringType *>(
-			tagItr->second.GetPointer() );
-
-		if( entryvalue )
-		{
-			std::string tagvalue = entryvalue->GetMetaDataObjectValue();
-			//std::cout << "Patient's Name (" << InstanceNumberTag <<  ") ";
-			//std::cout << " is: " << tagvalue.c_str() << std::endl;
-			////put value to instancenumber
-			InstanceNumber = std::stoi(tagvalue);
-		}
-	}
-	return InstanceNumber;
-}
-
 SubWidgetParadigmInBold::SubWidgetParadigmInBold(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::SubWidgetParadigmInBold)
@@ -100,10 +43,6 @@ SubWidgetParadigmInBold::SubWidgetParadigmInBold(QWidget *parent) :
 
 SubWidgetParadigmInBold::~SubWidgetParadigmInBold()
 {
-	if (this->siglm!=NULL)
-	{
-		delete this->siglm;
-	}
     delete ui;
 }
 
@@ -142,8 +81,8 @@ void SubWidgetParadigmInBold::on_click_addcondition()
 
 	//clean input box
 	//ui->conditionNameLineEdit->clear();
-	//ui->onsetLineEdit->clear();
-	//ui->durationLineEdit->clear();
+	ui->onsetLineEdit->clear();
+	ui->durationLineEdit->clear();
 }
 
 void SubWidgetParadigmInBold::on_select_condition()
@@ -165,8 +104,6 @@ void SubWidgetParadigmInBold::on_click_use_default()
 	//use default condition
 	this->ui->conditionNameBox->setCurrentIndex(0);
 	//trigger
-	ui->onsetLineEdit->setText(tr("10,30,50"));
-	ui->durationLineEdit->setText(tr("10,10,10"));
 	this->on_select_condition();
 
 	this->on_click_viewdesign();
@@ -192,11 +129,7 @@ void SubWidgetParadigmInBold::on_click_viewdesign()
 		this->numVolume = this->onset.back().back()+this->duration.back().back();
 	}
 
-	if (this->siglm!=NULL)
-	{
-		delete this->siglm;
-	}
-	this->siglm = new SignalModeling;
+
 	//this->numVolume = 60;
 	this->siglm->SetLen(this->numVolume);
 	this->siglm->SetTR(this->TR);
@@ -317,6 +250,19 @@ void SubWidgetParadigmInBold::on_click_open()
 void SubWidgetParadigmInBold::on_click_loadimage()
 {
 
+	//progress bar
+	QProgressDialog* dialogLoading_load_file = new QProgressDialog("Load Files", "", 0, 3 , this);
+	dialogLoading_load_file->setWindowModality(Qt::WindowModal);
+	dialogLoading_load_file->setCancelButton(0);
+	QLabel* label_temp_lf = new QLabel (dialogLoading_load_file);
+	label_temp_lf->setStyleSheet("color: rgb(255, 255, 255);");
+	dialogLoading_load_file->setLabel(label_temp_lf);
+	dialogLoading_load_file->setMinimumDuration(0);
+	dialogLoading_load_file->setLabelText("Loading files..");
+	dialogLoading_load_file->setValue(1);
+
+
+
 	//clear data_container
 	if(!this->data_container.empty())
 		this->data_container.clear();
@@ -338,18 +284,6 @@ void SubWidgetParadigmInBold::on_click_loadimage()
 //		QString log = mainwnd_gf->GetDirectory();
 //		log.append("\DicomSortList.txt");
 //#endif
-
-		//progress bar
-		QProgressDialog* dialogLoading_load_file = new QProgressDialog("Load Files", "", 0, 3 , this);
-		dialogLoading_load_file->setWindowModality(Qt::WindowModal);
-		dialogLoading_load_file->setCancelButton(0);
-		QLabel* label_temp_lf = new QLabel (dialogLoading_load_file);
-		label_temp_lf->setStyleSheet("color: rgb(255, 255, 255);");
-		dialogLoading_load_file->setLabel(label_temp_lf);
-		dialogLoading_load_file->setMinimumDuration(0);
-		dialogLoading_load_file->setLabelText("Loading files..");
-		dialogLoading_load_file->setValue(1);
-
 		qDebug()<<log;
 		//create file handle
 		this->file.setFileName(log);
@@ -616,10 +550,6 @@ void SubWidgetParadigmInBold::on_click_activate()
 
 void SubWidgetParadigmInBold::on_click_threshold()
 {
-	if ((this->siglm == NULL)||(this->data_container.size()==0))
-	{
-		return;
-	}
 	//progress bar
 	QProgressDialog* dialogLoading_pre_threshold = new QProgressDialog("Thresholding", "", 0, 2 , this);
 	dialogLoading_pre_threshold->setWindowModality(Qt::WindowModal);
@@ -781,7 +711,7 @@ void SubWidgetParadigmInBold::init_para()
 
 	//parameters
 	this->numVolume=0;
-	this->siglm =NULL;// new SignalModeling;      //model paradigm
+	this->siglm = new SignalModeling;      //model paradigm
 	this->designMat = vtkFloatArray::New();   //design matrix
 	this->contrast  = vtkIntArray::New();	//contrast vector
 	this->t = 0.0;
@@ -865,18 +795,6 @@ void SubWidgetParadigmInBold::Log2Container(File_info* info,
 	in.seek(info->path_position.at(index));
 	//1. put name into a vector
 	std::map<int,std::string> name_to_sort_all;
-	
-	//progress bar
-	QProgressDialog* dialogLoading_re_parse = new QProgressDialog("Re constructing files...", "", 0, slice_number-(slice_number%volume_number), this);
-	dialogLoading_re_parse->setWindowModality(Qt::WindowModal);
-	dialogLoading_re_parse->setCancelButton(0);
-	QLabel* label_temp_re_parse = new QLabel (dialogLoading_re_parse);
-	label_temp_re_parse->setStyleSheet("color: rgb(255, 255, 255);");
-	dialogLoading_re_parse->setLabel(label_temp_re_parse);
-	dialogLoading_re_parse->setMinimumDuration(0);
-	dialogLoading_re_parse->setValue(0);
-	dialogLoading_re_parse->setLabelText("Reading fMRI Images!");
-	
 	int cnt = 0;
 	while(cnt<slice_number-(slice_number%volume_number))
 	{
@@ -889,12 +807,29 @@ void SubWidgetParadigmInBold::Log2Container(File_info* info,
 		//2. split file name by ".", get file name without suffix
 		//3. split file name by "_", get order number
 		QString f_name = in.readLine();
-		name_to_sort_all[GetDicomTag_InstanceNumber(f_name.toStdString())] = f_name.toStdString();
-		dialogLoading_re_parse->setValue(cnt);
+		QStringList f_name_list;
+		if(f_name.contains("\\"))
+		{
+			f_name_list= f_name.split("\\");
+		}
+		else if (f_name.contains("/"))
+		{
+			f_name_list= f_name.split("/");
+		}
+		else
+		{
+			name_to_sort_all[cnt] = f_name.toStdString();
+			cnt++;
+			return;
+		}
+		QString f_file_name = f_name_list.last().split(".").first();
+		QString f_file_order = f_file_name.split("_").at(1);
+		int order_f = f_file_order.toInt();
+		name_to_sort_all[order_f] = f_name.toStdString();
 		cnt++;
 	}
-	delete dialogLoading_re_parse;
 	this->file.close();//read DicomSortLists.txt done
+
 
 	//2. put name_to_sort by order
 	std::vector< std::vector<std::string> > name_holder(volume_number);//QString to hold file names
@@ -933,6 +868,8 @@ void SubWidgetParadigmInBold::Log2Container(File_info* info,
 	//clear data container if not NULL
 	if(!container.empty())
 		container.clear();
+
+
 
 	for(int i = 0;i<volume_number;i++)
 	{
