@@ -121,7 +121,7 @@ void Log2Container_inDicomParse_Stereo_Only(QString log_name,
 //call dcm2nii function to convert dicom images to nii
 void Call_dcm2nii_func(std::string cmd_path,std::string folder_path);
 
-
+int Parse_GetDicomTag_InstanceNumber(std::string slice_name);
 
 //Function: Convert vtkiamge to a dicom series
 //IO:  input: vtkImageData

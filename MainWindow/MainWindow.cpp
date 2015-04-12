@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(this->ui->img_load_Btn,SIGNAL(clicked()),this,SLOT(on_click_load()));
 	connect(this->ui->del_file_Btn,SIGNAL(clicked()),this,SLOT(on_click_del_file()));
 	//connect bold function=============
-	//connect(this->ui->bold_Btn,SIGNAL(clicked()),this,SLOT(on_click_bold()));
+	connect(this->ui->bold_Btn,SIGNAL(clicked()),this,SLOT(on_click_bold()));
 	//slider bar
 	connect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
 	connect(this->ui->set_opacity_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_opacity_move(int)));
@@ -42,7 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(this->ui->register_Btn,SIGNAL(clicked()),this,SLOT(on_click_register()));
 	connect(this->ui->add_refer_Btn,SIGNAL(clicked()),this,SLOT(on_click_add_refer()));
 	connect(this->ui->add_src_Btn,SIGNAL(clicked()),this,SLOT(on_click_add_src()));
-	connect(this->ui->bold_Btn,SIGNAL(clicked()),this,SLOT(on_clear_register()));
+	//connect(this->ui->bold_Btn,SIGNAL(clicked()),this,SLOT(on_clear_register()));
 }
 
 MainWindow::~MainWindow()
@@ -362,7 +362,7 @@ void MainWindow::on_click_sel_dicom()
 
 	print_Info("Begin Parsing Dicom files!"," Please Wait...");
 
-	std::string dcm2nii_dir = "C:/Users/USER/Desktop/MRIcron/dcm2nii.exe";
+	std::string dcm2nii_dir = "dcm2nii.exe";//"C:/Users/USER/Desktop/MRIcron/dcm2nii.exe";
 	if (this->ui->use_dcm2nii_check->isChecked())
 	{
 		Call_dcm2nii_func(dcm2nii_dir,dicom_dir.toStdString());

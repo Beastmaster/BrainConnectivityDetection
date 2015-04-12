@@ -48,9 +48,10 @@ typedef itk::ImageToVTKImageFilter<ImageTypex> i2vConnectorType;
 typedef itk::VTKImageToImageFilter<ImageTypex> v2iConnectorType;
 
 //reader type (defined in DialogLoadImage.h)
-typedef itk::ImageSeriesReader< ImageTypex > ReaderType_b;
+//typedef itk::ImageSeriesReader< ImageTypex > ReaderType_b;
+typedef itk::ImageFileReader< ImageTypex > ReaderType_Convert;
 //writer type
-typedef itk::ImageFileWriter  < ImageTypex > WriterType_b;
+typedef itk::ImageFileWriter  < ImageTypex > WriterType_Convert;
 
 
 class Image_Convert_Base

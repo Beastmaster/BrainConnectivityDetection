@@ -138,7 +138,7 @@ void ParseParseParse(QString path, QString m_strDir)
 			modality = modalityEntryvalue->GetMetaDataObjectValue();
 		}
 
-		//Sequence Name
+		//Sequence Description
 		std::string seriesDescriptionTag = "0008|103e";
 		std::string seriesDescription = "/";
 
@@ -151,6 +151,24 @@ void ParseParseParse(QString path, QString m_strDir)
 
 			seriesDescription = seriesDescriptionEntryvalue->GetMetaDataObjectValue();
 		}
+
+
+		//Series Number                 0020|0011
+		//Acquisition Number            0020|0012
+		//Temporal Position Identifier  0020|0100
+		//Instance Number
+		std::string InstanceNumberTag = "0020|0013";
+		std::vector<std::string> InstanceNumber ;
+		std::map<int,std::string> fileNamesOrderMap;
+		DictionaryType::ConstIterator InstanceNumberTagItr = dictionary.Find(InstanceNumberTag);
+		if (InstanceNumberTagItr!=end)
+		{
+			MetaDataStringType::ConstPointer InstanceNumbervalue =
+				dynamic_cast<const MetaDataStringType *>( InstanceNumberTagItr->second.GetPointer() );
+
+			InstanceNumber .push_back( InstanceNumbervalue->GetMetaDataObjectValue() );
+		}
+
 
 		//Sequence Name
 		std::string numberOfTemporalPositionsTag = "0020|0105";
@@ -180,7 +198,7 @@ void ParseParseParse(QString path, QString m_strDir)
 			out << "<Path>" <<endl;
 			for (int i=0;i<fileNames.size();i++)
 			{
-				out	<<QString::fromStdString(fileNames.at(i))<<endl;
+				out	<<QString::fromStdString(fileNames.at(i))<<endl;//<<" - "<<QString::fromStdString(InstanceNumber.at(i))
 			}
 			out	<<"</Path>"<<endl;
 			out << "<NumberOfTemporalPositions>"<<QString::fromStdString(numberOfTemporalPositions) << "</NumberOfTemporalPositions>"<<endl<<endl;
@@ -302,26 +320,27 @@ void Load_File_from_log(QString log_name,
 
 	for (int select_index = 0;select_index<total_vol;select_index++)
 	{
-		//parse from log and add data to container
-		if (info->description[select_index].contains("pd") && info->description[select_index].contains("t2"))
-		{
-			if (info->description[select_index].contains("Stereo"))
-			{
-				Log2Container_inDicomParse_Stereo(log_name,info,container,select_index,img_names);
-			}
-			else
-			{
-				Log2Container_inDicomParse_Exception(log_name,info,container,select_index,img_names);
-			}
-		}
-		else if (info->description[select_index].contains("Stereo"))
-		{
-			Log2Container_inDicomParse_Stereo_Only(log_name,info,container,select_index,img_names);
-		}
-		else
-		{
-			Log2Container_inDicomParse(log_name,info,container,select_index,img_names);
-		}
+		////parse from log and add data to container
+		//if (info->description[select_index].contains("pd") && info->description[select_index].contains("t2"))
+		//{
+		//	if (info->description[select_index].contains("Stereo"))
+		//	{
+		//		Log2Container_inDicomParse_Stereo(log_name,info,container,select_index,img_names);
+		//	}
+		//	else
+		//	{
+		//		Log2Container_inDicomParse_Exception(log_name,info,container,select_index,img_names);
+		//	}
+		//}
+		//else if (info->description[select_index].contains("Stereo"))
+		//{
+		//	Log2Container_inDicomParse_Stereo_Only(log_name,info,container,select_index,img_names);
+		//}
+		//else
+		//{
+		//	Log2Container_inDicomParse(log_name,info,container,select_index,img_names);
+		//}
+		Log2Container_inDicomParse(log_name,info,container,select_index,img_names);
 	}
 
 	std::cout<<"load files successfully!!"<<std::endl;
@@ -339,18 +358,6 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 	size = info->description.size();
 	slice_number = info->slice_number.at(index).toInt();
 	volume_number= info->temperal_number.at(index).toInt();
-
-	//progress bar
-	QProgressDialog* dialogLoading_File = new QProgressDialog("Copying files...", "", 0, volume_number);
-	dialogLoading_File->setWindowModality(Qt::WindowModal);
-	dialogLoading_File->setCancelButton(0);
-	QLabel* label_temp = new QLabel (dialogLoading_File);
-	label_temp->setStyleSheet("color: rgb(255, 255, 255);");
-	dialogLoading_File->setLabel(label_temp);
-	dialogLoading_File->setMinimumDuration(0);
-	dialogLoading_File->setValue(0);
-	dialogLoading_File->setLabelText("Reading fMRI Images!");
-	dialogLoading_File->setValue(1);
 
 	std::cout<<"volume info:"
 		<<info->description.at(index).toStdString()
@@ -376,38 +383,7 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 		while(cnt<slice_number)
 		{
 			QString f_name = in.readLine();
-			QStringList f_name_list;
-			if(f_name.contains("\\") || f_name.contains("/"))
-			{
-				f_name_list= f_name.split("\\");
-				f_name_list= f_name_list.last().split("/");
-			}
-			else
-			{
-				name_to_sort_all[cnt] = f_name.toStdString();
-				cnt++;
-				return;
-			}
-			QString f_file_name = f_name_list.last().split(".").first();
-			QString f_file_order;
-			if (f_file_name.split("_").size()>2)
-			{
-				f_file_order = f_file_name.split("_").at(1);
-			}
-			else
-			{
-				f_file_order = f_file_name.split("_").first();
-			}
-
-			if (f_file_order.toInt())
-			{
-				int order_f = f_file_order.toInt();
-				name_to_sort_all[order_f] = f_name.toStdString();
-			}
-			else
-			{
-				name_to_sort_all[cnt] = f_name.toStdString();
-			}
+			name_to_sort_all[Parse_GetDicomTag_InstanceNumber(f_name.toStdString())] = f_name.toStdString();
 			cnt++;
 		}
 	}
@@ -415,47 +391,8 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 	{
 		while(cnt<slice_number-(slice_number%volume_number))
 		{
-			//example:
-			//C:\Users\USER\Documents\Medical_Images\CHOW,^CHUN^. P8801456_fMRI 10Jun2013\MR_1071.dcm
-			//C:\Users\USER\Documents\Medical_Images\CHOW,^CHUN^. P8801456_fMRI 10Jun2013\MR_1072.dcm
-			//C:/Users/USER/Documents/Medical_Images/Brainpla_281/BOLDacti_3578/MR_10_292357.dcm
-			//C:/Users/USER/Documents/Medical_Images/Brainpla_281/BOLDacti_3578/MR_11_292358.dcm
-			//1. split by "\\", get file name 
-			//2. split file name by ".", get file name without suffix
-			//3. split file name by "_", get order number
 			QString f_name = in.readLine();
-			QStringList f_name_list;
-			if(f_name.contains("\\") || f_name.contains("/"))
-			{
-				f_name_list= f_name.split("\\");
-				f_name_list= f_name_list.last().split("/");
-			}
-			else
-			{
-				name_to_sort_all[cnt] = f_name.toStdString();
-				cnt++;
-				return;
-			}
-			QString f_file_name = f_name_list.last().split(".").first();
-			QString f_file_order;
-			if (f_file_name.split("_").size()>2)
-			{
-				f_file_order = f_file_name.split("_").at(1);
-			}
-			else
-			{
-				f_file_order = f_file_name.split("_").first();
-			}
-
-			if (f_file_order.toInt())
-			{
-				int order_f = f_file_order.toInt();
-				name_to_sort_all[order_f] = f_name.toStdString();
-			}
-			else
-			{
-				name_to_sort_all[cnt] = f_name.toStdString();
-			}
+			name_to_sort_all[Parse_GetDicomTag_InstanceNumber(f_name.toStdString())] = f_name.toStdString();
 			cnt++;
 		}
 	}
@@ -520,6 +457,20 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 	//clear data container if not NULL
 	//if(!container.empty());
 	//	container.clear();
+
+
+	//progress bar
+	QProgressDialog* dialogLoading_File = new QProgressDialog("Copying files...", "", 0, volume_number);
+	dialogLoading_File->setWindowModality(Qt::WindowModal);
+	dialogLoading_File->setCancelButton(0);
+	QLabel* label_temp = new QLabel (dialogLoading_File);
+	label_temp->setStyleSheet("color: rgb(255, 255, 255);");
+	dialogLoading_File->setLabel(label_temp);
+	dialogLoading_File->setMinimumDuration(0);
+	dialogLoading_File->setValue(0);
+	dialogLoading_File->setLabelText("Reading fMRI Images!");
+	dialogLoading_File->setValue(1);
+
 
 	for(int i = 0;i<volume_number_temp;i++)
 	{
@@ -1370,6 +1321,62 @@ void WiteToDicomSeries(vtkSmartPointer<vtkImageData> in_img)
 
 
 
+int Parse_GetDicomTag_InstanceNumber(std::string slice_name)
+{
+	typedef float			   PixelType;
+	const unsigned int         Dimension = 2;
+
+	typedef itk::Image< PixelType, Dimension >      ImageType;
+	typedef itk::ImageFileReader< ImageType >     ReaderType;
+
+	ReaderType::Pointer reader = ReaderType::New();
+
+	typedef itk::GDCMImageIO       ImageIOType;
+	ImageIOType::Pointer dicomIO = ImageIOType::New();
+
+	reader->SetFileName( slice_name );
+	reader->SetImageIO( dicomIO );
+
+	try
+	{
+		reader->Update();
+	}
+	catch (itk::ExceptionObject &ex)
+	{
+		std::cout << ex << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	typedef itk::MetaDataDictionary   DictionaryType;
+
+	const  DictionaryType & dictionary = dicomIO->GetMetaDataDictionary();
+
+	typedef itk::MetaDataObject< std::string > MetaDataStringType;
+
+	DictionaryType::ConstIterator itr = dictionary.Begin();
+	DictionaryType::ConstIterator end = dictionary.End();
+
+	//Instance Number
+	std::string InstanceNumberTag = "0020|0013";
+	DictionaryType::ConstIterator tagItr = dictionary.Find( InstanceNumberTag );
+	int InstanceNumber = 0;
+	if( tagItr != end )
+	{
+		MetaDataStringType::ConstPointer entryvalue =
+			dynamic_cast<const MetaDataStringType *>(
+			tagItr->second.GetPointer() );
+
+		if( entryvalue )
+		{
+			std::string tagvalue = entryvalue->GetMetaDataObjectValue();
+			//std::cout << "Patient's Name (" << InstanceNumberTag <<  ") ";
+			//std::cout << " is: " << tagvalue.c_str() << std::endl;
+			////put value to instancenumber
+			InstanceNumber = std::stoi(tagvalue);
+		}
+	}
+	return InstanceNumber;
+}
 
 
 

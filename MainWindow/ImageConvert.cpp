@@ -1,5 +1,5 @@
 #include "ImageConvert.h"
-
+#include "itkOrientImageFilter.h"
 
 
 Image_Convert_Base::Image_Convert_Base()
@@ -29,7 +29,7 @@ vtkSmartPointer<vtkImageData> Image_Convert_Base::GetOutput()
 		//itk read nii file
 		//typedef itk::Image<float, 3> ImageType;
 		//typedef itk::ImageSeriesReader< ImageType >  ReaderType;
-		ReaderType_b::Pointer reader = ReaderType_b::New();
+		ReaderType_Convert::Pointer reader = ReaderType_Convert::New();
 		reader->SetImageIO(niftiIO);
 		reader->SetFileName(this->file_name);
 		try
@@ -42,10 +42,29 @@ vtkSmartPointer<vtkImageData> Image_Convert_Base::GetOutput()
 			std::cerr<<e;
 		}
 
+		//-------add --------//
+		//directed by zhangteng
+		itk::OrientImageFilter<ImageTypex,ImageTypex>::Pointer orientor = 
+			itk::OrientImageFilter<ImageTypex,ImageTypex>::New();
+		orientor->UseImageDirectionOn();
+		orientor->SetDesiredCoordinateOrientation(itk::SpatialOrientation::ITK_COORDINATE_ORIENTATION_RAI);
+		orientor->SetInput(reader->GetOutput());
+		try
+		{
+			orientor->Update();
+		}
+		catch (itk::ExceptionObject& e)
+		{
+			std::cout<<"orientai ror"<<std::endl;
+			std::cerr<<e;
+		}
+		 
+		          
+
 		//itk-vtk connector
 		//typedef itk::ImageToVTKImageFilter<ImageType> ConnectorType;
 		i2vConnectorType::Pointer connector = i2vConnectorType::New();
-		connector->SetInput(reader->GetOutput());
+		connector->SetInput(orientor->GetOutput());//(reader->GetOutput());
 		try
 		{
 		connector->Update();
