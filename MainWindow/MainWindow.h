@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <functional>
+#include <algorithm>
 
 //qt open file_dialog
 #include <QFileDialog>
@@ -157,6 +158,9 @@ private:
 
 	//multi thread!!!
 	multi_thread* register_thread[1];
+
+	//containers to write dicom series
+	DicomParseClass* dicom_parse_hd;
 };
 
 

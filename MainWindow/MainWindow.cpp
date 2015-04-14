@@ -43,6 +43,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(this->ui->add_refer_Btn,SIGNAL(clicked()),this,SLOT(on_click_add_refer()));
 	connect(this->ui->add_src_Btn,SIGNAL(clicked()),this,SLOT(on_click_add_src()));
 	//connect(this->ui->bold_Btn,SIGNAL(clicked()),this,SLOT(on_clear_register()));
+
 }
 
 MainWindow::~MainWindow()
@@ -67,8 +68,12 @@ MainWindow::~MainWindow()
 	//delete multi thread
 	if (this->register_thread[0] != NULL)
 	{
-		delete this->register_thread ;
+		delete [] this->register_thread ;
 	}
+
+	//release dicom parse class handle
+	delete dicom_parse_hd;
+	dicom_parse_hd = NULL;
 
 	delete ui;
 }
@@ -106,6 +111,10 @@ void MainWindow::init_Parameters()
 
 	//for multi thread
 	this->register_thread[0] = NULL;
+
+	//initial the dicom parse class
+	dicom_parse_hd = NULL;
+	dicom_parse_hd = new DicomParseClass;
 }
 
 void MainWindow::on_click_load()
@@ -345,8 +354,11 @@ void MainWindow::on_click_del_mask()
 
 	//remove from view
 	this->view_axial_reslice->RemoveMask();
+	this->view_axial_reslice->RenderView();
 	this->view_coronal_reslice->RemoveMask();
+	this->view_coronal_reslice->RenderView();
 	this->view_saggital_reslice->RemoveMask();
+	this->view_saggital_reslice->RenderView();
 
 	//delete mask from data container
 	this->mask_img.first.clear();
@@ -356,28 +368,44 @@ void MainWindow::on_click_del_mask()
 void MainWindow::on_click_sel_dicom()
 {
 	QString dicom_dir = QFileDialog::getExistingDirectory(this, tr("Open Dicom Directory"),
-		"C:/Users/user/Desktop",QFileDialog::ShowDirsOnly);
+		tr("C:/Users/user/Desktop"),QFileDialog::ShowDirsOnly);
 
 	if (dicom_dir.isEmpty())  return;
+
+	//create a new folder to hold converted .nii file
+	//create a folder
+	QString output_dir = dicom_dir;
+	output_dir.append(tr("-out"));
+	QDir *temp = new QDir;
+	bool exist = temp->exists(output_dir);
+	if(exist)
+		;
+	else
+	{
+		bool ok = temp->mkdir(output_dir);
+		if( ok )
+			print_Info("Folder Created: ",output_dir);
+	}
+	delete temp;
 
 	print_Info("Begin Parsing Dicom files!"," Please Wait...");
 
 	std::string dcm2nii_dir = "dcm2nii.exe";//"C:/Users/USER/Desktop/MRIcron/dcm2nii.exe";
 	if (this->ui->use_dcm2nii_check->isChecked())
 	{
-		Call_dcm2nii_func(dcm2nii_dir,dicom_dir.toStdString());
+		DicomParseClass::Call_dcm2nii_func(dcm2nii_dir,dicom_dir.toStdString());
 	}
 	else
 	{
-		Seek_Dicom_Folder(dicom_dir);
+		dicom_parse_hd->Seek_Dicom_Folder(dicom_dir);
 		QString dicom_list = dicom_dir;
 		dicom_list.append("\\DicomSortList.txt");
 		std::cout<<"Reading"<<dicom_list.toStdString()<<std::endl;
 		std::vector< vtkSmartPointer<vtkImageData> > temp_container;
 		std::vector< std::string >                   temp_name_container;
-		Load_File_from_log(dicom_list,temp_container,temp_name_container);
+		dicom_parse_hd->Load_File_from_log(dicom_list,temp_container,temp_name_container);
+		
 		//put data to global container
-	
 		for (int i = 0;i<temp_name_container.size();i++)
 		{
 			img_view_base_Type pair_temp;
@@ -421,6 +449,8 @@ void MainWindow::on_click_sel_dicom()
 			nii_writer_parse->SetFileName(name1);
 			//nii_writer_parse->Update();
 			nii_writer_parse->Write();
+			//write to dicom
+			//dicom_parse_hd->WiteToDicomSeries(pair_temp.second,dicom_dir.toStdString(),i);
 		}
 
 		int xxx = this->data_container.size();
@@ -737,17 +767,63 @@ void multi_thread::run()
 	this->main_win->print_Info("Registering Process","  Running");
 	for (int i=0;i<this->main_win->register_container.size();i++)
 	{
-		std::string name =this->main_win->register_container[i].first;
-		if (name.compare(name.size()-4,4,".nii") == 0)
+		std::string file_name =this->main_win->register_container[i].first;
+		if (file_name.compare(file_name.size()-4,4,".nii") == 0)
 		{	
 		}
 		else
 		{
-			name.append(".nii");
+			file_name.append(".nii");
 		}
-		Registration_Process(this->main_win->reference_img.second,this->main_win->register_container[i].second,name);
+		auto reg_temp = Registration_Process(this->main_win->reference_img.second,
+			this->main_win->register_container[i].second,file_name);
+
+		//save to dicom series
+		//find dicom source; if no dicom file source->escape
+		std::string full_name_temp = this->main_win->register_container[i].first;
+		unsigned found = full_name_temp.find_last_of("/\\");
+		std::string path_temp = full_name_temp.substr(0,found);
+		//seek to top-folder
+		std::string dir = path_temp;
+		//create a folder
+		QString output_dir = dir.c_str();
+		output_dir.append(tr("-reg"));
+		QDir *temp = new QDir;
+		bool exist = temp->exists(output_dir);
+		if(exist)
+			;
+		else
+		{
+			bool ok = temp->mkdir(output_dir);
+			if( ok )
+				main_win->print_Info("Folder Created: ",output_dir);
+			else
+				return;
+		}
+		delete temp;
+		//get name (without path)
+		std::string name_temp = full_name_temp.substr(found+1);
+
+		auto it = std::find (main_win->dicom_parse_hd->series_name_container.begin(),
+			main_win->dicom_parse_hd->series_name_container.end(),
+			name_temp);
+			//main_win->register_container[i].first);
+		if (it != main_win->dicom_parse_hd->series_name_container.end())
+		//find dicom source; if there is dicom file source, use the same gdcmIO to generate dicom series
+		{
+			//get position
+			auto ser_pos = it - main_win->dicom_parse_hd->series_name_container.begin();
+			main_win->dicom_parse_hd->WiteToDicomSeries(reg_temp,
+				output_dir.toStdString(),
+				main_win->dicom_parse_hd->input_dict_container[ser_pos],
+				main_win->dicom_parse_hd->gdcmIO_container[ser_pos]);
+		}
+			
+		else
+		{
+			main_win->print_Info("No dicom file source, ", " no writing to dicom files");
+		}
 	}
 	main_win->print_Info("Registering Process"," Done!!");
-
 }
 
