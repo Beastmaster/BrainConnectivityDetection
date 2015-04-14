@@ -32,11 +32,25 @@
 #include "vtkAssemblyPath.h"
 #include "vtkMath.h"
 
+//vtk slider calss
+#include "vtkSliderWidget.h"
+#include "vtkSliderRepresentation2D.h"
+#include <vtkProperty.h>
+#include <vtkTextProperty.h>
+#include <vtkProperty2D.h>
+#include <vtkWidgetEvent.h>
+#include <vtkCallbackCommand.h>
+#include <vtkWidgetEventTranslator.h>
+#include <vtkInteractorStyleTrackballCamera.h>
+
 class reslice_interactor_style;
+class vtkSliderCallback;
+
 
 class reslice_view_base : QObject
 {
 	Q_OBJECT
+	friend class vtkSliderCallback;
 public:
 	explicit reslice_view_base(QWidget *parent = 0);
 	reslice_view_base(vtkRenderWindow*,char);
@@ -93,6 +107,9 @@ private:
 	vtkSmartPointer<vtkEventQtSlotConnect> m_Connections_mouse_back;
 	vtkSmartPointer<vtkEventQtSlotConnect> m_Connections_mouse_forward;
 	vtkSmartPointer<vtkEventQtSlotConnect> m_Connections_mouse_lft_click;
+
+	//vtk slider
+	void SetUpSlider(vtkRenderWindowInteractor*);
 };
 
 
