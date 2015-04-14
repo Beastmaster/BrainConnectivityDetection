@@ -1,8 +1,8 @@
 #include "RegistrationProcess.h"
 
 
-
-Reg_Image_Type Registration_Process(Reg_Image_Type fix, Reg_Image_Type src, std::string name) 
+ImageTypex::Pointer Registration_Process(Reg_Image_Type fix, Reg_Image_Type src, std::string name)
+//Reg_Image_Type Registration_Process(Reg_Image_Type fix, Reg_Image_Type src, std::string name) 
 {
 	//1. connect fixed image to ITK data type
 	vtkSmartPointer<vtkImageData> temp_fixed_image = 
@@ -118,5 +118,6 @@ Reg_Image_Type Registration_Process(Reg_Image_Type fix, Reg_Image_Type src, std:
 		return NULL;
 	}
 
-	return i2vconnector_lag_temp->GetOutput();
+	//return i2vconnector_lag_temp->GetOutput();
+	return registered_img;
 }
