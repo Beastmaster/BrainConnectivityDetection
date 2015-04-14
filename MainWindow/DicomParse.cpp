@@ -1,8 +1,17 @@
 
 #include "DicomParse.h"
 
+DicomParseClass::DicomParseClass()
+{
+	;
+}
+DicomParseClass::~DicomParseClass()
+{
+	;
+}
 
-void Seek_Dicom_Folder(QString m_strDir)
+
+void DicomParseClass::Seek_Dicom_Folder(QString m_strDir)
 {
 	//m_strDir = QFileDialog::getExistingDirectory(this, tr("Open Image Directory"),
 	//	"C:/Users/user/Desktop",QFileDialog::ShowDirsOnly);
@@ -47,7 +56,7 @@ void Seek_Dicom_Folder(QString m_strDir)
 
 // first para: path      ---- single dicom file full path
 // second para: m_strDir ---- dicom file folder path
-void ParseParseParse(QString path, QString m_strDir)
+void DicomParseClass::ParseParseParse(QString path, QString m_strDir)
 {
 	//Example:DicomSeriesReadPrintTags, DicomSeriesReadImageWrite2
 
@@ -164,7 +173,7 @@ void ParseParseParse(QString path, QString m_strDir)
 		if (InstanceNumberTagItr!=end)
 		{
 			MetaDataStringType::ConstPointer InstanceNumbervalue =
-				dynamic_cast<const MetaDataStringType *>( InstanceNumberTagItr->second.GetPointer() );
+				dynamic_cast<const MetaDataStringType *>( (InstanceNumberTagItr++)->second.GetPointer() );
 
 			InstanceNumber .push_back( InstanceNumbervalue->GetMetaDataObjectValue() );
 		}
@@ -204,12 +213,15 @@ void ParseParseParse(QString path, QString m_strDir)
 			out << "<NumberOfTemporalPositions>"<<QString::fromStdString(numberOfTemporalPositions) << "</NumberOfTemporalPositions>"<<endl<<endl;
 		}
 
+		//this->dicom_seriesID_container.push_back(*seriesItr);
+		//this->dicom_directionary_container.push_back(dictionary);
+
 		++seriesItr;
 	}
 }
 
 //parse log file
-void Load_File_from_log(QString log_name,
+void DicomParseClass::Load_File_from_log(QString log_name,
 						std::vector<vtkSmartPointer<vtkImageData> >& container,
 						std::vector<std::string>& img_names)
 {
@@ -346,7 +358,7 @@ void Load_File_from_log(QString log_name,
 	std::cout<<"load files successfully!!"<<std::endl;
 }
 
-void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info, 
+void DicomParseClass::Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info, 
 								std::vector<vtkSmartPointer<vtkImageData> >& container,
 								int index, 
 								std::vector<std::string>& file_names)
@@ -447,7 +459,7 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 	//define itk reader
 	//typedef itk::Image< float , 3 >             ImageType; //image type pixel:float;dimension:3
 	//typedef itk::ImageSeriesReader< ImageType > ReaderType;
-	ReaderType_b::Pointer itk_reader = ReaderType_b::New();
+	ReaderType::Pointer itk_reader = ReaderType::New();
 	DicomIOType::Pointer  dicomIO = DicomIOType::New();
 	itk_reader->SetImageIO(dicomIO);
 
@@ -488,6 +500,19 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 			std::cerr<<e;
 			return;
 		}
+
+		//here we put all the information need to container
+		ReaderType::DictionaryRawPointer input_Dict_con = new ReaderType::DictionaryType;
+		ReaderType::DictionaryRawPointer inputDict = (*(itk_reader->GetMetaDataDictionaryArray()))[0];
+		this->CopyDictionary(*inputDict,*input_Dict_con);
+		this->input_dict_container.push_back(input_Dict_con);
+		//this->WiteToDicomSeries(itk_reader->GetOutput(),this->output_dir,inputDict,dicomIO);
+		this->gdcmIO_container.push_back(dicomIO);
+		//output series file name
+		std::string series_name = info->description.at(index).toStdString();
+		this->series_name_container.push_back(series_name);
+
+
 		////save .nii files for test
 		//WriterType_b::Pointer nii_writer_parse = 
 		//	WriterType_b::New();
@@ -620,7 +645,7 @@ void Log2Container_inDicomParse(QString log_name,File_info_in_DicomParse* info,
 //split a volume into 2 volumes
 //because they whole volume contain pd+t2 images
 //if normal t2+pd image, re-construct them in ordinary order
-void Log2Container_inDicomParse_Exception(QString log_name, File_info_in_DicomParse* info, std::vector<vtkSmartPointer<vtkImageData> >& container, int index, std::vector<std::string>& file_names)
+void DicomParseClass::Log2Container_inDicomParse_Exception(QString log_name, File_info_in_DicomParse* info, std::vector<vtkSmartPointer<vtkImageData> >& container, int index, std::vector<std::string>& file_names)
 {
 	int size = 0;
 	int slice_number = 0;
@@ -674,7 +699,7 @@ void Log2Container_inDicomParse_Exception(QString log_name, File_info_in_DicomPa
 	//define itk reader
 	//typedef itk::Image< float , 3 >             ImageType; //image type pixel:float;dimension:3
 	//typedef itk::ImageSeriesReader< ImageType > ReaderType;
-	ReaderType_b::Pointer itk_reader = ReaderType_b::New();
+	ReaderType::Pointer itk_reader = ReaderType::New();
 	DicomIOType::Pointer  dicomIO = DicomIOType::New();
 	itk_reader->SetImageIO(dicomIO);
 
@@ -810,7 +835,7 @@ void Log2Container_inDicomParse_Exception(QString log_name, File_info_in_DicomPa
 //split a volume into 2 volumes
 //because they whole volume contain pd+t2 images
 //if it is Stereo volume!!! Do re-construct slices in reverse order!!! God!!!
-void Log2Container_inDicomParse_Stereo(QString log_name, File_info_in_DicomParse* info, std::vector<vtkSmartPointer<vtkImageData> >& container, int index, std::vector<std::string>& file_names)
+void DicomParseClass::Log2Container_inDicomParse_Stereo(QString log_name, File_info_in_DicomParse* info, std::vector<vtkSmartPointer<vtkImageData> >& container, int index, std::vector<std::string>& file_names)
 {
 	int size = 0;
 	int slice_number = 0;
@@ -879,7 +904,7 @@ void Log2Container_inDicomParse_Stereo(QString log_name, File_info_in_DicomParse
 	//define itk reader
 	//typedef itk::Image< float , 3 >             ImageType; //image type pixel:float;dimension:3
 	//typedef itk::ImageSeriesReader< ImageType > ReaderType;
-	ReaderType_b::Pointer itk_reader = ReaderType_b::New();
+	ReaderType::Pointer itk_reader = ReaderType::New();
 	DicomIOType::Pointer  dicomIO = DicomIOType::New();
 	itk_reader->SetImageIO(dicomIO);
 
@@ -1019,7 +1044,7 @@ void Log2Container_inDicomParse_Stereo(QString log_name, File_info_in_DicomParse
 
 
 // no need to reverse here
-void Log2Container_inDicomParse_Stereo_Only(QString log_name, File_info_in_DicomParse* info, std::vector<vtkSmartPointer<vtkImageData> >& container, int index, std::vector<std::string>& file_names)
+void DicomParseClass::Log2Container_inDicomParse_Stereo_Only(QString log_name, File_info_in_DicomParse* info, std::vector<vtkSmartPointer<vtkImageData> >& container, int index, std::vector<std::string>& file_names)
 {
 	int size = 0;
 	int slice_number = 0;
@@ -1078,7 +1103,7 @@ void Log2Container_inDicomParse_Stereo_Only(QString log_name, File_info_in_Dicom
 	//define itk reader
 	//typedef itk::Image< float , 3 >             ImageType; //image type pixel:float;dimension:3
 	//typedef itk::ImageSeriesReader< ImageType > ReaderType;
-	ReaderType_b::Pointer itk_reader = ReaderType_b::New();
+	ReaderType::Pointer itk_reader = ReaderType::New();
 	DicomIOType::Pointer  dicomIO = DicomIOType::New();
 	itk_reader->SetImageIO(dicomIO);
 
@@ -1216,7 +1241,7 @@ void Log2Container_inDicomParse_Stereo_Only(QString log_name, File_info_in_Dicom
 }
 
 
-void Call_dcm2nii_func(std::string cmd_path,std::string folder_path)
+void DicomParseClass::Call_dcm2nii_func(std::string cmd_path,std::string folder_path)
 {
 	std::string space_space = " ";
 	std::string full_cmd;
@@ -1232,18 +1257,19 @@ void Call_dcm2nii_func(std::string cmd_path,std::string folder_path)
 
 
 
-void WiteToDicomSeries(vtkSmartPointer<vtkImageData> in_img)
+void DicomParseClass::WiteToDicomSeries(vtkSmartPointer<vtkImageData> in_img,std::string dir,int index)
 {
-	std::string OutputDir;
+	std::string OutputDir = dir;
 	//create output directory
 	//itksys::SystemTools::MakeDirectory( OutputDir ); 
 
 	//typdefs for output files. image type: 2D dimension
-	typedef itk::Image< float , 2 >      OutputImageType;
-	typedef itk::ImageSeriesWriter<ImageType,OutputImageType> 
-										 SeriesWriterType;
-	typedef itk::NumericSeriesFileNames  NamesGeneratorType;   
-	typedef itk::GDCMImageIO             GDCMIOType;
+	typedef itk::Image< unsigned int , 2 >				OutputImageType_f;
+	typedef itk::Image< unsigned int , 3 >				OutputImageType_un;
+	typedef itk::ImageSeriesWriter<OutputImageType_un,OutputImageType_f> 
+														SeriesWriterType;
+	typedef itk::NumericSeriesFileNames					NamesGeneratorType;   
+	typedef itk::GDCMImageIO							GDCMIOType;
 
 	//connect vtkimage to itk iamge
 	v2iConnectorType::Pointer connector = v2iConnectorType::New();
@@ -1257,13 +1283,20 @@ void WiteToDicomSeries(vtkSmartPointer<vtkImageData> in_img)
 		std::cout<<"connect vtk to itk error"<<std::endl;
 		std::cerr<<e;
 	}
-	ImageType::Pointer src_itk_img = ImageType::New();
-	src_itk_img = connector->GetOutput();
 
+	itk::CastImageFilter<ImageType,OutputImageType_un>::Pointer caster = 
+		itk::CastImageFilter<ImageType,OutputImageType_un>::New();
+	caster->SetInput(connector->GetOutput());
+
+
+	OutputImageType_un::Pointer src_itk_img = OutputImageType_un::New();
+	src_itk_img = caster->GetOutput();
 
 	//generate dicom dict (dicom tags informations)
 	GDCMIOType::Pointer gdcmIO = GDCMIOType::New();
-	itk::MetaDataDictionary & dict = gdcmIO->GetMetaDataDictionary(); //get gdcmIO
+	gdcmIO->SetMetaDataDictionary(this->dicom_directionary_container.at(index));
+
+	itk::MetaDataDictionary dict ;//= gdcmIO->GetMetaDataDictionary(); //get gdcmIO
 	std::string tagkey, value;
 
 	//tagkey and descriptions
@@ -1317,11 +1350,201 @@ void WiteToDicomSeries(vtkSmartPointer<vtkImageData> in_img)
 
 }
 
+void DicomParseClass::WiteToDicomSeries(ImageType::Pointer img,std::string dir,
+										itk::ImageSeriesReader<ImageType>::DictionaryRawPointer& dictx,
+										ImageIOType::Pointer& gdcmIO)
+{
+	std::string OutputDir = dir;
+
+	const ImageType::SpacingType& inputSpacing =
+		img->GetSpacing();
+	const ImageType::RegionType& inputRegion =
+		img->GetLargestPossibleRegion();
+	const ImageType::SizeType& inputSize =
+		inputRegion.GetSize();
+
+	ImageType::SizeType   outputSize;
+	typedef ImageType::SizeType::SizeValueType SizeValueType;
+	outputSize[0] = static_cast<SizeValueType>(inputSize[0]);
+	outputSize[1] = static_cast<SizeValueType>(inputSize[1]);
+	outputSize[2] = static_cast<SizeValueType>(inputSize[2]);
+
+
+	ReaderType::DictionaryRawPointer inputDict = dictx;
+	ReaderType::DictionaryArrayType outputArray;
+
+	gdcm::UIDGenerator suid;
+	std::string seriesUID = suid.Generate();
+	gdcm::UIDGenerator fuid;
+	std::string frameOfReferenceUID = fuid.Generate();
+
+	//typedef itk::GDCMImageIO   ImageIOType;
+	//ImageIOType::Pointer gdcmIO = ImageIOType::New();
+
+	std::string studyUID;
+	std::string sopClassUID;
+	itk::ExposeMetaData<std::string>(*inputDict, "0020|000d", studyUID);
+	itk::ExposeMetaData<std::string>(*inputDict, "0008|0016", sopClassUID);
+	gdcmIO->KeepOriginalUIDOn();
+
+	for (unsigned int f = 0; f < outputSize[2]; f++)
+	{
+		// Create a new dictionary for this slice
+		ReaderType::DictionaryRawPointer dict = new ReaderType::DictionaryType;
+
+		// Copy the dictionary from the first slice
+		CopyDictionary (*inputDict, *dict);
+
+		// Set the UID's for the study, series, SOP  and frame of reference
+		itk::EncapsulateMetaData<std::string>(*dict,"0020|000d", studyUID);
+		itk::EncapsulateMetaData<std::string>(*dict,"0020|000e", seriesUID);
+		itk::EncapsulateMetaData<std::string>(*dict,"0020|0052", frameOfReferenceUID);
+
+		gdcm::UIDGenerator sopuid;
+		std::string sopInstanceUID = sopuid.Generate();
+
+		itk::EncapsulateMetaData<std::string>(*dict,"0008|0018", sopInstanceUID);
+		itk::EncapsulateMetaData<std::string>(*dict,"0002|0003", sopInstanceUID);
+
+		// Change fields that are slice specific
+		itksys_ios::ostringstream value;
+		value.str("");
+		value << f + 1;
+
+		// Image Number
+		itk::EncapsulateMetaData<std::string>(*dict,"0020|0013", value.str());
+
+		// Series Description - Append new description to current series
+		// description
+		std::string oldSeriesDesc;
+		itk::ExposeMetaData<std::string>(*inputDict, "0008|103e", oldSeriesDesc);
+
+		value.str("");
+		value << oldSeriesDesc
+			<< ": Registered Image "
+			/*			<< outputSpacing[0] << ", "
+			<< outputSpacing[1] << ", "
+			<< outputSpacing[2]*/;
+		// This is an long string and there is a 64 character limit in the
+		// standard
+		unsigned lengthDesc = value.str().length();
+
+		std::string seriesDesc( value.str(), 0,
+			lengthDesc > 64 ? 64
+			: lengthDesc);
+		itk::EncapsulateMetaData<std::string>(*dict,"0008|103e", seriesDesc);
+
+		// Series Number
+		value.str("");
+		value << 1001;
+		itk::EncapsulateMetaData<std::string>(*dict,"0020|0011", value.str());
+
+		// Derivation Description - How this image was derived
+		value.str("");
+		//for (int i = 0; i < argc; i++)
+		//{
+		//	value << argv[i] << " ";
+		//}
+		value << ": Registered image by software" ;//<< ITK_SOURCE_VERSION;
+
+		lengthDesc = value.str().length();
+		std::string derivationDesc( value.str(), 0,
+			lengthDesc > 1024 ? 1024
+			: lengthDesc);
+		itk::EncapsulateMetaData<std::string>(*dict,"0008|2111", derivationDesc);
+
+		// Image Position Patient: This is calculated by computing the
+		// physical coordinate of the first pixel in each slice.
+		ImageType::PointType position;
+		ImageType::IndexType index;
+		index[0] = 0;
+		index[1] = 0;
+		index[2] = f;
+		img->TransformIndexToPhysicalPoint(index, position);
+
+		value.str("");
+		value << position[0] << "\\" << position[1] << "\\" << position[2];
+		itk::EncapsulateMetaData<std::string>(*dict,"0020|0032", value.str());
+		// Slice Location: For now, we store the z component of the Image
+		// Position Patient.
+		value.str("");
+		value << position[2];
+		itk::EncapsulateMetaData<std::string>(*dict,"0020|1041", value.str());
+
+		// Slice Thickness: For now, we store the z spacing
+		value.str("");
+		value << inputSpacing[2];
+		itk::EncapsulateMetaData<std::string>(*dict,"0018|0050",
+			value.str());
+		// Spacing Between Slices
+		itk::EncapsulateMetaData<std::string>(*dict,"0018|0088",
+			value.str());
+
+		// Save the dictionary
+		outputArray.push_back(dict);
+	}
+
+	// 4) Shift data to undo the effect of a rescale intercept by the DICOM reader
+	std::string interceptTag ("0028|1052");
+	typedef itk::MetaDataObject< std::string > MetaDataStringType;
+	itk::MetaDataObjectBase::Pointer entry = (*inputDict)[interceptTag];
+
+	MetaDataStringType::ConstPointer interceptValue =
+		dynamic_cast<const MetaDataStringType *>( entry.GetPointer() ) ;
+
+	int interceptShift = 0;
+	if( interceptValue )
+	{
+		std::string tagValue = interceptValue->GetMetaDataObjectValue();
+		interceptShift = -atoi ( tagValue.c_str() );
+	}
+
+	typedef itk::ShiftScaleImageFilter< ImageType, itk::Image<unsigned int, 3> >   ShiftScaleType;
+	ShiftScaleType::Pointer shiftScale = ShiftScaleType::New();
+	shiftScale->SetInput( img );
+	shiftScale->SetShift( interceptShift );
+	shiftScale->Update();
+
+	typedef itk::CastImageFilter< ImageType, itk::Image< unsigned int , 3 > > CasterType;
+	CasterType::Pointer caster = CasterType::New();
+	caster->SetInput(img);
+	caster->Update();
+
+	typedef itk::NumericSeriesFileNames   OutputNamesGeneratorType;
+	// Generate the file names
+	OutputNamesGeneratorType::Pointer outputNames = OutputNamesGeneratorType::New();
+	std::string seriesFormat(dir);
+	seriesFormat = seriesFormat + "/" + "IM%d.dcm";
+	outputNames->SetSeriesFormat (seriesFormat.c_str());
+	outputNames->SetStartIndex (1);
+	outputNames->SetEndIndex (outputSize[2]);
+
+	typedef itk::ImageSeriesWriter< itk::Image<unsigned int, 3>, itk::Image<unsigned short, 2> >
+		SeriesWriterType;
+
+
+	SeriesWriterType::Pointer seriesWriter = SeriesWriterType::New();
+	seriesWriter->SetInput( shiftScale->GetOutput() );  // shiftscale function
+	seriesWriter->SetImageIO( gdcmIO );
+	seriesWriter->SetFileNames( outputNames->GetFileNames() );
+	seriesWriter->SetMetaDataDictionaryArray( &outputArray );
+	try
+	{
+		seriesWriter->Write();
+	}
+	catch( itk::ExceptionObject & excp )
+	{
+		std::cerr << "Exception thrown while writing the series " << std::endl;
+		std::cerr << excp << std::endl;
+		return;
+	}
+}
 
 
 
 
-int Parse_GetDicomTag_InstanceNumber(std::string slice_name)
+
+int DicomParseClass::Parse_GetDicomTag_InstanceNumber(std::string slice_name)
 {
 	typedef float			   PixelType;
 	const unsigned int         Dimension = 2;
@@ -1382,5 +1605,67 @@ int Parse_GetDicomTag_InstanceNumber(std::string slice_name)
 
 
 
+void DicomParseClass::CopyDictionary (itk::MetaDataDictionary &fromDict, itk::MetaDataDictionary &toDict)
+{
+	typedef itk::MetaDataDictionary DictionaryType;
+
+	DictionaryType::ConstIterator itr = fromDict.Begin();
+	DictionaryType::ConstIterator end = fromDict.End();
+	typedef itk::MetaDataObject< std::string > MetaDataStringType;
+
+	while( itr != end )
+	{
+		itk::MetaDataObjectBase::Pointer  entry = itr->second;
+
+		MetaDataStringType::Pointer entryvalue =
+			dynamic_cast<MetaDataStringType *>( entry.GetPointer() ) ;
+		if( entryvalue )
+		{
+			std::string tagkey   = itr->first;
+			std::string tagvalue = entryvalue->GetMetaDataObjectValue();
+			itk::EncapsulateMetaData<std::string>(toDict, tagkey, tagvalue);
+		}
+		++itr;
+	}
+}
 
 
+//const gdcm::PixelFormat & pixeltype = image.GetPixelFormat();
+//switch ( pixeltype )
+//{
+//case gdcm::PixelFormat::INT8:
+//	m_InternalComponentType = ImageIOBase::CHAR; // Is it signed char ?
+//	break;
+//case gdcm::PixelFormat::UINT8:
+//	m_InternalComponentType = ImageIOBase::UCHAR;
+//	break;
+//	/* INT12 / UINT12 should not happen anymore in any modern DICOM */
+//case gdcm::PixelFormat::INT12:
+//	m_InternalComponentType = ImageIOBase::SHORT;
+//	break;
+//case gdcm::PixelFormat::UINT12:
+//	m_InternalComponentType = ImageIOBase::USHORT;
+//	break;
+//case gdcm::PixelFormat::INT16:
+//	m_InternalComponentType = ImageIOBase::SHORT;
+//	break;
+//case gdcm::PixelFormat::UINT16:
+//	m_InternalComponentType = ImageIOBase::USHORT;
+//	break;
+//	 RT / SC have 32bits
+//case gdcm::PixelFormat::INT32:
+//	m_InternalComponentType = ImageIOBase::INT;
+//	break;
+//case gdcm::PixelFormat::UINT32:
+//	m_InternalComponentType = ImageIOBase::UINT;
+//	break;
+//	case gdcm::PixelFormat::FLOAT16: // TODO
+//case gdcm::PixelFormat::FLOAT32:
+//	m_InternalComponentType = ImageIOBase::FLOAT;
+//	break;
+//case gdcm::PixelFormat::FLOAT64:
+//	m_InternalComponentType = ImageIOBase::DOUBLE;
+//	break;
+//default:
+//	itkExceptionMacro("Unhandled PixelFormat: " << pixeltype);
+//}
