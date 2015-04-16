@@ -1,6 +1,5 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
-#include <windows.h>
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -68,7 +67,7 @@ MainWindow::~MainWindow()
 	//delete multi thread
 	if (this->register_thread[0] != NULL)
 	{
-		delete [] this->register_thread ;
+		delete this->register_thread[0] ;
 	}
 
 	//release dicom parse class handle
@@ -804,24 +803,32 @@ void multi_thread::run()
 		//get name (without path)
 		std::string name_temp = full_name_temp.substr(found+1);
 
-		auto it = std::find (main_win->dicom_parse_hd->series_name_container.begin(),
-			main_win->dicom_parse_hd->series_name_container.end(),
-			name_temp);
-			//main_win->register_container[i].first);
-		if (it != main_win->dicom_parse_hd->series_name_container.end())
-		//find dicom source; if there is dicom file source, use the same gdcmIO to generate dicom series
+
+		if (main_win->dicom_parse_hd->series_name_container.empty())
 		{
-			//get position
-			auto ser_pos = it - main_win->dicom_parse_hd->series_name_container.begin();
-			main_win->dicom_parse_hd->WiteToDicomSeries(reg_temp,
-				output_dir.toStdString(),
-				main_win->dicom_parse_hd->input_dict_container[ser_pos],
-				main_win->dicom_parse_hd->gdcmIO_container[ser_pos]);
+			;
 		}
-			
 		else
 		{
-			main_win->print_Info("No dicom file source, ", " no writing to dicom files");
+			auto it = std::find (main_win->dicom_parse_hd->series_name_container.begin(),
+				main_win->dicom_parse_hd->series_name_container.end(),
+				name_temp);
+				//main_win->register_container[i].first);
+
+			if (it != main_win->dicom_parse_hd->series_name_container.end())
+			//find dicom source; if there is dicom file source, use the same gdcmIO to generate dicom series
+			{
+				//get position
+				auto ser_pos = it - main_win->dicom_parse_hd->series_name_container.begin();
+				main_win->dicom_parse_hd->WiteToDicomSeries(reg_temp,
+					output_dir.toStdString(),
+					main_win->dicom_parse_hd->input_dict_container[ser_pos],
+					main_win->dicom_parse_hd->gdcmIO_container[ser_pos]);
+			}
+			else
+			{
+				main_win->print_Info("No dicom file source, ", " no writing to dicom files");
+			}
 		}
 	}
 	main_win->print_Info("Registering Process"," Done!!");

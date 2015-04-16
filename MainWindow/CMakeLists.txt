@@ -47,6 +47,7 @@ MainWindow.h
 MarchingCube_construct.h
 ResliceView.h
 ImageViewer2View.h
+ResliceView.h
 )
 
 #qt .cxx files
@@ -55,6 +56,7 @@ MainWindow.cpp
 MarchingCube_construct.cpp
 ResliceView.cpp
 ImageViewer2View.cpp
+ResliceView.cpp
 )
 
 QT4_WRAP_UI(UISrcs ${QT_UI_FILES})

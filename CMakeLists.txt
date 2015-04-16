@@ -19,6 +19,7 @@ qcustomplot
 registration
 SubWidgetBold
 MainWindow
+PearsonCorrelation
 )
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -38,7 +39,7 @@ target_link_libraries(FMRI_TEST Dialog_Advance)
 target_link_libraries(FMRI_TEST qcustomplot)
 target_link_libraries(FMRI_TEST fmriEngine)
 target_link_libraries(FMRI_TEST MainWindow)
-target_link_libraries(FMRI_TESTPearsonCorrelationMethod)
+target_link_libraries(FMRI_TEST PearsonCorrelationMethod)
 
 #itk_register
 #itkStripTsImageFilter

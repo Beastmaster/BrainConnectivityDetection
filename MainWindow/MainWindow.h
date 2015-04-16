@@ -80,7 +80,8 @@ public:
 	explicit MainWindow(QWidget *parent = 0);
 	~MainWindow();
 
-
+	vector<std::pair<std::string, vtkSmartPointer<vtkImageData> > > 
+		GetDataContainer() {return this->data_container;};
 //define slots
 private slots:
 	//load images

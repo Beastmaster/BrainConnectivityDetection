@@ -21,21 +21,26 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 set(Plain_CXX
 PearsonCorrelationMethod.cpp
+GenerateTimeCourse.cpp
 )
 set(Plain_Head
 PearsonCorrelationMethod.h
 PearsonCorrelation_algorithm.hpp
+GenerateTimeCourse.h
 )
 
 set(QT_UI_FILES
+ROIBasedPanel.ui
 )
 
 #qt .h files
 set(QT_HEAD_FILES
+ROIBasedPanel.h
 )
 
 #qt .cxx files
 SET(QT_CXX_FILES
+ROIBasedPanel.cpp
 )
 
 QT4_WRAP_UI(UISrcs ${QT_UI_FILES})

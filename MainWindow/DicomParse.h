@@ -10,7 +10,8 @@
 #define _DICOMPARSE_H_
 
 //use windows.h to call system function
-#include <windows.h>
+//#include <windows.h>
+#include <stdlib.h>
 #include <vector>
 
 #include "itkImageSeriesReader.h"

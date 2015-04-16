@@ -4,15 +4,19 @@
 
 
 pearson_method::pearson_method()
-{}
-pearson_method::~pearson_method()
-{}
+{
 
-void pearson_method::Add_Row(std::vector<float> input)
+}
+pearson_method::~pearson_method()
+{
+
+}
+
+void pearson_method::Add_Row(std::vector<double> input)
 {
 	if (components.back().first.empty())
 	{
-		row_type pair_temp;
+		row_type2 pair_temp;
 		pair_temp.second = input;
 
 		components.push_back(pair_temp);
@@ -32,17 +36,17 @@ void pearson_method::Add_Row_name(std::string name)
 	}
 	else
 	{
-		row_type pair_temp;
+		row_type2 pair_temp;
 		pair_temp.first = name;
 		components.push_back(pair_temp);
 	}
 }
 
-void pearson_method::Calculate_Correlation()
+col_type2 pearson_method::Calculate_Correlation()
 {
 	if (components.empty())
 	{
-		return;
+		return correlation_matrix;
 	}
 	if (components.back().first.empty())
 	{
@@ -62,17 +66,19 @@ void pearson_method::Calculate_Correlation()
 			double relat_t = pearson(components[i].second,components[j].second);
 			row_temp.second.push_back(relat_t);
 		}
+		correlation_matrix.push_back(row_temp);
 	}
 
+	return correlation_matrix;
 }
 
 
-void pearson_method::Get_Range(double low,double high)
+void pearson_method::Get_Range(double& low,double& high,col_type2 correlation_matrix)
 {
 	low  = 0.0;
 	high = 0.0;
 
-	if (this->correlation_matrix.empty())
+	if (correlation_matrix.empty())
 	{
 		return;
 	}
@@ -100,12 +106,12 @@ void pearson_method::Get_Range(double low,double high)
 
 
 //clear to 0 between th_low and th_high
-void pearson_method::Thredhold(double th_low,double th_high)
+col_type2 pearson_method::Thredhold(double th_low,double th_high,col_type2 correlation_matrix)
 {
 	//find empty first
-	if (this->correlation_matrix.empty())
+	if (correlation_matrix.empty())
 	{
-		return;
+		return correlation_matrix;
 	}
 
 	for (int i=0;i<correlation_matrix.size();i++)
@@ -121,6 +127,8 @@ void pearson_method::Thredhold(double th_low,double th_high)
 			}
 		}
 	}
+
+	return correlation_matrix;
 }
 
 

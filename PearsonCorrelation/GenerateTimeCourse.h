@@ -41,13 +41,17 @@ public:
 
 
 	//functions
-	void Get_label_area(float th_l,float th_u,vtkSmartPointer<vtkImageData>);
-	double Mask_Region_Mean(vtkSmartPointer< vtkImageData >);
-	std::vector<double> GetTimecourse();
-	void SetInputData(vtkSmartPointer<vtkImageData>);
-	void SetInputData(std::vector<vtkSmartPointer <vtkImageData> >);
-	void SetTemplete(vtkSmartPointer <vtkImageData> img){this->templete_img = img;};
+	void SetLabelValue(float in) {threshold_low = in;threshold_up = in;};
 	void SetLabelMap(vtkSmartPointer <vtkImageData> img){this->label_map = img;};
+	//this two function is alternative
+	void AddInputData(vtkSmartPointer<vtkImageData>);
+	void SetInputData(std::vector<vtkSmartPointer <vtkImageData> >);
+	//no use here
+	void SetTemplete(vtkSmartPointer <vtkImageData> img){this->templete_img = img;};
+	
+	//output
+	std::vector<double> GetTimecourse();
+
 
 protected:
 	std::vector<vtkSmartPointer <vtkImageData> > data_container;
@@ -57,6 +61,9 @@ protected:
 	vtkSmartPointer<vtkImageData>                label_map;
 	vtkSmartPointer<vtkImageData>				 signal_value_region;
 	std::vector< double >						 time_course;
+
+	void Get_label_area(float th_l,float th_u,vtkSmartPointer<vtkImageData>);
+	double Mask_Region_Mean(vtkSmartPointer< vtkImageData >);
 };
 
 

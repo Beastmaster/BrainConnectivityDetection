@@ -2,17 +2,10 @@
 
 
 
-
-
-
-
-
-
-
-
-
 GenerateTimecourse::GenerateTimecourse()
 {
+	threshold_up,threshold_low = 0;
+
 	templete_img = NULL;
 	label_map    = NULL;
 	signal_value_region = NULL;
@@ -102,7 +95,7 @@ std::vector<double> GenerateTimecourse::GetTimecourse()
 	return this->time_course;
 }
 
-void GenerateTimecourse::SetInputData(vtkSmartPointer<vtkImageData> img)
+void GenerateTimecourse::AddInputData(vtkSmartPointer<vtkImageData> img)
 {
 	this->data_container.push_back(img);
 }
