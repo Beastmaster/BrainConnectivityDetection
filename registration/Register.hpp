@@ -10,6 +10,11 @@
 template < typename FixedImagePixelType, typename MovingImagePixelType, typename ThirdImagePixelType >
 Register<FixedImagePixelType, MovingImagePixelType, ThirdImagePixelType>::Register() {
     m_registered = false;
+
+	//init parameters
+	this->max_step_length = 0.2000 ;
+	this->min_step_length = 0.0010 ;
+	this->num_iteration = 500 ;
 }
 
 template < typename FixedImagePixelType, typename MovingImagePixelType, typename ThirdImagePixelType >
@@ -145,9 +150,9 @@ int Register<FixedImagePixelType, MovingImagePixelType, ThirdImagePixelType>::Ge
     optimizerScales[5] = translationScale;
     optimizer->SetScales( optimizerScales );
     
-    optimizer->SetMaximumStepLength( 0.2000 );//
-    optimizer->SetMinimumStepLength( 0.0010 );
-    optimizer->SetNumberOfIterations( 500 );
+    optimizer->SetMaximumStepLength( this->max_step_length );//0.2000 
+    optimizer->SetMinimumStepLength( this->min_step_length );//0.0010
+    optimizer->SetNumberOfIterations( this->num_iteration );//500
     
     typename CommandIterationUpdate::Pointer observer = CommandIterationUpdate::New();
     optimizer->AddObserver( itk::IterationEvent(), observer );

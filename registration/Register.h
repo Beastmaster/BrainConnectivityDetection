@@ -87,6 +87,9 @@ public:
     virtual int ApplyTransformToImage( typename ThirdImageType::Pointer input, typename ThirdImageType::Pointer &output );
     
 	TransformType::Pointer GetTranformMatrix(void) {return m_transform;};
+	void SetMaximumStepLength(double max) {this->max_step_length = max;};
+	void SetMinimumStepLength(double min) {this->min_step_length = min};
+	void SetNumberOfIterations(itk::SizeValueType num) {this->num_iteration = num};
 
 protected:
     typename FixedImageType::Pointer m_fixedImage;
@@ -96,6 +99,11 @@ protected:
     
     TransformType::Pointer m_transform;
     bool m_registered;
+
+	//add by qinshuo: iterate step length and number of iterations
+	double min_step_length;
+	double max_step_length;
+	itk::SizeValueType num_iteration;
 };
 
 # include "Register.hpp"
