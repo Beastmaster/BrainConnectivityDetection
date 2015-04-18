@@ -62,7 +62,7 @@ public:
 
 	void SetFileName(std::string);
 	vtkSmartPointer<vtkImageData> GetOutput();
-
+	static ImageTypex::Pointer GetITKPointer(std::string);
 private:
 	void Get_Name_Suffix();
 	std::string file_name;
