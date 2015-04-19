@@ -2,13 +2,19 @@
 #ifndef _ROIBASEDPANEL_H_
 #define _ROIBASEDPANEL_H_
 
-#include <QWidget>
+#include <fstream>
+#include <iostream>
+#include <string.h>
 
+#include <QWidget>
+#include <QFileDialog>
 
 #include "ImageConvert.h"
 #include "MainWindow.h"
 #include "GenerateTimeCourse.h"
 #include "PearsonCorrelationMethod.h"
+#include "Register.h"
+
 
 namespace Ui {
 	class ROIBasedPanel;
@@ -19,7 +25,7 @@ class ROIBasedPanel : public QWidget
 	Q_OBJECT
 
 public:
-	explicit ROIBasedPanel(QWidget *parent = 0);
+	explicit ROIBasedPanel(MainWindow* win,QWidget *parent = 0);
 	~ROIBasedPanel();
 
 	enum Templete
@@ -42,6 +48,7 @@ public:
 
 	public slots:
 		void on_click_sel_volume();
+		void on_click_normalize();
 		void on_click_Run();
 		void on_click_Create_Mask();
 		void on_click_load_Mask();

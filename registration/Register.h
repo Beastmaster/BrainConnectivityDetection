@@ -88,8 +88,8 @@ public:
     
 	TransformType::Pointer GetTranformMatrix(void) {return m_transform;};
 	void SetMaximumStepLength(double max) {this->max_step_length = max;};
-	void SetMinimumStepLength(double min) {this->min_step_length = min};
-	void SetNumberOfIterations(itk::SizeValueType num) {this->num_iteration = num};
+	void SetMinimumStepLength(double min) {this->min_step_length = min;};
+	void SetNumberOfIterations(itk::SizeValueType num) {this->num_iteration = num;};
 
 protected:
     typename FixedImageType::Pointer m_fixedImage;

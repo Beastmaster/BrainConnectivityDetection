@@ -8,7 +8,7 @@ GenerateTimecourse::GenerateTimecourse()
 
 	templete_img = NULL;
 	label_map    = NULL;
-	signal_value_region = NULL;
+	single_value_region = NULL;
 }
 
 GenerateTimecourse::~GenerateTimecourse()
@@ -21,15 +21,15 @@ GenerateTimecourse::~GenerateTimecourse()
 //use threshold method as a simple trick
 void GenerateTimecourse::Get_label_area(float th_l,float th_u,vtkSmartPointer<vtkImageData> img)
 {
-	signal_value_region = vtkSmartPointer<vtkImageData>::New();
+	single_value_region = vtkSmartPointer<vtkImageData>::New();
 
 	vtkSmartPointer<vtkImageThreshold> imageThreshold = 
 		vtkSmartPointer<vtkImageThreshold>::New();
 	imageThreshold->SetInput(img);
 
 	//threshold between: include the edge value
-	float lower = th_l;
-	float upper = th_u;
+	double lower = double(th_l);
+	double upper = double(th_u);
 
 	//set threshold value range
 	imageThreshold->ThresholdBetween(lower,upper);
@@ -41,13 +41,47 @@ void GenerateTimecourse::Get_label_area(float th_l,float th_u,vtkSmartPointer<vt
 	imageThreshold->SetInValue(1);
 
 	imageThreshold->Update();
-	signal_value_region->DeepCopy(imageThreshold->GetOutput());
+	single_value_region->DeepCopy(imageThreshold->GetOutput());
+
+	//auto testreg = imageThreshold->GetOutput();
+
+	//vtkSmartPointer<vtkImageCast> caster = 
+	//	vtkSmartPointer<vtkImageCast>::New();
+	//caster->SetInput(imageThreshold->GetOutput());
+	//caster->SetOutputScalarTypeToFloat();
+	//caster->Update();
+
+	//v2iConnectorType::Pointer connector = v2iConnectorType::New();
+	//connector->SetInput(caster->GetOutput());
+	//try
+	//{
+	//	connector->Update();
+	//}
+	//catch (itk::ExceptionObject& e)
+	//{
+	//	std::cout<<"connect itk vtk error"<<std::endl;
+	//	std::cerr<<e;
+	//}
+	//WriterType_b::Pointer nii_writer_parse = 
+	//	WriterType_b::New();
+	//nii_writer_parse->SetInput(connector->GetOutput());
+	//std::string name1 = "masktest.nii";
+	//nii_writer_parse->SetFileName(name1);
+	//try
+	//{
+	//	nii_writer_parse->Update();
+	//}
+	//catch (itk::ExceptionObject& e)
+	//{
+	//	std::cout<<"connect itk vtk error"<<std::endl;
+	//	std::cerr<<e;
+	//}
 }
 
 //parameter: image to mask
 double GenerateTimecourse::Mask_Region_Mean(vtkSmartPointer<vtkImageData> img)
 {
-	if (signal_value_region == NULL)
+	if (single_value_region == NULL)
 	{
 		return 0.0;
 	}
@@ -59,20 +93,74 @@ double GenerateTimecourse::Mask_Region_Mean(vtkSmartPointer<vtkImageData> img)
 	maskFilter->SetMaskedOutputValue(0.0);
 	//set mask data
 	maskFilter->SetImageInput(img);
-	maskFilter->SetMaskInput(signal_value_region);
+	maskFilter->SetMaskInput(single_value_region);
 	maskFilter->Update();
 
-	//compute means
-	vtkSmartPointer<vtkImageAccumulate> accumulate_Filter = 
-		vtkSmartPointer<vtkImageAccumulate>::New();
-	accumulate_Filter->SetComponentExtent(0, 0, 0, 0, 0, 0);
-	accumulate_Filter->SetComponentOrigin(0.0, 0.0, 0.0);
-	accumulate_Filter->SetComponentSpacing(1.0, 1.0, 1.0);
-	accumulate_Filter->SetInput(maskFilter->GetOutput());
-	accumulate_Filter->Update();
+	//v2iConnectorType::Pointer connector = v2iConnectorType::New();
+	//connector->SetInput(maskFilter->GetOutput());
+	//try
+	//{
+	//	connector->Update();
+	//}
+	//catch (itk::ExceptionObject& e)
+	//{
+	//	std::cout<<"connect itk vtk error"<<std::endl;
+	//	std::cerr<<e;
+	//}
+	//WriterType_b::Pointer nii_writer_parse = 
+	//	WriterType_b::New();
+	//nii_writer_parse->SetInput(connector->GetOutput());
+	//std::string name1 = "masktest.nii";
+	//nii_writer_parse->SetFileName(name1);
+	//nii_writer_parse->Update();
+	//nii_writer_parse->Write();
+	
+	//compute image size
+	int dims[3];
+	img->GetDimensions(dims);
+	int img_size = dims[0]*dims[1]*dims[2];
+
+	//use sef-defined method to compute means
+	int region_size = 0;
+	float* val;
+	double region_accumulate = 0.0;
+	for (int i=0;i<dims[0];i++)
+	{
+		for (int j=0;j<dims[1];j++)
+		{
+			for (int k=0;k<dims[2];k++)
+			{
+				val = (float *)maskFilter->GetOutput()->GetScalarPointer(i, j, k);
+				if (*val != 0.0)
+				{
+					region_size++;
+				}
+				region_accumulate += *val;
+			}
+		}
+	}
+	return region_accumulate/region_size;
+
+	////compute means: use vtk image accumulate method
+	//vtkSmartPointer<vtkImageAccumulate> accumulate_Filter = 
+	//	vtkSmartPointer<vtkImageAccumulate>::New();
+	//accumulate_Filter->SetComponentExtent(0, 0, 0, 0, 0, 0);
+	//accumulate_Filter->SetComponentOrigin(0.0, 0.0, 0.0);
+	//accumulate_Filter->SetComponentSpacing(1.0, 1.0, 1.0);
+	//accumulate_Filter->SetInput(maskFilter->GetOutput());
+	//accumulate_Filter->Update();
+
 
 	//use means[0] to get value!!!!
-	return accumulate_Filter->GetMean()[0];   
+	//double *means = accumulate_Filter->GetMean();
+	//return accumulate_Filter->GetMean()[0] * img_size;   
+
+	////use vtkimage histogramstaticstics to compute means
+	//vtkSmartPointer<vtkImageHistogramStatistics> hist = 
+	//	vtkSmartPointer<vtkImageHistogramStatistics>::New();
+	//hist->SetInput(maskFilter->GetOutput());
+	//hist->Update();
+	//return hist->GetMean();
 }
 
 std::vector<double> GenerateTimecourse::GetTimecourse()
@@ -86,6 +174,7 @@ std::vector<double> GenerateTimecourse::GetTimecourse()
 	//get a single area
 	this->Get_label_area(this->threshold_low,this->threshold_up,this->label_map);
 	
+	this->time_course.clear();
 	//compute means
 	for(int i=0;i<img_cnt;i++)
 	{
@@ -102,4 +191,21 @@ void GenerateTimecourse::AddInputData(vtkSmartPointer<vtkImageData> img)
 void GenerateTimecourse::SetInputData(std::vector<vtkSmartPointer <vtkImageData> >img_v)
 {
 	this->data_container = img_v;
+}
+
+void GenerateTimecourse::SetLabelMap(vtkSmartPointer <vtkImageData> img)
+{
+	if (img == NULL)
+	{
+		return;
+	}
+
+	vtkSmartPointer<vtkImageCast> caster = 
+		vtkSmartPointer<vtkImageCast>::New();
+	caster->SetInput(img);
+	caster->SetOutputScalarTypeToUnsignedChar();
+	caster->Update();
+
+	this->label_map = vtkSmartPointer<vtkImageData>::New();
+	this->label_map->DeepCopy(caster->GetOutput());
 }

@@ -14,32 +14,12 @@ pearson_method::~pearson_method()
 
 void pearson_method::Add_Row(std::vector<double> input)
 {
-	if (components.back().first.empty())
-	{
-		row_type2 pair_temp;
-		pair_temp.second = input;
-
-		components.push_back(pair_temp);
-	}
-	else
-	{
-		components.back().second = input;
-	}
-
+	temp_vector_holder.push_back(input);
 }
 
 void pearson_method::Add_Row_name(std::string name)
 {
-	if (components.back().first.empty())
-	{
-		components.back().first=name;
-	}
-	else
-	{
-		row_type2 pair_temp;
-		pair_temp.first = name;
-		components.push_back(pair_temp);
-	}
+	temp_name_holder.push_back(name);
 }
 
 col_type2 pearson_method::Calculate_Correlation()
@@ -129,6 +109,26 @@ col_type2 pearson_method::Thredhold(double th_low,double th_high,col_type2 corre
 	}
 
 	return correlation_matrix;
+}
+
+void pearson_method::Make_Matrix()
+{
+	if (this->temp_name_holder.size() != this->temp_vector_holder.size())
+	{
+		std::cout<<"name size and col size mis-match"<<std::endl;
+		return;
+	}
+
+	for(int i = 0;i<this->temp_name_holder.size();i++)
+	{
+		row_type2 temp_pair = 
+		std::make_pair(temp_name_holder[i],temp_vector_holder[i]);
+
+		this->components.push_back(temp_pair);
+	}
+
+	temp_name_holder.clear();
+	temp_vector_holder.clear();
 }
 
 

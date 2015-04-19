@@ -28,7 +28,8 @@ Description: Generate timecourse of a image series
 #include "vtkImageMask.h"
 #include "vtkImageAccumulate.h"
 #include "vtkImageMathematics.h"
-
+#include "vtkImageCast.h"
+//#include "vtkImageHistogramStatistics.h"
 
 class GenerateTimecourse
 {
@@ -42,7 +43,7 @@ public:
 
 	//functions
 	void SetLabelValue(float in) {threshold_low = in;threshold_up = in;};
-	void SetLabelMap(vtkSmartPointer <vtkImageData> img){this->label_map = img;};
+	void SetLabelMap(vtkSmartPointer <vtkImageData> img);
 	//this two function is alternative
 	void AddInputData(vtkSmartPointer<vtkImageData>);
 	void SetInputData(std::vector<vtkSmartPointer <vtkImageData> >);
@@ -59,7 +60,7 @@ protected:
 	vtkSmartPointer<vtkImageData>                templete_img;
 	//label map of brain areas
 	vtkSmartPointer<vtkImageData>                label_map;
-	vtkSmartPointer<vtkImageData>				 signal_value_region;
+	vtkSmartPointer<vtkImageData>				 single_value_region;
 	std::vector< double >						 time_course;
 
 	void Get_label_area(float th_l,float th_u,vtkSmartPointer<vtkImageData>);

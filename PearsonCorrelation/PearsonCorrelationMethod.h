@@ -22,6 +22,7 @@ public:
 
 	void Add_Row(std::vector<double>);
 	void Add_Row_name(std::string);
+	void Make_Matrix();
 	col_type2 Calculate_Correlation();
 	static void Get_Range(double&,double&,col_type2);
 	static col_type2 Thredhold(double,double,col_type2);
@@ -30,6 +31,9 @@ public:
 	col_type2 correlation_matrix;
 
 private:
+	std::vector< std::vector<double> > temp_vector_holder;
+	std::vector< std::string > temp_name_holder;
+
 	//hold input
 	col_type2 components;
 };
