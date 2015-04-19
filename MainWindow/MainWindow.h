@@ -80,7 +80,7 @@ public:
 	explicit MainWindow(QWidget *parent = 0);
 	~MainWindow();
 
-	vector<std::pair<std::string, vtkSmartPointer<vtkImageData> > > 
+	std::vector<std::pair<std::string, vtkSmartPointer<vtkImageData> > > 
 		GetDataContainer() {return this->data_container;};
 //define slots
 private slots:
@@ -120,8 +120,8 @@ private:
 	img_view_base_Type img_to_view;
 	img_view_base_Type mask_img;
 	img_view_base_Type reference_img;
-	vector<img_view_base_Type > data_container;
-	vector<img_view_base_Type > register_container;
+	std::vector<img_view_base_Type > data_container;
+	std::vector<img_view_base_Type > register_container;
 
 	//bold widget
 	SubWidgetParadigmInBold* bold_win;
