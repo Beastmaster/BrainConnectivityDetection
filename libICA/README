@@ -1,0 +1,14 @@
+Source Website: http://tumic.wz.cz/fel/online/libICA/
+
+Use tips:
+
+Input: array
+
+Parameter type: double
+
+Function:
+1. De-mean
+2. Pre-whitening
+
+
+
