@@ -185,6 +185,7 @@ void ROIBasedPanel::on_click_Run()
 		out_file.close();
 	}
 
+	std::cout<<"running pearson correlation analysis"<<std::endl;
 	PearsomMethod(this->RegionTimecourse);
 
 }

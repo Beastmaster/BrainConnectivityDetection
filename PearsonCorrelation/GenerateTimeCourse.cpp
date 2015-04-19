@@ -43,8 +43,7 @@ void GenerateTimecourse::Get_label_area(float th_l,float th_u,vtkSmartPointer<vt
 	imageThreshold->Update();
 	single_value_region->DeepCopy(imageThreshold->GetOutput());
 
-	//auto testreg = imageThreshold->GetOutput();
-
+	//#include "MainWindow.h"
 	//vtkSmartPointer<vtkImageCast> caster = 
 	//	vtkSmartPointer<vtkImageCast>::New();
 	//caster->SetInput(imageThreshold->GetOutput());
@@ -95,7 +94,8 @@ double GenerateTimecourse::Mask_Region_Mean(vtkSmartPointer<vtkImageData> img)
 	maskFilter->SetImageInput(img);
 	maskFilter->SetMaskInput(single_value_region);
 	maskFilter->Update();
-
+	
+	//#include "MainWindow.h"
 	//v2iConnectorType::Pointer connector = v2iConnectorType::New();
 	//connector->SetInput(maskFilter->GetOutput());
 	//try
@@ -208,4 +208,37 @@ void GenerateTimecourse::SetLabelMap(vtkSmartPointer <vtkImageData> img)
 
 	this->label_map = vtkSmartPointer<vtkImageData>::New();
 	this->label_map->DeepCopy(caster->GetOutput());
+}
+
+
+std::vector<float > GenerateTimecourse::GetPointTimecourse(int i,int j,int k)
+{
+	std::vector<float> return_vector;
+
+	if (data_container.size()==0)
+	{
+		std::cout<<"there is no data in container"<<std::endl;
+		return return_vector;
+	}
+
+	// image size
+	int dims[3];
+	data_container[0]->GetDimensions(dims);
+	if ((i<=dims[0])&&(j<=dims[1])&&(k<=dims[2])&&(i>=0)&&(j>=0)&&(k>=0));
+	else
+	{
+		return return_vector;
+	}
+	int img_size = dims[0]*dims[1]*dims[2];
+
+	//use sef-defined method to compute means
+	int region_size = 0;
+	float* val;
+	for (int i=0;i<data_container.size();i++)
+	{
+		val = (float *)data_container[i]->GetScalarPointer(i, j, k);
+		return_vector.push_back(*val);
+	}
+	
+	return return_vector; 
 }

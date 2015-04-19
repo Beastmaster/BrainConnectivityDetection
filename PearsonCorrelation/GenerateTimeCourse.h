@@ -52,7 +52,7 @@ public:
 	
 	//output
 	std::vector<double> GetTimecourse();
-
+	std::vector<float > GetPointTimecourse(int,int,int);
 
 protected:
 	std::vector<vtkSmartPointer <vtkImageData> > data_container;

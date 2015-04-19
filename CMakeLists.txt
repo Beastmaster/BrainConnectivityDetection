@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
-PROJECT(FMRI_TEST)
+set(PROJECT_NAME BC_Tool)
+PROJECT(${PROJECT_NAME})
  
 find_package(ITK REQUIRED)
 include(${ITK_USE_FILE})
@@ -20,6 +21,7 @@ registration
 SubWidgetBold
 MainWindow
 PearsonCorrelation
+libICA
 )
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -31,24 +33,26 @@ add_subdirectory(registration)
 add_subdirectory(SubWidgetBold)
 add_subdirectory(MainWindow)
 add_subdirectory(PearsonCorrelation)
+add_subdirectory(libICA)
 
-add_executable(FMRI_TEST main.cpp)
+add_executable(${PROJECT_NAME} main.cpp)
 
-target_link_libraries(FMRI_TEST widget_bold)
-target_link_libraries(FMRI_TEST Dialog_Advance)
-target_link_libraries(FMRI_TEST qcustomplot)
-target_link_libraries(FMRI_TEST fmriEngine)
-target_link_libraries(FMRI_TEST MainWindow)
-target_link_libraries(FMRI_TEST PearsonCorrelationMethod)
+target_link_libraries(${PROJECT_NAME} widget_bold)
+target_link_libraries(${PROJECT_NAME} Dialog_Advance)
+target_link_libraries(${PROJECT_NAME} qcustomplot)
+target_link_libraries(${PROJECT_NAME} fmriEngine)
+target_link_libraries(${PROJECT_NAME} MainWindow)
+target_link_libraries(${PROJECT_NAME} PearsonCorrelationMethod)
+target_link_libraries(${PROJECT_NAME} libICA)
 
 #itk_register
 #itkStripTsImageFilter
 if(VTK_LIBRARIES)
   if(${VTK_VERSION} VERSION_LESS "6")
-    target_link_libraries(FMRI_TEST ${VTK_LIBRARIES} ${ITK_LIBRARIES} QVTK ${ITK_VERSION_MAJOR} )
+    target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES} ${ITK_LIBRARIES} QVTK ${ITK_VERSION_MAJOR} )
   else()
-    target_link_libraries(FMRI_TEST ${VTK_LIBRARIES} ${ITK_LIBRARIES} ${ITK_VERSION_MAJOR})
+    target_link_libraries(${PROJECT_NAME} ${VTK_LIBRARIES} ${ITK_LIBRARIES} ${ITK_VERSION_MAJOR})
   endif()
 else()
-  target_link_libraries(FMRI_TEST vtkHybrid QVTK vtkViews ${QT_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} vtkHybrid QVTK vtkViews ${QT_LIBRARIES})
 endif()
