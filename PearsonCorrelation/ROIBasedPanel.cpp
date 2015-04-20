@@ -17,6 +17,14 @@ ROIBasedPanel::ROIBasedPanel(MainWindow* win,QWidget *parent) :
 ROIBasedPanel::~ROIBasedPanel()
 {
 	delete ui;
+
+
+
+	//delete text items in graph view
+	for (int i=0;i<this->rectItem_to_delete.size();i++)
+	{
+		delete this->rectItem_to_delete[i];
+	}
 }
 
 
@@ -89,23 +97,31 @@ void ROIBasedPanel::on_click_sel_volume()
 
 	for (int fn = 0;fn<file_name_list.size();fn++)
 	{
-		std::cout<<"registering "<<fn<<"th image ..."<<std::endl;
+		std::cout<<"Reading "<<fn<<"th image ..."<<std::endl;
 
 		std::string file_name = file_name_list[fn].toStdString();
 
 		Image_Convert_Base* reader = new Image_Convert_Base;
 		reader->SetFileName(file_name);
 		vtkSmartPointer<vtkImageData> img_data = reader->GetOutput();
+		int dim[3];
+		int dim2[3];
+		img_data->GetDimensions(dim);
+		atlas_image->GetDimensions(dim2);
+		for (unsigned int i=0;i<3;i++)
+		{
+			if (dim2[i]!=dim[i])
+			{
+				std::cout<<"Normalize first: dimensions do not match.."<<std::endl;
+				return;
+			}
+		}
 		std::pair<std::string, vtkSmartPointer<vtkImageData> > img;
 		img.first = file_name;
 		img.second = img_data;
 		this->data_container.push_back(img);
 		delete reader;
 
-		int dim[3];
-		img_data->GetDimensions(dim);
-		int dim_temp[3];
-		this->atlas_image->GetDimensions(dim_temp);
 	}
 
 }
@@ -188,6 +204,9 @@ void ROIBasedPanel::on_click_Run()
 	std::cout<<"running pearson correlation analysis"<<std::endl;
 	PearsomMethod(this->RegionTimecourse);
 
+	std::cout<<"Process done"<<std::endl;
+
+	view_correlation_matrix();
 }
 
 void ROIBasedPanel::on_click_Create_Mask()
@@ -270,6 +289,7 @@ void ROIBasedPanel::PearsomMethod(std::vector< std::pair< std::string, std::vect
 
 	//calculate
 	auto test = new_method->Calculate_Correlation();
+	this->correlation_matrix = test;
 
 	delete new_method;
 
@@ -294,6 +314,90 @@ void ROIBasedPanel::PearsomMethod(std::vector< std::pair< std::string, std::vect
 	{
 		out_file.close();
 	}
+}
+
+void ROIBasedPanel::view_correlation_matrix()
+{
+
+	this->correlation_MatrixCanvas = new QGraphicsScene(this->ui->graphicsView);
+	this->ui->graphicsView->setScene(this->correlation_MatrixCanvas);
+
+	//get data range and cols/rows of designmatrix
+	double cor_MatRange[2] = {-1,1};
+	double range_temp = cor_MatRange[1]-cor_MatRange[0];
+	//this->designMat->GetRange(designMatRange,-1);
+	int draw_col = this->correlation_matrix.size();
+	int draw_row = this->correlation_matrix.size();
+
+	//map position
+	float origin_x = 0;
+	float origin_y = 0;
+	float x_width = 300;
+	float y_height = 300;
+
+	//width and height of per area
+	float x_width_per = x_width/draw_row; 
+	float y_height_per = y_height/draw_col;
+
+	float x_pos = 0;
+	float y_pos = 0;
+	//map color
+	double color_step = 255/range_temp;
+
+	//add a color look_up_table to view
+	for (int i=0;i<255;i++)
+	{
+		QColor disp_color = QColor(i,0,0);
+		QGraphicsRectItem* new_rect_item = 
+			new QGraphicsRectItem(x_pos-100,i,x_width_per,1);
+		new_rect_item->setPen(QPen(Qt::NoPen));
+		new_rect_item->setBrush(disp_color);
+		correlation_MatrixCanvas->addItem(new_rect_item);
+		this->rectItem_to_delete.push_back((QObject*)new_rect_item);
+	}
+
+
+	float name_height = 0;
+	for (int i=0;i<draw_row;i++)
+	{
+		//add name
+		QGraphicsTextItem* name_text_item = new QGraphicsTextItem;
+		name_text_item->setPos(-50,name_height);
+		name_text_item->setPlainText(this->correlation_matrix[i].first.data());
+		correlation_MatrixCanvas->addItem(name_text_item);
+		name_height += y_height_per;
+		this->rectItem_to_delete.push_back((QObject*)name_text_item);
+	}
+
+
+	//add items
+	for (int i = 0;i<draw_row;i++)
+	{
+		//create items and add
+		float y_pos = 0;
+		for(int j=0;j<draw_col;j++)
+		{
+			//get value of component
+			double tem_component_value = this->correlation_matrix[i].second[j];//this->designMat->GetComponent(j,i);
+			double red_color_temp = (tem_component_value-cor_MatRange[0])*color_step;
+			QColor disp_color = QColor(int(red_color_temp),0,0);//,int(red_color_temp),int(red_color_temp));
+			QGraphicsRectItem* new_rect_item = new QGraphicsRectItem(x_pos,y_pos,x_width_per,y_height_per);
+			new_rect_item->setPen(QPen(Qt::NoPen));
+			new_rect_item->setBrush(disp_color);
+			correlation_MatrixCanvas->addItem(new_rect_item);
+			this->rectItem_to_delete.push_back((QObject*)new_rect_item);
+			y_pos += y_height_per;
+		}
+		x_pos += x_width_per;
+	}
+
+	//add text to view
+	QGraphicsTextItem* new_text_item = new QGraphicsTextItem;
+	new_text_item->setPos(0,-20);
+	new_text_item->setPlainText("Coorelation Matrix");
+	correlation_MatrixCanvas->addItem(new_text_item);
+	this->rectItem_to_delete.push_back((QObject*)new_text_item);
+
 }
 
 

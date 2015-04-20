@@ -35,7 +35,19 @@ add_subdirectory(MainWindow)
 add_subdirectory(PearsonCorrelation)
 add_subdirectory(libICA)
 
-add_executable(${PROJECT_NAME} main.cpp)
+
+#qt .cxx files
+SET(QT_CXX_FILES
+main.cpp
+)
+QT4_WRAP_CPP(MOCSrcs ${QT_CXX_FILES})
+#include source dir
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+add_executable(${PROJECT_NAME} ${QT_CXX_FILES} ${MOCSrcs})
+
+
+
+#add_executable(${PROJECT_NAME} main.cpp)
 
 target_link_libraries(${PROJECT_NAME} widget_bold)
 target_link_libraries(${PROJECT_NAME} Dialog_Advance)

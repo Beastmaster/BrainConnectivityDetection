@@ -179,6 +179,17 @@ protected:
 
 
 
+//multi thread
+class multi_thread_main : public QThread
+{
+	Q_OBJECT
+public:
+	explicit multi_thread_main(QWidget* win) {main_win = win;};
+	~multi_thread_main() {};
+	void run() {main_win->show();};
+protected:
+	QWidget* main_win;
+};
 
 
 #endif

@@ -55,6 +55,7 @@ public:
 		void sel_templete(int);
 		void sel_correlation(int);
 		void sel_method(int);
+		void view_correlation_matrix();
 
 public:
 	//public parameters
@@ -76,10 +77,16 @@ private:
 	//data container hold all data
 	std::vector< std::pair<std::string, vtkSmartPointer<vtkImageData> > >
 		data_container;
+	col_type2 correlation_matrix;
 
 	//private functions:
 	void Init_Para();
 	void PearsomMethod(std::vector< std::pair< std::string, std::vector< double > > > );
+
+
+	QGraphicsScene* correlation_MatrixCanvas;
+	vector<QObject*> rectItem_to_delete;
+
 };
 
 
