@@ -7,8 +7,16 @@
 #ifndef MATRIX_H_
 #define MATRIX_H_
 
+
+
+
 #include <float.h>
 #define SCAL_EPSILON	DBL_EPSILON
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef double **mat;
 typedef double *vect;
@@ -33,5 +41,10 @@ void mat_sub(mat A, mat B, int rows, int cols, mat R);
 void mat_mult(mat A, int rows_A, int cols_A, mat B, int rows_B, int cols_B, mat R);
 void mat_center(mat M, int rows, int cols, vect means);
 void mat_decenter(mat M, int rows, int cols, vect means);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /*MATRIX_H_*/
