@@ -713,7 +713,7 @@ void fileout(vtkFloatArray* input,char* name)
 			file<<"\ncomponent:"<<j<<"\n";
 			for(int i=0;i<tuples;i++)
 		   {
-			 file<<input->GetComponent(i,j)<<"\,";
+			 file<<input->GetComponent(i,j)<<",";
 			}
 		}
 	}
