@@ -14,7 +14,7 @@
 #include "GenerateTimeCourse.h"
 #include "PearsonCorrelationMethod.h"
 #include "Register.h"
-
+#include "libICA.h"
 
 namespace Ui {
 	class ROIBasedPanel;
@@ -50,12 +50,15 @@ public:
 		void on_click_sel_volume();
 		void on_click_normalize();
 		void on_click_Run();
+		void on_run_ROIbased();
+		void on_run_Seedbased();
 		void on_click_Create_Mask();
 		void on_click_load_Mask();
 		void sel_templete(int);
 		void sel_correlation(int);
 		void sel_method(int);
 		void view_correlation_matrix();
+		void fastICA_Analysis();
 
 public:
 	//public parameters
@@ -69,6 +72,9 @@ private:
 	Ui::ROIBasedPanel *ui;
 	MainWindow* main_win;
 
+	int templete_ID;
+	int method_ID;
+	int correlation_ID;
 
 	std::string templete_file_name;
 	std::string atlas_file_name;
@@ -77,6 +83,8 @@ private:
 	//data container hold all data
 	std::vector< std::pair<std::string, vtkSmartPointer<vtkImageData> > >
 		data_container;
+	std::vector< std::pair<std::string, vtkSmartPointer<vtkImageData> > >
+		component_container;
 	col_type2 correlation_matrix;
 
 	//private functions:

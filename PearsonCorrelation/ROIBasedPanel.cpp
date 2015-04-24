@@ -1,7 +1,8 @@
 #include "ROIBasedPanel.h"
 #include "ui_ROIBasedPanel.h"
 
-
+#include <functional>
+#include <thread>
 
 ROIBasedPanel::ROIBasedPanel(MainWindow* win,QWidget *parent) :
 	QWidget(parent),
@@ -11,6 +12,9 @@ ROIBasedPanel::ROIBasedPanel(MainWindow* win,QWidget *parent) :
 	this->main_win = win;
 	connect(this->ui->sel_volume_Btn,SIGNAL(clicked()),this,SLOT(on_click_sel_volume()));
 	connect(this->ui->run_Btn,SIGNAL(clicked()),this,SLOT(on_click_Run()));
+	connect(this->ui->ica_test_Btn,SIGNAL(clicked()),this,SLOT(fastICA_Analysis()));
+	connect(this->ui->sel_base_method,SIGNAL(currentIndexChanged(int)),this,SLOT(sel_method(int)));
+	connect(this->ui->sel_templete,SIGNAL(currentIndexChanged(int)),this,SLOT(sel_templete(int)));
 	this->Init_Para();
 }
 
@@ -30,6 +34,11 @@ ROIBasedPanel::~ROIBasedPanel()
 
 void ROIBasedPanel::Init_Para()
 {
+
+	templete_ID = 0;
+	method_ID = 0;
+	correlation_ID = 0;
+
 	templete_image = NULL;
 	atlas_image = NULL;
 
@@ -123,7 +132,7 @@ void ROIBasedPanel::on_click_sel_volume()
 		delete reader;
 
 	}
-
+	std::cout<<"load image done!"<<std::endl;
 }
 
 
@@ -135,8 +144,40 @@ void ROIBasedPanel::on_click_normalize()
 
 }
 
-
 void ROIBasedPanel::on_click_Run()
+{
+	switch(method_ID)
+	{
+	case 0:
+		{
+			this->on_run_ROIbased();
+			break;
+		}
+	case 1:
+		{
+			this->on_run_Seedbased();
+			break;
+		}
+	default:
+		{
+			this->on_run_ROIbased();
+			break;
+		}
+	}
+}
+
+void ROIBasedPanel::on_run_Seedbased()
+{
+	if (this->data_container.size() == 0 )
+	{
+		return;
+	}
+
+
+
+}
+
+void ROIBasedPanel::on_run_ROIbased()
 {
 	if ( this->atlas_image == NULL ||
 		 this->data_container.size() == 0 ||
@@ -166,7 +207,7 @@ void ROIBasedPanel::on_click_Run()
 		 it!=this->label_value.end();
 		 it++)
 	{
-		std::cout<<"Computing "<<(*it).first<<std::endl;
+		std::cout<<"Masking Region: "<<(*it).first<<std::endl;
 		timecourse_generator->SetLabelValue((*it).second);
 		std::pair< std::string, std::vector< double > > temp;
 		temp.first  = (*it).first;
@@ -263,14 +304,55 @@ void ROIBasedPanel::sel_templete(int index)
 	//}
 }
 
-void ROIBasedPanel::sel_correlation(int)
+void ROIBasedPanel::sel_correlation(int index)
 {
-
+	correlation_ID = index;
+	switch(method_ID)
+	{
+	case 0:
+		{
+			std::cout<<"select AAL templete"<<std::endl;
+			break;
+		}
+	case 1:
+		{
+			std::cout<<"select Talarich templete"<<std::endl;
+			break;
+		}
+	case 2:
+		{
+			std::cout<<"select Broadman templete"<<std::endl;
+			break;
+		}
+	default:
+		{
+			std::cout<<"select un-resonable templete"<<std::endl;
+			break;
+		}
+	}
 }
 
 void ROIBasedPanel::sel_method(int index)
 {
-
+	method_ID = index;
+	switch(method_ID)
+	{
+	case 0:
+		{
+			std::cout<<"select ROI based method"<<std::endl;
+			break;
+		}
+	case 1:
+		{
+			std::cout<<"select Seed based method"<<std::endl;
+			break;
+		}
+	default:
+		{
+			std::cout<<"select un-resonable method"<<std::endl;
+			break;
+		}
+	}
 }
 
 
@@ -329,6 +411,13 @@ void ROIBasedPanel::view_correlation_matrix()
 	int draw_col = this->correlation_matrix.size();
 	int draw_row = this->correlation_matrix.size();
 
+	//map number to 0-255
+	auto colo_map_func = [] (float num) 
+	{
+		if (num<0){return (-num)*255;}
+		else      {return num*255;}
+	};
+
 	//map position
 	float origin_x = 0;
 	float origin_y = 0;
@@ -342,19 +431,33 @@ void ROIBasedPanel::view_correlation_matrix()
 	float x_pos = 0;
 	float y_pos = 0;
 	//map color
-	double color_step = 255/range_temp;
+	double color_step = 512/range_temp;
 
 	//add a color look_up_table to view
-	for (int i=0;i<255;i++)
+	for (int i=0;i<512;i++)
 	{
-		QColor disp_color = QColor(i,0,0);
-		QGraphicsRectItem* new_rect_item = 
-			new QGraphicsRectItem(x_pos-100,i,x_width_per,1);
-		new_rect_item->setPen(QPen(Qt::NoPen));
-		new_rect_item->setBrush(disp_color);
-		correlation_MatrixCanvas->addItem(new_rect_item);
-		this->rectItem_to_delete.push_back((QObject*)new_rect_item);
+		if (i<256)
+		{
+			QColor disp_color = QColor(i,255,255);
+			QGraphicsRectItem* new_rect_item = 
+				new QGraphicsRectItem(x_pos-150,i,x_width_per/2,1);
+			new_rect_item->setPen(QPen(Qt::NoPen));
+			new_rect_item->setBrush(disp_color);
+			correlation_MatrixCanvas->addItem(new_rect_item);
+			this->rectItem_to_delete.push_back((QObject*)new_rect_item);
+		}
+		else
+		{
+			QColor disp_color = QColor(255,255,511-i);
+			QGraphicsRectItem* new_rect_item = 
+				new QGraphicsRectItem(x_pos-150,i,x_width_per/2,1);
+			new_rect_item->setPen(QPen(Qt::NoPen));
+			new_rect_item->setBrush(disp_color);
+			correlation_MatrixCanvas->addItem(new_rect_item);
+			this->rectItem_to_delete.push_back((QObject*)new_rect_item);
+		}
 	}
+	
 
 
 	float name_height = 0;
@@ -362,7 +465,7 @@ void ROIBasedPanel::view_correlation_matrix()
 	{
 		//add name
 		QGraphicsTextItem* name_text_item = new QGraphicsTextItem;
-		name_text_item->setPos(-50,name_height);
+		name_text_item->setPos(-100,name_height);
 		name_text_item->setPlainText(this->correlation_matrix[i].first.data());
 		correlation_MatrixCanvas->addItem(name_text_item);
 		name_height += y_height_per;
@@ -379,8 +482,17 @@ void ROIBasedPanel::view_correlation_matrix()
 		{
 			//get value of component
 			double tem_component_value = this->correlation_matrix[i].second[j];//this->designMat->GetComponent(j,i);
-			double red_color_temp = (tem_component_value-cor_MatRange[0])*color_step;
-			QColor disp_color = QColor(int(red_color_temp),0,0);//,int(red_color_temp),int(red_color_temp));
+			QColor disp_color;// = QColor(int(red_color_temp),0,0);//,int(red_color_temp),int(red_color_temp));
+			if (tem_component_value<0)
+			{
+				double red_color_temp = colo_map_func(tem_component_value);
+				disp_color = QColor(255,255,int(red_color_temp));
+			}
+			else
+			{
+				double red_color_temp = colo_map_func(tem_component_value);
+				disp_color = QColor(int(red_color_temp),255,255);
+			}
 			QGraphicsRectItem* new_rect_item = new QGraphicsRectItem(x_pos,y_pos,x_width_per,y_height_per);
 			new_rect_item->setPen(QPen(Qt::NoPen));
 			new_rect_item->setBrush(disp_color);
@@ -399,6 +511,111 @@ void ROIBasedPanel::view_correlation_matrix()
 	this->rectItem_to_delete.push_back((QObject*)new_text_item);
 
 }
+
+void ROIBasedPanel::fastICA_Analysis()
+{
+	/*****  1. reconstruct data  *****/
+	//get image size
+	if (data_container.size()==0)
+	{
+		return;
+	}
+	int dims[3] = {0,0,0};
+	data_container[0].second->GetDimensions(dims);
+	int time_length = data_container.size();
+	//create new matrix;
+	int ica_data_rows = time_length;
+	int ica_data_cols = dims[0]*dims[1]*dims[2];
+	double** src_mat = mat_create(ica_data_rows,ica_data_cols);
+	//put data to matrix
+	int tim_cnt=0;
+	for (auto it=data_container.begin();it!=data_container.end();it++)
+	{
+		int vox_cnt=0;
+		for (int k=0; k<dims[2];k++)
+		{
+			for (int j=0; j<dims[1];j++)
+			{
+				for (int i=0; i<dims[0];i++)
+				{
+					src_mat[tim_cnt][vox_cnt++/*((i+1)*(j+1)*(k+1)-1)*/] =*(float*)(*it).second->GetScalarPointer(i,j,k);
+				}
+			}
+		}
+		tim_cnt++;
+	}
+
+	/*****  2. process data  *****/
+	//number of component
+	int num_compc = this->ui->in_num_Compc->text().toInt();
+	if ((num_compc<2)||(num_compc>time_length))
+	{
+		num_compc = 5;
+	}
+	double  **K, **W, **A, **S;
+	W = mat_create(num_compc, num_compc);//de-mix matrix
+	A = mat_create(num_compc, num_compc);//mix matrix
+	K = mat_create(ica_data_cols, num_compc);
+	S = mat_create(ica_data_rows, ica_data_cols);	//source
+
+	// ICA computation
+	fastICA(src_mat, ica_data_rows, ica_data_cols, num_compc, K, W, A, S);
+
+
+	//write to output image
+	//1. clean components image container
+	if (component_container.size()!=0)
+	{
+		component_container.clear();
+	}
+	//2. write voxel value
+	for (int vol_cnt=0;vol_cnt<ica_data_rows;vol_cnt++)//for each component
+	{
+		//allocate memory for one component
+		vtkSmartPointer<vtkImageData> output = vtkSmartPointer<vtkImageData>::New();
+		vtkSmartPointer<vtkImageData> input = data_container[0].second;
+		output->SetScalarType(VTK_FLOAT);
+		output->SetOrigin(input->GetOrigin());
+		output->SetSpacing(input->GetSpacing());
+		output->SetNumberOfScalarComponents(1);
+		output->SetDimensions(dims[0], dims[1], dims[2]);
+		output->AllocateScalars();
+		
+		vtkDataArray *scalarsOutput = output->GetPointData()->GetScalars();
+		//vtkDataArray *scalarsInput = input->GetPointData()->GetScalars();
+
+		// Voxel iteration through the entire image volume
+		int indx = 0;
+		for (int kk = 0; kk < dims[2]; kk++)
+		{
+			for (int jj = 0; jj < dims[1]; jj++)
+			{
+				for (int ii = 0; ii < dims[0]; ii++)
+				{
+					float com_value = float(S[vol_cnt][indx]);
+					scalarsOutput->SetComponent(indx++, 0, com_value);
+				}
+			} 
+		}
+
+		//put them to component data container
+		char component_name[20];
+		sprintf(component_name,"%dth_component",vol_cnt);
+		std::pair< std::string,vtkSmartPointer<vtkImageData> > 
+			cop_data_temp = std::make_pair(component_name,output);
+		component_container.push_back(cop_data_temp);
+	}
+
+
+	/*****3. release memory******/
+	mat_delete(src_mat,ica_data_rows,ica_data_cols);
+	mat_delete(W,num_compc, num_compc);
+	mat_delete(A,num_compc, num_compc);
+	mat_delete(K,ica_data_cols, num_compc);
+	mat_delete(S,ica_data_rows, ica_data_cols);	
+}
+
+
 
 
 
