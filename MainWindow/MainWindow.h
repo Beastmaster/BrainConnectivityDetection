@@ -79,6 +79,7 @@ class MainWindow : public QMainWindow
 public:
 	explicit MainWindow(QWidget *parent = 0);
 	~MainWindow();
+	void show(){this->show();};
 
 	std::vector<std::pair<std::string, vtkSmartPointer<vtkImageData> > > 
 		GetDataContainer() {return this->data_container;};
