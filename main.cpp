@@ -8,7 +8,6 @@
 #include <QTextCodec>
 
 
-
 int main( int argc, char** argv )
 {
 	QTextCodec *codec=QTextCodec::codecForName("GBK");
@@ -22,7 +21,8 @@ int main( int argc, char** argv )
 
 	//ROIBasedPanel roi_based_panel(&fmri_main_window);
 	QWidget	* main_win = new MainWindow;
-	QWidget* bct_panel = new ROIBasedPanel( (MainWindow*) main_win);
+	MainWindow* textxxxx = new MainWindow;
+	QWidget* bct_panel = new ROIBasedPanel(textxxxx);//( (MainWindow*) main_win);
 	multi_thread_main* thread_main[1];
 	thread_main[0] = new multi_thread_main(main_win);
 	multi_thread_main* thread_bct[1];
