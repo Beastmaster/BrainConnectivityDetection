@@ -189,3 +189,32 @@ ImageTypex::Pointer Image_Convert_Base::GetITKPointer(std::string file_name)
 		return NULL;
 	}
 }
+
+void Image_Convert_Base::WriteTonii(vtkSmartPointer<vtkImageData> image,std::string name)
+{
+
+	v2iConnectorType::Pointer connector = v2iConnectorType::New();
+	connector->SetInput(image);
+	try
+	{
+		connector->Update();
+	}
+	catch (itk::ExceptionObject& e)
+	{
+		std::cout<<"connect itk vtk error"<<std::endl;
+		std::cerr<<e;
+	}
+
+	WriterType_Convert::Pointer nii_writer_parse = 
+		WriterType_Convert::New();
+	nii_writer_parse->SetInput(connector->GetOutput());
+	std::string name1 = name;
+	if (name1.compare(name1.size()-4,4,".nii") == 0)
+	{}//do nothing
+	else
+	{
+		name1.append(".nii");
+	}
+	nii_writer_parse->SetFileName(name1);
+	nii_writer_parse->Write();
+}

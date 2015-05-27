@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1306</width>
-    <height>907</height>
+    <width>1190</width>
+    <height>937</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -105,6 +105,55 @@
        </layout>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_9">
+        <item>
+         <widget class="QSlider" name="th_low_Slider">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSlider" name="th_up_Slider">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Overlay Opacity  </string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSlider" name="overlay_opacity_Slider">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="overlay_opacity_Label">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
          <widget class="QLabel" name="label_3">
@@ -172,41 +221,10 @@
         </item>
        </layout>
       </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
-        <item>
-         <widget class="QLabel" name="label_6">
-          <property name="text">
-           <string>Overlay Opacity  </string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSlider" name="overlay_opacity_Slider">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="overlay_opacity_Label">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
      </layout>
     </item>
     <item row="0" column="1" rowspan="2">
-     <widget class="QWidget" name="" native="true">
+     <widget class="QWidget" name="widget" native="true">
       <property name="maximumSize">
        <size>
         <width>400</width>
@@ -429,7 +447,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1306</width>
+     <width>1190</width>
      <height>31</height>
     </rect>
    </property>

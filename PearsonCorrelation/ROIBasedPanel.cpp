@@ -113,18 +113,7 @@ void ROIBasedPanel::on_click_sel_volume()
 		Image_Convert_Base* reader = new Image_Convert_Base;
 		reader->SetFileName(file_name);
 		vtkSmartPointer<vtkImageData> img_data = reader->GetOutput();
-		int dim[3];
-		int dim2[3];
-		img_data->GetDimensions(dim);
-		atlas_image->GetDimensions(dim2);
-		for (unsigned int i=0;i<3;i++)
-		{
-			if (dim2[i]!=dim[i])
-			{
-				std::cout<<"Normalize first: dimensions do not match.."<<std::endl;
-				return;
-			}
-		}
+
 		std::pair<std::string, vtkSmartPointer<vtkImageData> > img;
 		img.first = file_name;
 		img.second = img_data;
@@ -146,6 +135,19 @@ void ROIBasedPanel::on_click_normalize()
 
 void ROIBasedPanel::on_click_Run()
 {
+	int dim[3];
+	int dim2[3];
+	data_container[0].second->GetDimensions(dim);
+	atlas_image->GetDimensions(dim2);
+	for (unsigned int i=0;i<3;i++)
+	{
+		if (dim2[i]!=dim[i])
+		{
+			std::cout<<"Normalize first: dimensions do not match.."<<std::endl;
+			return;
+		}
+	}
+
 	switch(method_ID)
 	{
 	case 0:
@@ -168,13 +170,95 @@ void ROIBasedPanel::on_click_Run()
 
 void ROIBasedPanel::on_run_Seedbased()
 {
+	//---------define a label to generate pearson correlation map----------//
+	int i_th_label = 0;
+	//---------define a label to generate pearson correlation map----------//
+
 	if (this->data_container.size() == 0 )
 	{
 		return;
 	}
 
+	//------1. overlay seed area and generate timecourse------//
+	if ( this->atlas_image == NULL ||
+		this->data_container.size() == 0 ||
+		this->label_value.size() == 0)
+	{
+		return;
+	}
+
+	//clear region time course 
+	if (this->RegionTimecourse.size() != 0 )
+	{
+		this->RegionTimecourse.clear();
+	}
+
+	//define a handle to generate time course
+	GenerateTimecourse* timecourse_generator = new GenerateTimecourse;
+	timecourse_generator->SetLabelMap(this->atlas_image);
+	//add data one by one
+	for (int i = 0;i<this->data_container.size();i++)
+	{
+		timecourse_generator->AddInputData(this->data_container[i].second);
+	}
+
+	//iterate through label value map to generate all time course
+	for (std::map< std::string , float >::iterator it 
+		= this->label_value.begin();
+		it!=this->label_value.end();
+	it++)
+	{
+		std::cout<<"Masking Region: "<<(*it).first<<std::endl;
+		timecourse_generator->SetLabelValue((*it).second);
+		std::pair< std::string, std::vector< double > > temp;
+		temp.first  = (*it).first;
+		temp.second = timecourse_generator->GetTimecourse();
+
+		this->RegionTimecourse.push_back(temp);
+	}
 
 
+	//------2. pearson correlation calculation-------------//
+	//allocate memory for one component
+	vtkSmartPointer<vtkImageData> output = vtkSmartPointer<vtkImageData>::New();
+	vtkSmartPointer<vtkImageData> input = data_container[0].second;
+	int dims[3] = {0};
+	input->GetDimensions(dims);
+	output->SetScalarType(VTK_FLOAT);
+	output->SetOrigin(input->GetOrigin());
+	output->SetSpacing(input->GetSpacing());
+	output->SetNumberOfScalarComponents(1);
+	output->SetDimensions(dims[0], dims[1], dims[2]);
+	output->AllocateScalars();
+
+	vtkDataArray *scalarsOutput = output->GetPointData()->GetScalars();
+
+	// Voxel iteration through the entire image volume
+	int indx = 0;
+	for (int kk = 0; kk < dims[2]; kk++)
+	{
+		for (int jj = 0; jj < dims[1]; jj++)
+		{
+			for (int ii = 0; ii < dims[0]; ii++)
+			{
+				auto point_timecourse = timecourse_generator->GetPointTimecourse(ii,jj,kk);
+				std::vector<double> point_tim;
+				for (auto it = point_timecourse.begin();it!=point_timecourse.end();it++)
+				{
+					point_tim.push_back((*it));
+				}
+				float com_value = float(pearson(point_tim,this->RegionTimecourse[i_th_label].second));
+				scalarsOutput->SetComponent(indx, 0, com_value);
+				indx++;
+			}
+		} 
+	}
+	//delete timecourse_generator in the end
+	delete timecourse_generator;
+
+	//------3. write to image--------------//
+	Image_Convert_Base::WriteTonii(output,"seed_based.nii");
+	std::cout<<"seed based method done"<<std::endl;
 }
 
 void ROIBasedPanel::on_run_ROIbased()
@@ -514,7 +598,22 @@ void ROIBasedPanel::view_correlation_matrix()
 
 void ROIBasedPanel::fastICA_Analysis()
 {
-	/*****  1. reconstruct data  *****/
+	//number of component
+	int num_compc = this->ui->in_num_Compc->text().toInt();
+	if ((num_compc<2)||(num_compc>data_container.size()))
+	{
+		num_compc = 5;
+	}
+	//get number of components and allocate memory
+	char component_name[20];
+	for (unsigned int i=0;i<num_compc;i++)
+	{
+		vtkSmartPointer<vtkImageData> output = vtkSmartPointer<vtkImageData>::New();
+		sprintf(component_name,"%dth_component",i);
+		std::pair< std::string,vtkSmartPointer<vtkImageData> > 
+			cop_data_temp = std::make_pair(component_name,output);
+		component_container.push_back(cop_data_temp);
+	}
 	//get image size
 	if (data_container.size()==0)
 	{
@@ -524,43 +623,60 @@ void ROIBasedPanel::fastICA_Analysis()
 	data_container[0].second->GetDimensions(dims);
 	int time_length = data_container.size();
 	//create new matrix;
-	int ica_data_rows = time_length;
-	int ica_data_cols = dims[0]*dims[1]*dims[2];
+	int ica_data_cols = time_length;
+	int ica_data_rows = dims[0]*dims[1];//*dims[2];
 	double** src_mat = mat_create(ica_data_rows,ica_data_cols);
-	//put data to matrix
-	int tim_cnt=0;
-	for (auto it=data_container.begin();it!=data_container.end();it++)
-	{
-		int vox_cnt=0;
-		for (int k=0; k<dims[2];k++)
-		{
-			for (int j=0; j<dims[1];j++)
-			{
-				for (int i=0; i<dims[0];i++)
-				{
-					src_mat[tim_cnt][vox_cnt++/*((i+1)*(j+1)*(k+1)-1)*/] =*(float*)(*it).second->GetScalarPointer(i,j,k);
-				}
-			}
-		}
-		tim_cnt++;
-	}
 
-	/*****  2. process data  *****/
-	//number of component
-	int num_compc = this->ui->in_num_Compc->text().toInt();
-	if ((num_compc<2)||(num_compc>time_length))
-	{
-		num_compc = 5;
-	}
 	double  **K, **W, **A, **S;
 	W = mat_create(num_compc, num_compc);//de-mix matrix
 	A = mat_create(num_compc, num_compc);//mix matrix
 	K = mat_create(ica_data_cols, num_compc);
-	S = mat_create(ica_data_rows, ica_data_cols);	//source
+	std::vector<double**> S_vect(dims[2]);
+	std::vector<double**> S_vect_Z(dims[2]);
 
-	// ICA computation
-	fastICA(src_mat, ica_data_rows, ica_data_cols, num_compc, K, W, A, S);
+	for (auto it=S_vect.begin();it!=S_vect.end();it++)
+		(*it) = mat_create(ica_data_rows, num_compc);	//source
+	for (auto it=S_vect_Z.begin();it!=S_vect_Z.end();it++)
+		(*it) = mat_create(ica_data_rows, num_compc);	//source
 
+	//put data to matrix
+	for (int k=0; k<dims[2];k++)
+	{
+		int tim_cnt=0;
+		for (auto it=data_container.begin();it!=data_container.end();it++)
+		{
+			//1. put a a slice data to mat
+			int vox_cnt=0;
+			for (int j=0; j<dims[1];j++)
+			{
+				for (int i=0; i<dims[0];i++)
+				{
+					src_mat[vox_cnt++/*((i+1)*(j+1)*(k+1)-1)*/][tim_cnt] =*(float*)(*it).second->GetScalarPointer(i,j,k);
+				}
+			}
+			tim_cnt++;
+		}
+		/*****  2. process data  *****/
+		// ICA computation
+		fastICA(src_mat, ica_data_rows, ica_data_cols, num_compc, K, W, A, S_vect[k]);
+
+		//z score components (ica_data_rows)
+		for (int i=0;i<num_compc;i++)
+		{
+			compute_Z_score(S_vect[k],ica_data_rows,num_compc,S_vect_Z[k]);
+		}
+
+		std::cout<<"processing "<<k<<" th slice"<<std::endl;
+	}
+
+
+	/*****3. release memory******/
+	mat_delete(src_mat,ica_data_rows,ica_data_cols);
+	mat_delete(W,num_compc, num_compc);
+	mat_delete(A,num_compc, num_compc);
+	mat_delete(K,ica_data_cols, num_compc);
+	for (auto it=S_vect.begin();it!=S_vect.end();it++)
+		mat_delete(*it,ica_data_rows, num_compc);	
 
 	//write to output image
 	//1. clean components image container
@@ -569,8 +685,14 @@ void ROIBasedPanel::fastICA_Analysis()
 		component_container.clear();
 	}
 	//2. write voxel value
-	for (int vol_cnt=0;vol_cnt<ica_data_rows;vol_cnt++)//for each component
+	for (int vol_cnt=0;vol_cnt<num_compc;vol_cnt++)//for each component
 	{
+		std::stringstream ss;
+		ss<<vol_cnt;
+		std::string name;
+		ss>>name;
+		name.append("th_comp");
+
 		//allocate memory for one component
 		vtkSmartPointer<vtkImageData> output = vtkSmartPointer<vtkImageData>::New();
 		vtkSmartPointer<vtkImageData> input = data_container[0].second;
@@ -588,31 +710,31 @@ void ROIBasedPanel::fastICA_Analysis()
 		int indx = 0;
 		for (int kk = 0; kk < dims[2]; kk++)
 		{
+			int index_vox=0;
 			for (int jj = 0; jj < dims[1]; jj++)
 			{
 				for (int ii = 0; ii < dims[0]; ii++)
 				{
-					float com_value = float(S[vol_cnt][indx]);
-					scalarsOutput->SetComponent(indx++, 0, com_value);
+					float com_value = float(S_vect_Z[kk][index_vox][vol_cnt]);
+					scalarsOutput->SetComponent(indx, 0, com_value);
+					index_vox++;
+					indx++;
 				}
 			} 
 		}
-
-		//put them to component data container
-		char component_name[20];
-		sprintf(component_name,"%dth_component",vol_cnt);
-		std::pair< std::string,vtkSmartPointer<vtkImageData> > 
-			cop_data_temp = std::make_pair(component_name,output);
-		component_container.push_back(cop_data_temp);
+		//write to nii for test
+		this->main_win->add_image(name,output);
+		Image_Convert_Base::WriteTonii(output,name);
 	}
 
 
-	/*****3. release memory******/
-	mat_delete(src_mat,ica_data_rows,ica_data_cols);
-	mat_delete(W,num_compc, num_compc);
-	mat_delete(A,num_compc, num_compc);
-	mat_delete(K,ica_data_cols, num_compc);
-	mat_delete(S,ica_data_rows, ica_data_cols);	
+
+	//delete cache
+	for (auto it=S_vect_Z.begin();it!=S_vect_Z.end();it++)
+		mat_delete(*it,ica_data_rows, num_compc);	
+
+
+	std::cout<<"ICA process done!"<<std::endl;
 }
 
 

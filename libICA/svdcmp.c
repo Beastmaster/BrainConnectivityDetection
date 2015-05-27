@@ -203,7 +203,7 @@ void svdcmp(mat A, int M, int N, vect W, mat V)
        Loop over singular values. */
     for( k = (N-1); k >= 0; --k ) {
         /* Loop over allowed iterations. */
-        for( its = 1; its <= 30; ++its ) {
+        for( its = 1; its <= 50; ++its ) {
             /* Test for splitting.
                Note that rv1[0] is always zero. */
             flag = true;
@@ -252,8 +252,8 @@ void svdcmp(mat A, int M, int N, vect W, mat V)
                 break;
             }
 
-            if( its >= 30 ) {
-                fprintf( stderr, "No convergence in 30 iterations.\n" );
+            if( its >= 50 ) {
+                fprintf( stderr, "No convergence in 50 iterations.\n" );
                 return;
             }
 

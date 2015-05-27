@@ -31,6 +31,7 @@
 #include "vtkPropPicker.h"
 #include "vtkAssemblyPath.h"
 #include "vtkMath.h"
+#include <vtkImageThreshold.h>
 
 //vtk slider calss
 #include "vtkSliderWidget.h"
@@ -42,7 +43,7 @@
 #include <vtkCallbackCommand.h>
 #include <vtkWidgetEventTranslator.h>
 #include <vtkInteractorStyleTrackballCamera.h>
-
+#include <vtkScalarBarActor.h>
 class reslice_interactor_style;
 class vtkSliderCallback;
 
@@ -62,6 +63,7 @@ public:
 	void Set_Mask_Img(vtkSmartPointer<vtkImageData>);
 	void RenderView();
 	void RemoveMask();
+	void Display_Threshold(int low,int hig);
 	int Slice_Position;//useless
 
 	public slots:
@@ -77,6 +79,7 @@ private:
 	double spacing[3];
 	double origin[3];
 	int    extent_m[6];
+	double valuesRange[2];
 
 	vtkSmartPointer<vtkImageData> img_to_view;
 	vtkSmartPointer<vtkImageData> img_to_mask;
@@ -93,6 +96,9 @@ private:
 	vtkSmartPointer<vtkRenderWindow>				 view_window;
 	vtkSmartPointer<vtkRenderWindowInteractor>       Interactor;
 	vtkSmartPointer<reslice_interactor_style>        InteractorStyle;
+	//map to color
+	vtkSmartPointer<vtkLookupTable> mask_table;
+	vtkSmartPointer<vtkLookupTable> main_table;
 
 	char direction;
 	int  slice_n;

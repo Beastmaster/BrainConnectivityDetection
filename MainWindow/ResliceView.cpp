@@ -1,6 +1,5 @@
 #include "ResliceView.h"
 
-
 class vtkSliderCallback : public vtkCommand
 {
 public:
@@ -43,6 +42,7 @@ public:
 				break;
 			}
 		case 'c':
+
 			{
 				reslice_view->slice_n = 
 					static_cast<vtkSliderRepresentation *>(sliderWidget->GetRepresentation())->GetValue();;
@@ -142,6 +142,33 @@ reslice_view_base::reslice_view_base(vtkRenderWindow* winx,char a)
 	this->InteractorStyle = vtkSmartPointer<reslice_interactor_style>::New();
 	this->Interactor      = vtkSmartPointer<vtkRenderWindowInteractor>::New();
 
+	mask_table = vtkSmartPointer<vtkLookupTable>::New();
+	mask_table->SetNumberOfColors(2);
+	mask_table->SetRange(0,100);
+	//mask_table->SetValueRange(1.0,1.0);
+	//mask_table->SetSaturationRange(1.0,1.0);
+	//mask_table->SetRampToLinear();
+	mask_table->SetTableValue(0,1,0,0,1);
+	mask_table->SetTableValue(1,0,1,0,1);
+
+	mask_table->Build();
+
+	main_table = vtkSmartPointer<vtkLookupTable>::New();
+	main_table->SetRange(0,100);
+	main_table->SetValueRange(1.0,1.0);
+	main_table->SetSaturationRange(1.0,1.0);
+	main_table->SetRampToLinear();
+	//main_table->SetTableValue(0,1,0,0,1);
+	main_table->Build();
+
+
+	vtkSmartPointer<vtkScalarBarActor> scalarBar = 
+		vtkSmartPointer<vtkScalarBarActor>::New();
+	scalarBar->SetLookupTable(mask_table);
+	scalarBar->SetTitle(" ");
+	scalarBar->SetNumberOfLabels(4);
+	this->new_render->AddActor2D(scalarBar);
+
 	//this->view_window->AddRenderer(this->new_render);
 	//new_render->AddActor(this->actor);
 	////set default interact null
@@ -193,14 +220,14 @@ void reslice_view_base::Set_View_Img(vtkSmartPointer<vtkImageData> img)
 	
 
 	//get vtkimagedata range
-	double valuesRange[2];
+	//double valuesRange[2];
 	vtkDataArray* scalar_pointer = this->img_to_view->GetPointData()->GetScalars();
 	scalar_pointer->GetRange(valuesRange,-1);
 	std::cout<<"range is "<<valuesRange[0]<<"|"<<valuesRange[1]<<std::endl;
 	//set window level
 	this->WindowLevel1->SetWindow(valuesRange[1]-valuesRange[0]);
 	this->WindowLevel1->SetLevel((valuesRange[1]+valuesRange[0])/2);
-
+	main_table->SetTableRange(valuesRange[0],valuesRange[1]);
 
 	SetUpSlider(this->view_window->GetInteractor());
 }
@@ -217,7 +244,33 @@ void reslice_view_base::Set_Mask_Img(vtkSmartPointer<vtkImageData> img)
 	//set window level
 	this->WindowLevel2->SetWindow(valuesRange[1]-valuesRange[0]);
 	this->WindowLevel2->SetLevel((valuesRange[1]+valuesRange[0])/2);
+
+	mask_table->SetTableRange(valuesRange[0],valuesRange[1]);
+	mask_table->Build();
 }
+
+
+void reslice_view_base::Display_Threshold(int low,int hig)
+{
+	if (this->reslice == NULL)
+	{
+		return;
+	}
+
+	vtkSmartPointer<vtkImageThreshold> img_th = 
+		vtkSmartPointer<vtkImageThreshold>::New();
+	
+	img_th->SetInput(this->img_to_view);
+	img_th->ThresholdBetween((valuesRange[1]-valuesRange[0])*low/2000+valuesRange[0],(valuesRange[1]-valuesRange[0])*hig/2000+valuesRange[0]);
+	img_th->ReplaceOutOn();
+	img_th->SetOutValue(0);
+	img_th->Update();
+
+	this->reslice->SetInput(img_th->GetOutput());
+	this->new_render->ResetCamera();
+	this->view_window->Render();	
+}
+
 
 void reslice_view_base::RemoveMask()
 {
@@ -249,18 +302,18 @@ void reslice_view_base::Set_Window(vtkRenderWindow* win)
 
 void reslice_view_base::RenderView()
 {
-
 	this->reslice = vtkSmartPointer<vtkImageReslice>::New();
 	this->reslice->SetInput(this->img_to_view);
 	this->reslice->SetOutputDimensionality(2);
 	this->reslice->SetResliceAxesDirectionCosines(this->view_dirX,this->view_dirY,this->view_dirZ);
 	this->reslice->SetResliceAxesOrigin(center);
 	this->reslice->SetInterpolationModeToLinear();
+	//this->WindowLevel1->SetLookupTable(main_table);
 	this->WindowLevel1->SetInput(this->reslice->GetOutput());
 
 	if (this->img_to_mask != NULL)
 	{
-		//install pipline here
+		//install pipeline here
 		if (this->new_render && this->mask_actor)
 		{
 			this->new_render->AddViewProp(this->mask_actor);
@@ -275,6 +328,8 @@ void reslice_view_base::RenderView()
 		this->mask_reslice->SetResliceAxesDirectionCosines(this->view_dirX,this->view_dirY,this->view_dirZ);
 		this->mask_reslice->SetResliceAxesOrigin(center);
 		this->mask_reslice->SetInterpolationModeToLinear();
+		//map to color
+		this->WindowLevel2->SetLookupTable(mask_table);
 		this->WindowLevel2->SetInput(this->mask_reslice->GetOutput());
 	}
 
@@ -614,7 +669,7 @@ void reslice_view_base::SetUpSlider(vtkRenderWindowInteractor* renderWindowInter
 	sliderRep->GetPoint1Coordinate()->SetCoordinateSystemToView();
 	sliderRep->GetPoint1Coordinate()->SetValue(0 ,0);
 	sliderRep->GetPoint2Coordinate()->SetCoordinateSystemToView();
-	sliderRep->GetPoint2Coordinate()->SetValue(0, 100);
+	sliderRep->GetPoint2Coordinate()->SetValue(50, 100);
 	sliderRep->SetSliderLength(1);
 	sliderRep->SetEndCapLength(0.5);
 

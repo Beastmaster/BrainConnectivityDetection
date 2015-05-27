@@ -138,7 +138,7 @@ template<typename T>
 double pearson(vector<T> v1, vector<T> v2){
 	if (std_dev(v1) * std_dev(v2) == 0){
 		cout << "( a standard deviaton was 0 )";
-		return -2; // I dont know what to do here???
+		return 0; // I dont know what to do here???
 	}
 	return covariance(v1,v2) / ( std_dev(v1) * std_dev(v2));
 }

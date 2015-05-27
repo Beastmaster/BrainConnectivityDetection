@@ -9,6 +9,68 @@
 #include <math.h>
 #include "libICA.h"
 
+/*
+compute mean of an array
+rows: total number of rows
+cols: cols th col (index)
+*/
+double compute_Means(double** src,int rows,int cols)
+{
+	int i=0;
+	double accum=0;
+
+	for (i=0;i<rows;i++)
+	{
+		accum += src[i][cols];
+	}
+	
+	return accum/rows;
+}
+
+
+/*
+compute deviation of an array
+rows: total number of rows
+cols: cols th col (index)
+*/
+double compute_Deviation(double** src,int rows,int cols)
+{
+	int i=0;
+	double mean = 0;
+	double variance = 0;
+
+	mean = compute_Means(src,rows,cols);
+	for (i=0;i<rows;i++)
+	{
+		variance += pow(src[i][cols]-mean,2);
+	}
+	variance = variance/rows;
+
+	return sqrt(variance);
+}
+
+/*
+z-score an array
+rows: total number of rows
+cols: total number of cols
+*/
+void compute_Z_score(double** src,int rows,int cols,double** dest)
+{
+	int i=0;
+	int j=0;
+	double mean = 0.0;
+	double deviation = 0.0;
+
+	for (j=0;j<cols;j++)
+	{
+		mean = compute_Means(src,rows,j);
+		deviation = compute_Deviation(src,rows,j);
+		for (i=0;i<rows;i++)
+		{
+			dest[i][j] = (src[i][j]-mean)/deviation;
+		}
+	}
+}
 
 
 /*

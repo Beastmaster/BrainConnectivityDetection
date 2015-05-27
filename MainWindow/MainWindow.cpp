@@ -24,6 +24,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(this->ui->set_opacity_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_opacity_move(int)));
 	connect(this->ui->strip_val_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_strip_val_move(int)));
 	connect(this->ui->overlay_opacity_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_overlay_move(int)));
+	connect(this->ui->th_low_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_threshold()));
+	connect(this->ui->th_up_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_threshold()));
 
 	//connect signal to enable atuo-scroll in info panel
 	connect(this->ui->info_Panel,SIGNAL(cursorPositionChanged()),this,SLOT(info_Panel_Scroll()));
@@ -107,6 +109,11 @@ void MainWindow::init_Parameters()
 	//init overlay opacity slider bar
 	this->ui->overlay_opacity_Slider->setRange(0,100);
 	this->ui->overlay_opacity_Slider->setValue(100);
+	//init threshold value
+	this->ui->th_up_Slider->setRange(0,2000);
+	this->ui->th_up_Slider->setValue(2000);
+	this->ui->th_low_Slider->setRange(0,2000);
+	this->ui->th_low_Slider->setValue(0);
 
 	//for multi thread
 	this->register_thread[0] = NULL;
@@ -185,6 +192,21 @@ void MainWindow::on_click_load()
 	connect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
 }
 
+
+void MainWindow::add_image(std::string name,vtkSmartPointer<vtkImageData> image)
+{
+	img_view_base_Type new_image;
+	new_image.first = name;
+	new_image.second = image;
+
+	this->img_to_view = new_image;
+	this->data_container.push_back(new_image);
+
+	//create new file list item and add to file list
+	QListWidgetItem* new_item =
+		new QListWidgetItem(new_image.first.c_str(),this->ui->file_listWidget);
+	this->ui->file_listWidget->addItem(new_item);
+}
 
 
 void MainWindow::on_click_show()
@@ -307,11 +329,16 @@ void MainWindow::on_click_add_mask_file()
 	vtkSmartPointer<vtkImageReslice> resample =
 		vtkSmartPointer<vtkImageReslice>::New();
 	resample->SetInput(temp_img.second);
+	if (this->img_to_view.first.size() == 0)
+	{
+		goto skip_resample;
+	}
 	resample->SetOutputSpacing(this->img_to_view.second->GetSpacing());
 	resample->SetOutputExtent(this->img_to_view.second->GetExtent());
 	resample->SetInterpolationModeToLinear();
 	resample->Update();
 
+	skip_resample:
 	this->mask_img = temp_img;
 
 	print_Info("Load Mask Image:  ",
@@ -740,6 +767,26 @@ void MainWindow::on_click_register()
 	//this->ui->add_src_Btn->setEnabled(true);
 	//this->ui->add_refer_Btn->setEnabled(true);
 }
+
+void MainWindow::on_slider_threshold()
+{
+	if (this->view_axial_reslice == NULL)
+	{
+		return;
+	}
+
+	this->view_axial_reslice->Display_Threshold(
+		this->ui->th_low_Slider->value(),
+		this->ui->th_up_Slider->value());
+	this->view_coronal_reslice->Display_Threshold(
+		this->ui->th_low_Slider->value(),
+		this->ui->th_up_Slider->value());
+	this->view_saggital_reslice->Display_Threshold(
+		this->ui->th_low_Slider->value(),
+		this->ui->th_up_Slider->value());
+}
+
+
 
 
 

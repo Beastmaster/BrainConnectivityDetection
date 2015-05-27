@@ -234,9 +234,9 @@ std::vector<float > GenerateTimecourse::GetPointTimecourse(int i,int j,int k)
 	//use sef-defined method to compute means
 	int region_size = 0;
 	float* val;
-	for (int i=0;i<data_container.size();i++)
+	for (int ii=0;ii<data_container.size();ii++)
 	{
-		val = (float *)data_container[i]->GetScalarPointer(i, j, k);
+		val = (float *)data_container[ii]->GetScalarPointer(i, j, k);
 		return_vector.push_back(*val);
 	}
 	

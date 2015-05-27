@@ -19,6 +19,9 @@
 extern "C" {
 #endif
 
+double compute_Means(double** src,int rows,int cols);
+double compute_Deviation(double** src,int rows,int cols);
+void compute_Z_score(double** src,int rows,int cols,double** dest);
 void fastICA(double** X, int rows, int cols, int compc, double** K, double** W, double** A, double** S);
 
 #ifdef __cplusplus

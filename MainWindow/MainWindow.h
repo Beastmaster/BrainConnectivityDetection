@@ -84,9 +84,10 @@ public:
 	std::vector<std::pair<std::string, vtkSmartPointer<vtkImageData> > > 
 		GetDataContainer() {return this->data_container;};
 //define slots
-private slots:
+public slots:
 	//load images
 	void on_click_load();
+	void add_image(std::string,vtkSmartPointer<vtkImageData>);
 	void on_click_show();
 	void on_click_show3d();
 	void on_click_bold();
@@ -103,6 +104,7 @@ private slots:
 	void on_slider_opacity_move(int);
 	void on_slider_strip_val_move(int);
 	void on_slider_overlay_move(int);
+	void on_slider_threshold();
 	void info_Panel_Scroll();
 	void mouse_Wheel_move(QWheelEvent *e);
 	void init_Parameters();
