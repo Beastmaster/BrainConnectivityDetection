@@ -143,14 +143,13 @@ reslice_view_base::reslice_view_base(vtkRenderWindow* winx,char a)
 	this->Interactor      = vtkSmartPointer<vtkRenderWindowInteractor>::New();
 
 	mask_table = vtkSmartPointer<vtkLookupTable>::New();
-	mask_table->SetNumberOfColors(2);
 	mask_table->SetRange(0,100);
-	//mask_table->SetValueRange(1.0,1.0);
-	//mask_table->SetSaturationRange(1.0,1.0);
-	//mask_table->SetRampToLinear();
-	mask_table->SetTableValue(0,1,0,0,1);
-	mask_table->SetTableValue(1,0,1,0,1);
-
+	mask_table->SetValueRange(1.0,1.0);
+	mask_table->SetSaturationRange(1.0,1.0);
+	mask_table->SetRampToLinear();
+	//mask_table->SetNumberOfColors(2);
+	//mask_table->SetTableValue(0,1,0,0,1);
+	//mask_table->SetTableValue(1,0,1,0,1);
 	mask_table->Build();
 
 	main_table = vtkSmartPointer<vtkLookupTable>::New();

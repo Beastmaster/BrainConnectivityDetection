@@ -105,10 +105,26 @@ vtkSmartPointer<vtkImageData> Image_Convert_Base::GetOutput()
 
 		return return_img;
 	}
-	else if	(file_suffix == ".hdr")
+	else if ((file_suffix == ".dcm")||(file_suffix == ".img"))
 	{
-		return NULL;
+		vtkSmartPointer<vtkDICOMImageReader> reader =
+			vtkSmartPointer<vtkDICOMImageReader>::New();
+		reader->SetFileName(file_name.data());
+		reader->Update();
+
+		vtkSmartPointer<vtkImageCast> img_caster = 
+			vtkSmartPointer<vtkImageCast>::New();
+		img_caster->SetInput(reader->GetOutput());
+		img_caster->SetOutputScalarTypeToFloat();
+		img_caster->Update();
+
+		vtkSmartPointer<vtkImageData> return_img = 
+			vtkSmartPointer<vtkImageData>::New();
+		return_img->DeepCopy(img_caster->GetOutput());
+
+		return return_img;
 	}
+
 	else
 	{
 		return NULL;

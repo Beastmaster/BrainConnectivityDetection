@@ -128,7 +128,7 @@ void MainWindow::on_click_load()
 	disconnect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
 	this->file_name_list = 
 		QFileDialog::getOpenFileNames(this,
-		tr("open log file"),"./",tr("Image Files (*.nii *.mha)"));
+		tr("open log file"),"./",tr("Image Files (*.nii *.mha *.img *.dcm)"));
 	if (file_name_list.isEmpty()){return;}
 
 	for (int i=0;i<file_name_list.size();i++)
@@ -752,6 +752,9 @@ void MainWindow::on_click_register()
 		return;
 	}
 
+	//select output dir
+
+
 	print_Info("Registering Process","  Running");
 	//start register process
 	if (register_thread[0] != NULL)
@@ -858,9 +861,8 @@ void multi_thread::run()
 		else
 		{
 			auto it = std::find (main_win->dicom_parse_hd->series_name_container.begin(),
-				main_win->dicom_parse_hd->series_name_container.end(),
-				name_temp);
-				//main_win->register_container[i].first);
+								main_win->dicom_parse_hd->series_name_container.end(),
+								name_temp);
 
 			if (it != main_win->dicom_parse_hd->series_name_container.end())
 			//find dicom source; if there is dicom file source, use the same gdcmIO to generate dicom series
@@ -875,6 +877,7 @@ void multi_thread::run()
 			else
 			{
 				main_win->print_Info("No dicom file source, ", " no writing to dicom files");
+
 			}
 		}
 	}
