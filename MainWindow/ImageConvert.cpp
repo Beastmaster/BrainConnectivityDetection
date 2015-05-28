@@ -91,7 +91,15 @@ vtkSmartPointer<vtkImageData> Image_Convert_Base::GetOutput()
 		vtkSmartPointer<vtkMetaImageReader> img_reader = 
 			vtkSmartPointer<vtkMetaImageReader>::New();
 		img_reader->SetFileName(file_name.data());
-		img_reader->Update();
+		try
+		{
+			img_reader->Update();
+		}
+		catch(...)
+		{
+			return NULL;
+		}
+		
 
 		vtkSmartPointer<vtkImageCast> img_caster = 
 			vtkSmartPointer<vtkImageCast>::New();
