@@ -15,6 +15,8 @@ ROIBasedPanel::ROIBasedPanel(MainWindow* win,QWidget *parent) :
 	connect(this->ui->ica_test_Btn,SIGNAL(clicked()),this,SLOT(fastICA_Analysis()));
 	connect(this->ui->sel_base_method,SIGNAL(currentIndexChanged(int)),this,SLOT(sel_method(int)));
 	connect(this->ui->sel_templete,SIGNAL(currentIndexChanged(int)),this,SLOT(sel_templete(int)));
+	connect(this->ui->sel_folder_Btn,SIGNAL(clicked()),this,SLOT(fastICA_Load()));
+	connect(this->ui->save_comp_Btn,SIGNAL(clicked()),this,SLOT(fastICA_Save()));
 	this->Init_Para();
 }
 
@@ -96,7 +98,6 @@ void ROIBasedPanel::on_click_sel_volume()
 {
 	//this->data_container = this->main_win->GetDataContainer();
 
-//	disconnect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
 	QStringList file_name_list = 
 		QFileDialog::getOpenFileNames(this,
 		tr("open log file"),"./",tr("(*)"));
@@ -113,13 +114,17 @@ void ROIBasedPanel::on_click_sel_volume()
 		Image_Convert_Base* reader = new Image_Convert_Base;
 		reader->SetFileName(file_name);
 		vtkSmartPointer<vtkImageData> img_data = reader->GetOutput();
+		if (img_data == NULL)
+		{
+			delete reader;
+			continue;
+		}
 
 		std::pair<std::string, vtkSmartPointer<vtkImageData> > img;
 		img.first = file_name;
 		img.second = img_data;
 		this->data_container.push_back(img);
 		delete reader;
-
 	}
 	std::cout<<"load image done!"<<std::endl;
 }
@@ -598,6 +603,9 @@ void ROIBasedPanel::view_correlation_matrix()
 
 void ROIBasedPanel::fastICA_Analysis()
 {
+	//delete component container
+	this->component_container.clear();
+
 	//number of component
 	int num_compc = this->ui->in_num_Compc->text().toInt();
 	if ((num_compc<2)||(num_compc>data_container.size()))
@@ -627,7 +635,7 @@ void ROIBasedPanel::fastICA_Analysis()
 	int ica_data_rows = dims[0]*dims[1];//*dims[2];
 	double** src_mat = mat_create(ica_data_rows,ica_data_cols);
 
-	double  **K, **W, **A, **S;
+	double  **K, **W, **A;//**S;
 	W = mat_create(num_compc, num_compc);//de-mix matrix
 	A = mat_create(num_compc, num_compc);//mix matrix
 	K = mat_create(ica_data_cols, num_compc);
@@ -666,7 +674,7 @@ void ROIBasedPanel::fastICA_Analysis()
 			compute_Z_score(S_vect[k],ica_data_rows,num_compc,S_vect_Z[k]);
 		}
 
-		std::cout<<"processing "<<k<<" th slice"<<std::endl;
+		std::cout<<"processing "<<k+1<<" th slice"<<std::endl;
 	}
 
 
@@ -722,11 +730,13 @@ void ROIBasedPanel::fastICA_Analysis()
 				}
 			} 
 		}
+
+		//add to component container
+		this->component_container.push_back(std::make_pair(name,output));
+
 		//write to nii for test
 		this->main_win->add_image(name,output);
-		Image_Convert_Base::WriteTonii(output,name);
 	}
-
 
 
 	//delete cache
@@ -739,5 +749,17 @@ void ROIBasedPanel::fastICA_Analysis()
 
 
 
+void ROIBasedPanel::fastICA_Load()
+{
+	this->on_click_sel_volume();
+}
 
+void ROIBasedPanel::fastICA_Save()
+{
+	//iterate component container to save
+	for(auto it = this->component_container.begin();it!=component_container.end();it++)
+	{
+		Image_Convert_Base::WriteTonii((*it).second,(*it).first);
+	}
+}
 

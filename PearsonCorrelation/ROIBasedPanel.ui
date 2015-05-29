@@ -45,7 +45,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="TabWidgetPage1">
       <attribute name="title">
@@ -312,6 +312,13 @@
           <widget class="QComboBox" name="comboBox"/>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QPushButton" name="save_comp_Btn">
+         <property name="text">
+          <string>Save</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
