@@ -64,7 +64,9 @@ public:
 	void RenderView();
 	void RemoveMask();
 	void Display_Threshold(int low,int hig);
-	int Slice_Position;//useless
+	void Map_Color();
+	void Clear_Map_Color();
+	int  Slice_Position;//useless
 
 	public slots:
 		void on_scroll_mouse_back(vtkObject*);
@@ -99,6 +101,7 @@ private:
 	//map to color
 	vtkSmartPointer<vtkLookupTable> mask_table;
 	vtkSmartPointer<vtkLookupTable> main_table;
+	vtkSmartPointer<vtkScalarBarActor> scalarBar;
 
 	char direction;
 	int  slice_n;

@@ -161,8 +161,7 @@ reslice_view_base::reslice_view_base(vtkRenderWindow* winx,char a)
 	main_table->Build();
 
 
-	vtkSmartPointer<vtkScalarBarActor> scalarBar = 
-		vtkSmartPointer<vtkScalarBarActor>::New();
+	scalarBar = vtkSmartPointer<vtkScalarBarActor>::New();
 	scalarBar->SetLookupTable(mask_table);
 	scalarBar->SetTitle(" ");
 	scalarBar->SetNumberOfLabels(4);
@@ -228,6 +227,8 @@ void reslice_view_base::Set_View_Img(vtkSmartPointer<vtkImageData> img)
 	this->WindowLevel1->SetLevel((valuesRange[1]+valuesRange[0])/2);
 	main_table->SetTableRange(valuesRange[0],valuesRange[1]);
 
+	main_table->Build();
+
 	SetUpSlider(this->view_window->GetInteractor());
 }
 
@@ -245,6 +246,12 @@ void reslice_view_base::Set_Mask_Img(vtkSmartPointer<vtkImageData> img)
 	this->WindowLevel2->SetLevel((valuesRange[1]+valuesRange[0])/2);
 
 	mask_table->SetTableRange(valuesRange[0],valuesRange[1]);
+	mask_table->SetNumberOfTableValues(20);
+	for (double i=0;i<20;i++)
+	{
+		mask_table->SetTableValue((i+1)/20,1.0,1.0,1.0);
+	}
+
 	mask_table->Build();
 }
 
@@ -686,8 +693,19 @@ void reslice_view_base::SetUpSlider(vtkRenderWindowInteractor* renderWindowInter
 	sliderWidget->AddObserver(vtkCommand::InteractionEvent,callback);
 }
 
+void reslice_view_base::Map_Color()
+{
+	this->scalarBar->SetLookupTable(main_table);
+	this->WindowLevel1->SetLookupTable(main_table);
+}
+void reslice_view_base::Clear_Map_Color()
+{
+	this->scalarBar->SetLookupTable(mask_table);
+	vtkSmartPointer<vtkLookupTable> temp_table = vtkSmartPointer<vtkLookupTable>::New();
+	this->WindowLevel1->SetLookupTable(temp_table);
+}
 
-//this line is badly need to inhert a new class
+//this line is badly need to inherit a new class
 //vtkObjectFactory.h must include!
 vtkStandardNewMacro(reslice_interactor_style);
 

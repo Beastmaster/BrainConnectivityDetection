@@ -45,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(this->ui->add_src_Btn,SIGNAL(clicked()),this,SLOT(on_click_add_src()));
 	//connect(this->ui->bold_Btn,SIGNAL(clicked()),this,SLOT(on_clear_register()));
 
+	connect(this->ui->map_color_Btn,SIGNAL(toggled(bool)),this,SLOT(on_map_to_Color(bool)));
 }
 
 MainWindow::~MainWindow()
@@ -787,6 +788,29 @@ void MainWindow::on_slider_threshold()
 	this->view_saggital_reslice->Display_Threshold(
 		this->ui->th_low_Slider->value(),
 		this->ui->th_up_Slider->value());
+}
+
+void MainWindow::on_map_to_Color(bool checked)
+{
+	if (this->view_axial_reslice == NULL)
+	{
+		return;
+	}
+	else
+	{
+		if (checked)
+		{
+			this->view_axial_reslice->Map_Color();
+			this->view_saggital_reslice->Map_Color();
+			this->view_coronal_reslice->Map_Color();
+		}
+		else
+		{
+			this->view_axial_reslice->Clear_Map_Color();
+			this->view_saggital_reslice->Clear_Map_Color();
+			this->view_coronal_reslice->Clear_Map_Color();
+		}
+	}
 }
 
 

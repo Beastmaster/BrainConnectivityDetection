@@ -102,6 +102,13 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QRadioButton" name="map_color_Btn">
+          <property name="text">
+           <string>MapColor</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>

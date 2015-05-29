@@ -109,6 +109,7 @@ public slots:
 	void mouse_Wheel_move(QWheelEvent *e);
 	void init_Parameters();
 	void on_file_list_focus_change(int row);
+	void on_map_to_Color(bool checked);
 
 private:
 	//GUI
