@@ -18,6 +18,7 @@
 #include "vtkProperty.h"
 
 
+
 class construct_base
 {
 
@@ -45,6 +46,7 @@ private:
 	vtkSmartPointer<vtkRenderWindow> view_window;
 	vtkSmartPointer<vtkMarchingCubes> marchingCubes;
 	vtkSmartPointer<vtkActor> actor;
+
 };
 
 

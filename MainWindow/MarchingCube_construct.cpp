@@ -44,7 +44,9 @@ void construct_base::Re_Construct()
 	vtkSmartPointer<vtkDataSetMapper> mapper = 
 		vtkSmartPointer<vtkDataSetMapper>::New();
 	mapper->SetInput(marchingCubes->GetOutput());
+	mapper->ScalarVisibilityOff();
 	actor->SetMapper(mapper);
+	actor->GetProperty()->SetColor(1.0,0.0,0.0);
 	this->view_window->Render();
 }
 
