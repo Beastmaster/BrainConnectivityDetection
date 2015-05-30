@@ -67,7 +67,7 @@ void compute_Z_score(double** src,int rows,int cols,double** dest)
 		deviation = compute_Deviation(src,rows,j);
 		for (i=0;i<rows;i++)
 		{
-			dest[i][j] = (src[i][j]-mean)/deviation;
+			dest[i][j] = fabs((src[i][j]-mean)/deviation);
 		}
 	}
 }
