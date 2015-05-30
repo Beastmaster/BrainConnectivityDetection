@@ -83,6 +83,11 @@ public:
 
 	std::vector<std::pair<std::string, vtkSmartPointer<vtkImageData> > > 
 		GetDataContainer() {return this->data_container;};
+
+	void print_Info(QString,QString); 
+	void print_Info(QString,QString,QString,QString);
+	void print_Info(QString in);
+
 //define slots
 public slots:
 	//load images
@@ -134,9 +139,6 @@ private:
 	void set_slider_volume_range(int);
 	void set_data_container(vector<img_view_base_Type > );
 	void refresh_view();
-	void print_Info(QString,QString); 
-	void print_Info(QString,QString,QString,QString);
-
 	//qt vtk views
 	vtkimageview2_base* view_axial;
 	vtkimageview2_base* view_cornoal;

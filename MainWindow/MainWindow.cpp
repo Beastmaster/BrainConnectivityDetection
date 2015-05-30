@@ -638,6 +638,13 @@ void MainWindow::print_Info(QString in,QString x,QString y,QString z)
 	temp.append("\n");
 	ui->info_Panel->insertPlainText(temp);
 }
+
+void MainWindow::print_Info(QString in)
+{
+	QString temp = in;
+	temp.append("\n");
+	ui->info_Panel->insertPlainText(temp);
+}
 //basic method to calculate center of the image
 double* MainWindow::calculate_img_center(vtkSmartPointer<vtkImageData> img)
 {
