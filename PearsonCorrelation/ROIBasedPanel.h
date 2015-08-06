@@ -58,6 +58,8 @@ public:
 		void sel_correlation(int);
 		void sel_method(int);
 		void view_correlation_matrix();
+		void view_correlation_matrix2();
+		void save_Matrix_Veiw();
 		void fastICA_Analysis();
 		void fastICA_Load();
 		void fastICA_Save();
@@ -92,7 +94,7 @@ private:
 	//private functions:
 	void Init_Para();
 	void PearsomMethod(std::vector< std::pair< std::string, std::vector< double > > > );
-
+	
 	//for display matrix
 	QGraphicsScene* correlation_MatrixCanvas;
 	std::vector<QObject*> rectItem_to_delete;

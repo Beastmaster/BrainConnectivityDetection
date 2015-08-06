@@ -100,6 +100,30 @@ public:
 };
 
 
+
+class MouseInteractorStylePP : public vtkInteractorStyleTrackballCamera
+{
+public:
+	static MouseInteractorStylePP* New();
+	vtkTypeMacro(MouseInteractorStylePP, vtkInteractorStyleTrackballCamera);
+
+	virtual void OnLeftButtonDown() 
+	{
+		std::cout << "Picking pixel: " << this->Interactor->GetEventPosition()[0] << " " << this->Interactor->GetEventPosition()[1] << std::endl;
+		this->Interactor->GetPicker()->Pick(this->Interactor->GetEventPosition()[0], 
+			this->Interactor->GetEventPosition()[1], 
+			0,  // always zero.
+			this->Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer());
+		double picked[3];
+		this->Interactor->GetPicker()->GetPickPosition(picked);
+		std::cout << "Picked value: " << picked[0] << " " << picked[1] << " " << picked[2] << std::endl;
+		// Forward events
+		vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
+	}
+
+};
+vtkStandardNewMacro(MouseInteractorStylePP);
+
 reslice_view_base::reslice_view_base(vtkRenderWindow* winx,char a)
 {
 	// init para
@@ -170,8 +194,10 @@ reslice_view_base::reslice_view_base(vtkRenderWindow* winx,char a)
 	//this->view_window->AddRenderer(this->new_render);
 	//new_render->AddActor(this->actor);
 	////set default interact null
-	vtkSmartPointer<reslice_interactor_style> new_act_style = 
-		vtkSmartPointer<reslice_interactor_style>::New();
+	//vtkSmartPointer<reslice_interactor_style> new_act_style = 
+	//	vtkSmartPointer<reslice_interactor_style>::New();
+	vtkSmartPointer<MouseInteractorStylePP> new_act_style = 
+			vtkSmartPointer<MouseInteractorStylePP>::New();
 	this->view_window->GetInteractor()->SetInteractorStyle(new_act_style);
 	this->InstallPipeline();
 
@@ -246,12 +272,11 @@ void reslice_view_base::Set_Mask_Img(vtkSmartPointer<vtkImageData> img)
 	this->WindowLevel2->SetLevel((valuesRange[1]+valuesRange[0])/2);
 
 	mask_table->SetTableRange(valuesRange[0],valuesRange[1]);
-	mask_table->SetNumberOfTableValues(20);
-	for (double i=0;i<20;i++)
-	{
-		mask_table->SetTableValue((i+1)/20,1.0,1.0,1.0);
-	}
-
+	//mask_table->SetNumberOfTableValues(20);
+	//for (double i=0;i<20;i++)
+	//{
+	//	mask_table->SetTableValue((i+1)/20,1.0,1.0,1.0);
+	//}
 	mask_table->Build();
 }
 

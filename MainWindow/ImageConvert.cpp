@@ -20,7 +20,7 @@ vtkSmartPointer<vtkImageData> Image_Convert_Base::GetOutput()
 {
 	this->Get_Name_Suffix();
 
-	if (file_suffix == ".nii")
+	if (file_suffix == ".nii"||(file_suffix == ".hdr"))
 	{
 		//nifti io
 		//typedef itk::NiftiImageIO NiftiIOType;
@@ -113,7 +113,7 @@ vtkSmartPointer<vtkImageData> Image_Convert_Base::GetOutput()
 
 		return return_img;
 	}
-	else if ((file_suffix == ".dcm")||(file_suffix == ".img"))
+	else if (file_suffix == ".dcm")
 	{
 		vtkSmartPointer<vtkDICOMImageReader> reader =
 			vtkSmartPointer<vtkDICOMImageReader>::New();

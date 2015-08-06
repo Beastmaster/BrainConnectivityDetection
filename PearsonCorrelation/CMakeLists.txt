@@ -22,11 +22,13 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 set(Plain_CXX
 PearsonCorrelationMethod.cpp
 GenerateTimeCourse.cpp
+GraphAnalysis.cpp
 )
 set(Plain_Head
 PearsonCorrelationMethod.h
 PearsonCorrelation_algorithm.hpp
 GenerateTimeCourse.h
+GraphAnalysis.h
 )
 
 set(QT_UI_FILES

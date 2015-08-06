@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>ROI Based Method</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_13">
+  <layout class="QHBoxLayout" name="horizontalLayout_14">
    <item>
     <widget class="QWidget" name="verticalWidget" native="true">
      <property name="maximumSize">
@@ -45,7 +45,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="TabWidgetPage1">
       <attribute name="title">
@@ -198,11 +198,22 @@
         </layout>
        </item>
        <item>
-        <widget class="QPushButton" name="run_Btn">
-         <property name="text">
-          <string>Run</string>
-         </property>
-        </widget>
+        <layout class="QHBoxLayout" name="horizontalLayout_13">
+         <item>
+          <widget class="QPushButton" name="run_Btn">
+           <property name="text">
+            <string>Run</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="save_matrix_Btn">
+           <property name="text">
+            <string>Print</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="QPushButton" name="create_mask_Btn">

@@ -129,7 +129,7 @@ void MainWindow::on_click_load()
 	disconnect(this->ui->view_vol_Slider,SIGNAL(valueChanged(int)),this,SLOT(on_slider_volume_move(int)));
 	this->file_name_list = 
 		QFileDialog::getOpenFileNames(this,
-		tr("open log file"),"./",tr("Image Files (*.nii *.mha *.img *.dcm)"));
+		tr("open log file"),"./",tr("Image Files (*.nii *.mha *.hdr *.dcm)"));
 	if (file_name_list.isEmpty()){return;}
 
 	for (int i=0;i<file_name_list.size();i++)

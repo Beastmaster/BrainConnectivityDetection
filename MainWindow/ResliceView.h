@@ -44,6 +44,11 @@
 #include <vtkWidgetEventTranslator.h>
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkScalarBarActor.h>
+
+#include <vtkRendererCollection.h>
+#include <vtkPointPicker.h>
+
+class MouseInteractorStylePP;
 class reslice_interactor_style;
 class vtkSliderCallback;
 

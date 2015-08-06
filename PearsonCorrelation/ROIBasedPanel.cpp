@@ -17,6 +17,7 @@ ROIBasedPanel::ROIBasedPanel(MainWindow* win,QWidget *parent) :
 	connect(this->ui->sel_templete,SIGNAL(currentIndexChanged(int)),this,SLOT(sel_templete(int)));
 	connect(this->ui->sel_folder_Btn,SIGNAL(clicked()),this,SLOT(fastICA_Load()));
 	connect(this->ui->save_comp_Btn,SIGNAL(clicked()),this,SLOT(fastICA_Save()));
+	connect(this->ui->save_matrix_Btn,SIGNAL(clicked()),this,SLOT(save_Matrix_Veiw()));
 	this->Init_Para();
 }
 
@@ -208,10 +209,9 @@ void ROIBasedPanel::on_run_Seedbased()
 	}
 
 	//iterate through label value map to generate all time course
-	for (std::map< std::string , float >::iterator it 
-		= this->label_value.begin();
+	for (std::map< std::string , float >::iterator it = this->label_value.begin();
 		it!=this->label_value.end();
-	it++)
+		it++)
 	{
 		std::cout<<"Masking Region: "<<(*it).first<<std::endl;
 		timecourse_generator->SetLabelValue((*it).second);
@@ -262,7 +262,7 @@ void ROIBasedPanel::on_run_Seedbased()
 	delete timecourse_generator;
 
 	//------3. write to image--------------//
-	Image_Convert_Base::WriteTonii(output,"seed_based.nii");
+	Image_Convert_Base::WriteTonii(output,this->RegionTimecourse[i_th_label].first.append(".nii"));
 	std::cout<<"seed based method done"<<std::endl;
 }
 
@@ -486,7 +486,10 @@ void ROIBasedPanel::PearsomMethod(std::vector< std::pair< std::string, std::vect
 		out_file.close();
 	}
 }
+void ROIBasedPanel::view_correlation_matrix2()
+{
 
+}
 void ROIBasedPanel::view_correlation_matrix()
 {
 
@@ -510,8 +513,8 @@ void ROIBasedPanel::view_correlation_matrix()
 	//map position
 	float origin_x = 0;
 	float origin_y = 0;
-	float x_width = 300;
-	float y_height = 300;
+	float x_width = 600;
+	float y_height = 600;
 
 	//width and height of per area
 	float x_width_per = x_width/draw_row; 
@@ -523,7 +526,7 @@ void ROIBasedPanel::view_correlation_matrix()
 	double color_step = 512/range_temp;
 
 	//add a color look_up_table to view
-	for (int i=0;i<512;i++)
+	for (int i=0;i<0;i++)
 	{
 		if (i<256)
 		{
@@ -537,7 +540,7 @@ void ROIBasedPanel::view_correlation_matrix()
 		}
 		else
 		{
-			QColor disp_color = QColor(255,255,511-i);
+			QColor disp_color = QColor(255,255,i-255);
 			QGraphicsRectItem* new_rect_item = 
 				new QGraphicsRectItem(x_pos-150,i,x_width_per/2,1);
 			new_rect_item->setPen(QPen(Qt::NoPen));
@@ -548,7 +551,7 @@ void ROIBasedPanel::view_correlation_matrix()
 	}
 	
 
-
+	//col name items
 	float name_height = 0;
 	for (int i=0;i<draw_row;i++)
 	{
@@ -562,7 +565,7 @@ void ROIBasedPanel::view_correlation_matrix()
 	}
 
 
-	//add items
+	//add cor-value color-map items
 	for (int i = 0;i<draw_row;i++)
 	{
 		//create items and add
@@ -603,8 +606,18 @@ void ROIBasedPanel::view_correlation_matrix()
 
 void ROIBasedPanel::fastICA_Analysis()
 {
+	std::cout<<"begin ICA analysis"<<std::endl;
+	this->main_win->print_Info("Start ICA analysis..");
 	//delete component container
 	this->component_container.clear();
+
+	//get image size
+	if (data_container.size()<=30)
+	{
+		std::cout<<"Less than 30 volume.. exiting"<<std::endl;
+		this->main_win->print_Info("Less than 30 volume.. Exiting....");
+		return;
+	}
 
 	//number of component
 	int num_compc = this->ui->in_num_Compc->text().toInt();
@@ -622,11 +635,7 @@ void ROIBasedPanel::fastICA_Analysis()
 			cop_data_temp = std::make_pair(component_name,output);
 		component_container.push_back(cop_data_temp);
 	}
-	//get image size
-	if (data_container.size()==0)
-	{
-		return;
-	}
+
 	int dims[3] = {0,0,0};
 	data_container[0].second->GetDimensions(dims);
 	int time_length = data_container.size();
@@ -745,6 +754,7 @@ void ROIBasedPanel::fastICA_Analysis()
 
 
 	std::cout<<"ICA process done!"<<std::endl;
+	this->main_win->print_Info("ICA process done!");
 }
 
 
@@ -761,5 +771,15 @@ void ROIBasedPanel::fastICA_Save()
 	{
 		Image_Convert_Base::WriteTonii((*it).second,(*it).first);
 	}
+}
+
+void ROIBasedPanel::save_Matrix_Veiw()
+{
+	QPixmap screen;
+	QString format = "PNG";
+	QString filename_screen = "cor_matrix";//QDateTime::currentDateTime().toString("yyyyMMddhhmmss");
+	filename_screen.append(".png");
+	screen = QPixmap::grabWidget(this->ui->graphicsView);
+	screen.save(filename_screen,"PNG");
 }
 
