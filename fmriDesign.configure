@@ -1,0 +1,46 @@
+####################
+# Configure file example
+#
+# File Name: fmriDesign.configure
+# Date: 2015/09/10
+# Author: Qin Shuo
+####################
+
+
+
+#############
+# Rules:
+#
+#
+#
+##############
+
+<TR>
+2
+</TR>
+
+<Design Pattern>
+block
+</Design Pattern>
+
+<Time Points>
+60
+</Time Points>
+
+<Conditions>
+2
+</Conditions>
+
+<Onset>
+10,30,50
+0,20,40
+</Onset>
+
+<Duration>
+10,10,10
+10,10,10
+</Duration>
+
+<Contrast Vector>
+1,0,0
+</Contrast Vector>

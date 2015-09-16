@@ -24,7 +24,10 @@ Tools:
 	ITK 4.4
 	QT  4
 	libICA
-	
+
+Configure file:
+	This file is used to configure fmri experiment.
+	Read details in the exampe file.
 	
 
 
