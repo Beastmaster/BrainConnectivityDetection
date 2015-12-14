@@ -104,8 +104,8 @@ private:
   int numCrossValFolds;               // number of cross validation folds 
   unsigned long int maxTraining;                 // limit for size of training sample
   unsigned long int entryNumber;   // position in training sample
-  int posEntryNumber;              // position in training sample
-  int negEntryNumber;              // position in training sample
+  unsigned int posEntryNumber;              // position in training sample
+  unsigned int negEntryNumber;              // position in training sample
   float negStd;                    // standard deviation
   float posStd;                    // standard deviation
   float std;                       // standard deviation

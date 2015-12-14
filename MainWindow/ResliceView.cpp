@@ -226,7 +226,11 @@ void reslice_view_base::InstallPipeline()
 
 	if (this->actor && this->WindowLevel1)
 	{
+#if VTK_MAJOR_VERSION <= 5
 		this->actor->SetInput(this->WindowLevel1->GetOutput());
+#else
+		this->actor->SetInputData(this->WindowLevel1->GetOutput());
+#endif
 	}
 }
 
@@ -290,14 +294,22 @@ void reslice_view_base::Display_Threshold(int low,int hig)
 
 	vtkSmartPointer<vtkImageThreshold> img_th = 
 		vtkSmartPointer<vtkImageThreshold>::New();
-	
+
+#if VTK_MAJOR_VERSION <= 5
 	img_th->SetInput(this->img_to_view);
+#else
+	img_th->SetInputData(this->img_to_view);
+#endif
 	img_th->ThresholdBetween((valuesRange[1]-valuesRange[0])*low/2000+valuesRange[0],(valuesRange[1]-valuesRange[0])*hig/2000+valuesRange[0]);
 	img_th->ReplaceOutOn();
 	img_th->SetOutValue(0);
 	img_th->Update();
 
+#if VTK_MAJOR_VERSION <= 5
 	this->reslice->SetInput(img_th->GetOutput());
+#else
+	this->reslice->SetInputData(img_th->GetOutput());
+#endif 
 	this->new_render->ResetCamera();
 	this->view_window->Render();	
 }
@@ -318,7 +330,11 @@ void reslice_view_base::RemoveMask()
 
 	if (this->mask_actor && this->WindowLevel2)
 	{
+#if VTK_MAJOR_VERSION <= 5
 		this->mask_actor->SetInput(NULL);
+#else
+		this->mask_actor->SetInputData(NULL);
+#endif
 	}
 
 	//delete this mask
@@ -334,14 +350,21 @@ void reslice_view_base::Set_Window(vtkRenderWindow* win)
 void reslice_view_base::RenderView()
 {
 	this->reslice = vtkSmartPointer<vtkImageReslice>::New();
+#if VTK_MAJOR_VERSION <= 5
 	this->reslice->SetInput(this->img_to_view);
+#else
+	this->reslice->SetInputData(this->img_to_view);
+#endif 
 	this->reslice->SetOutputDimensionality(2);
 	this->reslice->SetResliceAxesDirectionCosines(this->view_dirX,this->view_dirY,this->view_dirZ);
 	this->reslice->SetResliceAxesOrigin(center);
 	this->reslice->SetInterpolationModeToLinear();
 	//this->WindowLevel1->SetLookupTable(main_table);
+#if VTK_MAJOR_VERSION <= 5
 	this->WindowLevel1->SetInput(this->reslice->GetOutput());
-
+#else
+	this->WindowLevel1->SetInputData(this->reslice->GetOutput());
+#endif
 	if (this->img_to_mask != NULL)
 	{
 		//install pipeline here
@@ -351,17 +374,29 @@ void reslice_view_base::RenderView()
 		}
 		if (this->mask_actor && this->WindowLevel2)
 		{
+#if VTK_MAJOR_VERSION <= 5
 			this->mask_actor->SetInput(this->WindowLevel2->GetOutput());
+#else
+			this->mask_actor->SetInputData(this->WindowLevel2->GetOutput());
+#endif
 		}
 		this->mask_reslice = vtkSmartPointer<vtkImageReslice>::New();
+#if VTK_MAJOR_VERSION <= 5
 		this->mask_reslice->SetInput(this->img_to_mask);
+#else
+		this->mask_reslice->SetInputData(this->img_to_mask);
+#endif
 		this->mask_reslice->SetOutputDimensionality(2);
 		this->mask_reslice->SetResliceAxesDirectionCosines(this->view_dirX,this->view_dirY,this->view_dirZ);
 		this->mask_reslice->SetResliceAxesOrigin(center);
 		this->mask_reslice->SetInterpolationModeToLinear();
 		//map to color
 		this->WindowLevel2->SetLookupTable(mask_table);
+#if VTK_MAJOR_VERSION <= 5
 		this->WindowLevel2->SetInput(this->mask_reslice->GetOutput());
+#else
+		this->WindowLevel2->SetInputData(this->mask_reslice->GetOutput());
+#endif
 	}
 
 	this->new_render->ResetCamera();
@@ -630,8 +665,12 @@ void reslice_view_base::Set_Direction(char x)
 //private method: calculate imge center of a 3D image
 double* reslice_view_base::calculate_img_center(vtkSmartPointer<vtkImageData> img)
 {
-
+#if VTK_MAJOR_VERSION <= 5
 	img->GetWholeExtent(extent_m);
+#else
+	img->GetExtent(extent_m);
+#endif
+	
 	img->GetSpacing(spacing);
 	img->GetOrigin(origin);
 

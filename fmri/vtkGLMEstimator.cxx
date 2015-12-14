@@ -181,31 +181,49 @@ void vtkGLMEstimator::PerformHighPassFiltering()
     // of a specific voxel. First, we convert the time course from
     // a vtkFloatArray to vtkImageData.
     vtkImageData *img = vtkImageData::New();
-    img->GetPointData()->SetScalars(this->TimeCourse);
+	img->GetPointData()->SetScalars(this->TimeCourse);
     img->SetDimensions(numberOfInputs, 1, 1);
-    img->SetScalarType(VTK_FLOAT);
     img->SetSpacing(1.0, 1.0, 1.0);
     img->SetOrigin(0.0, 0.0, 0.0);
+#if VTK_MAJOR_VERSION <=5 
+	img->SetScalarType(VTK_FLOAT);
+#else
+#endif
 
     // FFT on the vtkImageData
     vtkImageFFT *fft = vtkImageFFT::New();
+#if VTK_MAJOR_VERSION <= 5
     fft->SetInput(img); 
+#else
+	fft->SetInputData(img);
+#endif
 
     // Cut frequency on the vtkImageData on frequence domain
     vtkImageIdealHighPass *highPass = vtkImageIdealHighPass::New();
+#if VTK_MAJOR_VERSION <= 5
     highPass->SetInput(fft->GetOutput());
+#else
+	highPass->SetInputData(fft->GetOutput());
+#endif
     highPass->SetXCutOff(this->Cutoff);         
     highPass->SetYCutOff(this->Cutoff); 
     highPass->ReleaseDataFlagOff();
 
     // RFFT on the vtkImageData following frequency cutoff
     vtkImageRFFT *rfft = vtkImageRFFT::New();
+#if VTK_MAJOR_VERSION <= 5
     rfft->SetInput(highPass->GetOutput());
-
+#else
+	rfft->SetInputData(highPass->GetOutput());
+#endif 
     // The vtkImageData now holds two components: real and imaginary.
     // The real component is the image (time course) we want to plot
     vtkImageExtractComponents *real = vtkImageExtractComponents::New();
-    real->SetInput(rfft->GetOutput());
+#if VTK_MAJOR_VERSION <= 5
+	real->SetInput(rfft->GetOutput());
+#else
+	real->SetInputData(rfft->GetOutput());
+#endif 
     real->SetComponents(0);
     real->Update();
 
@@ -263,7 +281,11 @@ void vtkGLMEstimator::ComputeMeans(vtkInformationVector **inputVector)
     for (int i = 0; i < numberOfInputs; i++)
     {
         // get original mean for each volume
-        ia->SetInput(Getinputx(i,inputVector));
+#if (VTK_MAJOR_VERSION <= 5)
+		ia->SetInput(Getinputx(i,inputVector));
+#else
+		ia->SetInputData(Getinputx(i, inputVector));
+#endif
         ia->Update();
         double *means = ia->GetMean();
         // 4.0 is arbitray. I did experiment on 1, 2, 4, 6, 8 and 10.
@@ -538,7 +560,6 @@ int vtkGLMEstimator::RequestData(vtkInformation *vtkNotUsed(request),
         
     //this->GetInput(0)
 	Getinputx(0,inputVector)->GetDimensions(imgDim);
-    output->SetScalarType(VTK_FLOAT);
     //output->SetOrigin(this->GetInput(0)->GetOrigin());
 	output->SetOrigin(Getinputx(0,inputVector)->GetOrigin());
     //output->SetSpacing(this->GetInput(0)->GetSpacing());
@@ -548,10 +569,15 @@ int vtkGLMEstimator::RequestData(vtkInformation *vtkNotUsed(request),
     // plus chisq (the sum of squares of the residuals from the best-fit)
     // plus the correlation coefficient at lag 1 generated from error modeling.
     // plus one % signal change for each regressors
-    output->SetNumberOfScalarComponents(noOfRegressors * 2 + 2);
-    output->SetDimensions(imgDim[0], imgDim[1], imgDim[2]);
+#if VTK_MAJOR_VERSION <= 5
+	output->SetScalarType(VTK_FLOAT);
+	output->SetNumberOfScalarComponents(noOfRegressors * 2 + 2);
+	output->SetDimensions(imgDim[0], imgDim[1], imgDim[2]);
     output->AllocateScalars();
-   
+#else
+	output->SetDimensions(imgDim[0], imgDim[1], imgDim[2]);
+	output->AllocateScalars(VTK_FLOAT, noOfRegressors * 2 + 2);
+#endif
     // Array holding time course of a voxel
     vtkFloatArray *tc = vtkFloatArray::New();
     tc->SetNumberOfTuples(numberOfInputs);

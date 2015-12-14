@@ -25,7 +25,11 @@ void GenerateTimecourse::Get_label_area(float th_l,float th_u,vtkSmartPointer<vt
 
 	vtkSmartPointer<vtkImageThreshold> imageThreshold = 
 		vtkSmartPointer<vtkImageThreshold>::New();
+#if VTK_MAJOR_VERSION <= 5
 	imageThreshold->SetInput(img);
+#else
+	imageThreshold->SetInputData(img);
+#endif
 
 	//threshold between: include the edge value
 	double lower = double(th_l);
@@ -91,8 +95,13 @@ double GenerateTimecourse::Mask_Region_Mean(vtkSmartPointer<vtkImageData> img)
 	//set mask properties
 	maskFilter->SetMaskedOutputValue(0.0);
 	//set mask data
+#if VTK_MAJOR_VERSION <= 5
 	maskFilter->SetImageInput(img);
 	maskFilter->SetMaskInput(single_value_region);
+#else
+	maskFilter->SetImageInputData(img);
+	maskFilter->SetMaskInputData(single_value_region);
+#endif
 	maskFilter->Update();
 	
 	//#include "MainWindow.h"
@@ -202,7 +211,11 @@ void GenerateTimecourse::SetLabelMap(vtkSmartPointer <vtkImageData> img)
 
 	vtkSmartPointer<vtkImageCast> caster = 
 		vtkSmartPointer<vtkImageCast>::New();
+#if VTK_MAJOR_VERSION <= 5
 	caster->SetInput(img);
+#else
+	caster->SetInputData(img);
+#endif
 	caster->SetOutputScalarTypeToUnsignedChar();
 	caster->Update();
 

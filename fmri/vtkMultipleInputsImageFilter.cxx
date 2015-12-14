@@ -13,14 +13,17 @@
 =========================================================================auto=*/
 
 #include "vtkMultipleInputsImageFilter.h"
+#if VTK_MAJOR_VERSION <= 5
 #include "vtkSource.h"
+#else
+#endif
 #include "vtkImageData.h"
 #include "vtkPointData.h"
 
 void vtkMultipleInputsImageFilter::AddInput(vtkImageData *image)
 {
-#if (VTK_MAJOR_VERSION >= 5)
-    this->vtkImageAlgorithm::AddInput(image);
+#if (VTK_MAJOR_VERSION > 5)
+    this->vtkImageAlgorithm::AddInputConnection(image);
 #else
     this->vtkProcessObject::AddInput(image);
 #endif

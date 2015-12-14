@@ -49,13 +49,17 @@ void vtkLabelMapWhitening::SimpleExecute(vtkImageData *input, vtkImageData* outp
     // Sets up properties for output vtkImageData
     int imgDim[3];  
     input->GetDimensions(imgDim);
-    output->SetScalarType(input->GetScalarType());
     output->SetOrigin(input->GetOrigin());
     output->SetSpacing(input->GetSpacing());
+#if VTK_MAJOR_VERSION <= 5
+	output->SetScalarType(input->GetScalarType());
     output->SetNumberOfScalarComponents(1);
     output->SetDimensions(imgDim[0], imgDim[1], imgDim[2]);
     output->AllocateScalars();
- 
+#else
+	output->SetDimensions(imgDim[0], imgDim[1], imgDim[2]);
+	output->AllocateScalars(input->GetScalarType(), 1);
+#endif
     int indx = 0;
     vtkDataArray *scalarsOutput = output->GetPointData()->GetScalars();
     vtkDataArray *scalarsInput = input->GetPointData()->GetScalars();

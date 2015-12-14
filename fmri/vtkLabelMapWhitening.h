@@ -20,6 +20,7 @@
 #include "vtkFloatArray.h"
 #include "vtkDataObject.h"
 #include "vtkSimpleImageToImageFilter.h"
+#include "vtkSmartPointer.h"  //new add
 
 class  VTK_FMRIENGINE_EXPORT vtkLabelMapWhitening : public vtkSimpleImageToImageFilter
 {

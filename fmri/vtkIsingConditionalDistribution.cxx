@@ -94,13 +94,20 @@ void vtkIsingConditionalDistribution::SimpleExecute(vtkImageData *input, vtkImag
   vtkFloatArray *outputArray = vtkFloatArray::New();
   
   output->SetDimensions(dims);
-  output->SetWholeExtent(0, x, 0, y, 0, z*nType);
+
+#if VTK_MAJOR_VERSION <= 5
+    output->SetWholeExtent(0, x, 0, y, 0, z*nType);
+	output->SetExtent(0, x, 0, y, 0, z*nType);
+	output->SetScalarType(VTK_FLOAT);
+	output->SetSpacing(1.0, 1.0, 1.0);
+	output->SetOrigin(0.0, 0.0, 0.0);
+	output->AllocateScalars();
+#else
   output->SetExtent(0, x, 0, y, 0, z*nType);
-  output->SetScalarType(VTK_FLOAT);
   output->SetSpacing(1.0,1.0,1.0);
   output->SetOrigin(0.0,0.0,0.0);
-  output->AllocateScalars();    
-
+  output->AllocateScalars(VTK_FLOAT,1);    
+#endif 
   // Parzen density estimation
   if (densityEstimate == 1) {    
     float *trainingDataPar;
@@ -127,7 +134,11 @@ void vtkIsingConditionalDistribution::SimpleExecute(vtkImageData *input, vtkImag
       delete [] trainingDataPar;
       if (entryNumber != 0) {
         vtkParzenDensityEstimation *parzenDensity = vtkParzenDensityEstimation::New();
-        parzenDensity->SetInput(this->GetInput(1));
+#if VTK_MAJOR_VERSION <= 5
+		parzenDensity->SetInput(this->GetInput(1));
+#else
+		parzenDensity->SetInputData(this->GetInput(1));
+#endif
         parzenDensity->SetnumSearchSteps(numSearchSteps);
         parzenDensity->SetnumCrossValFolds(numCrossValFolds);
         parzenDensity->SetnumTraining(entryNumber);
@@ -260,10 +271,18 @@ void vtkIsingConditionalDistribution::ExecuteInformation(vtkImageData *input, vt
   dims[1] = y;
   dims[2] = z*nType;
   output->SetDimensions(dims);
+#if VTK_MAJOR_VERSION <= 5
   output->SetWholeExtent(0, x, 0, y, 0, z*nType);
+#else
   output->SetExtent(0, x, 0, y, 0, z*nType);
-  output->SetScalarType(VTK_FLOAT);
+#endif 
+  output->SetExtent(0, x, 0, y, 0, z*nType);
   output->SetSpacing(1.0,1.0,1.0);
   output->SetOrigin(0.0,0.0,0.0);
+#if VTK_MAJOR_VERSION <= 5
+  output->SetScalarType(VTK_FLOAT);
   output->AllocateScalars();      
+#else
+  output->AllocateScalars(VTK_FLOAT,1);
+#endif
 }

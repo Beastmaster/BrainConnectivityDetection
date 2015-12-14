@@ -136,13 +136,21 @@ void vtkActivationRegionStats::SimpleExecute(vtkImageData *inputs, vtkImageData*
             this->RegionVoxels->SetNumberOfComponents(4);
 
             // create the output image
+#if VTK_MAJOR_VERSION <= 5
             output->SetWholeExtent(0, this->Count-1, 0, 0, 0, 0);
-            output->SetExtent(0, this->Count-1, 0, 0, 0, 0);
-            output->SetScalarType(VTK_FLOAT);
+#else
+			output->SetExtent(0, this->Count - 1, 0, 0, 0, 0);
+#endif
+			output->SetExtent(0, this->Count - 1, 0, 0, 0, 0);
             output->SetOrigin(this->GetInput(0)->GetOrigin());
             output->SetSpacing(this->GetInput(0)->GetSpacing());
+#if VTK_MAJOR_VERSION <= 5
+			output->SetScalarType(VTK_FLOAT);
             output->SetNumberOfScalarComponents(1);
             output->AllocateScalars();
+#else
+			output->AllocateScalars(VTK_FLOAT,1);
+#endif
 
             float *ptr = (float *) output->GetScalarPointer();
             for (int i = 0; i < indx; i++) 
@@ -191,12 +199,21 @@ void vtkActivationRegionStats::ExecuteInformation(vtkImageData *input, vtkImageD
         dim[1] = 1;
         dim[2] = 1;
         output->SetDimensions(dim);
-        output->SetWholeExtent(0, this->Count-1, 0, 0, 0, 0);
-        output->SetExtent(0, this->Count-1, 0, 0, 0, 0);
-        output->SetScalarType(VTK_FLOAT);
+#if VTK_MAJOR_VERSION <= 5
+		output->SetWholeExtent(0, this->Count-1, 0, 0, 0, 0);
+#else
+		output->SetExtent(0, this->Count - 1, 0, 0, 0, 0);
+#endif
+		output->SetExtent(0, this->Count - 1, 0, 0, 0, 0);
         output->SetOrigin(this->GetInput(0)->GetOrigin());
         output->SetSpacing(this->GetInput(0)->GetSpacing());
-        output->SetNumberOfScalarComponents(1);
+ 
+#if VTK_MAJOR_VERSION <= 5
+		output->SetScalarType(VTK_FLOAT);
+		output->SetNumberOfScalarComponents(1);
+#else
+		output->AllocateScalars(VTK_FLOAT, 1);
+#endif
     }
 }
 

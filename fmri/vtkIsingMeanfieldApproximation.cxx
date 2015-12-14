@@ -153,11 +153,14 @@ void vtkIsingMeanfieldApproximation::SimpleExecute(vtkImageData *input, vtkImage
   vtkIntArray *finalOutput = vtkIntArray::New();
   
   output->SetDimensions(dims);
-  output->SetScalarType(VTK_INT);
   output->SetSpacing(1.0,1.0,1.0);
   output->SetOrigin(0.0,0.0,0.0);
+#if VTK_MAJOR_VERSION <=5 
+  output->SetScalarType(VTK_INT);
   output->AllocateScalars();
-
+#else
+  output->AllocateScalars(VTK_INT,1);
+#endif
   helpArray = new float[nType];
 
   // initialization of class probability output volume
@@ -265,8 +268,12 @@ void vtkIsingMeanfieldApproximation::SimpleExecute(vtkImageData *input, vtkImage
 void vtkIsingMeanfieldApproximation::ExecuteInformation(vtkImageData *input, vtkImageData *output)
 {
   output->SetDimensions(dims);
-  output->SetScalarType(VTK_INT);
   output->SetSpacing(1.0,1.0,1.0);
   output->SetOrigin(0.0,0.0,0.0);
+#if VTK_MAJOR_VERSION <= 5
+  output->SetScalarType(VTK_INT);
   output->AllocateScalars();
+#else
+  output->AllocateScalars(VTK_INT,1);
+#endif 
 }

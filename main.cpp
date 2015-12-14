@@ -1,19 +1,26 @@
 #include "MainWindow.h"
 #include "ROIBasedPanel.h"
-//
-#include <QApplication>
+
 #include <QMainWindow>
-
-//support for Chinese
-#include <QTextCodec>
-
+//
+#include <QtGlobal>
+#if QT_VERSION < 0x050000
+	//main apllication
+	#include <QApplication>
+	//support for Chinese
+	#include <QTextCodec>
+#else
+	#include <QtGui/QApplication>
+#endif
 
 int main( int argc, char** argv )
 {
+#if QT_VERSION < 0x050000
 	QTextCodec *codec=QTextCodec::codecForName("GBK");
 	QTextCodec::setCodecForLocale(codec);   
 	QTextCodec::setCodecForTr(codec);   
 	QTextCodec::setCodecForCStrings(codec);  
+#endif
 
 	QApplication fmri_main_app(argc,argv);
 

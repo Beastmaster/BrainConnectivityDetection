@@ -60,10 +60,13 @@ void vtkIsingActivationTissue::SimpleExecute(vtkImageData *input, vtkImageData *
   }
   
   output->SetDimensions(dims);
+#if VTK_MAJOR_VERSION <= 5
   output->SetScalarType(VTK_INT);
   output->SetNumberOfScalarComponents(1);
   output->AllocateScalars();
-
+#else
+  output->AllocateScalars(VTK_INT, 1);
+#endif
   // in case of anatomical label map input
   if (numberOfInputs == 2){
     segMArray = vtkIntArray::New();

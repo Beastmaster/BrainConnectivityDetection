@@ -17,7 +17,10 @@
 
 #include "vtkObjectFactory.h"
 #include "vtkActivationVolumeCaster.h"
+#if VTK_MAJOR_VERSION <= 5
 #include "vtkSource.h"
+#else
+#endif
 #include "vtkImageData.h"
 #include "vtkPointData.h"
 #include "vtkDataArray.h"
@@ -40,12 +43,19 @@ void vtkActivationVolumeCaster::SimpleExecute(vtkImageData *input, vtkImageData*
     // Sets up properties for output vtkImageData
     int imgDim[3];  
     input->GetDimensions(imgDim);
-    output->SetScalarType(VTK_SHORT);
+#if VTK_MAJOR_VERSION <= 5    
+	output->SetScalarType(VTK_SHORT);
     output->SetOrigin(input->GetOrigin());
     output->SetSpacing(input->GetSpacing());
     output->SetNumberOfScalarComponents(1);
     output->SetDimensions(imgDim[0], imgDim[1], imgDim[2]);
     output->AllocateScalars();
+#else
+	output->SetOrigin(input->GetOrigin());
+	output->SetSpacing(input->GetSpacing());
+	output->SetDimensions(imgDim[0], imgDim[1], imgDim[2]);
+	output->AllocateScalars(VTK_SHORT, 1);
+#endif
  
     int indx = 0;
     vtkDataArray *scalarsOutput = output->GetPointData()->GetScalars();

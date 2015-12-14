@@ -77,7 +77,11 @@ vtkSmartPointer<vtkImageData> Image_Convert_Base::GetOutput()
 
 		vtkSmartPointer<vtkImageCast> img_caster = 
 			vtkSmartPointer<vtkImageCast>::New();
+#if VTK_MAJOR_VERSION <= 5
 		img_caster->SetInput(connector->GetOutput());
+#else
+		img_caster->SetInputData(connector->GetOutput());
+#endif
 		img_caster->SetOutputScalarTypeToFloat();
 		img_caster->Update();
 
@@ -122,7 +126,11 @@ vtkSmartPointer<vtkImageData> Image_Convert_Base::GetOutput()
 
 		vtkSmartPointer<vtkImageCast> img_caster = 
 			vtkSmartPointer<vtkImageCast>::New();
+#if VTK_MAJOR_VERSION <= 5
 		img_caster->SetInput(reader->GetOutput());
+#else
+		img_caster->SetInputData(reader->GetOutput());
+#endif
 		img_caster->SetOutputScalarTypeToFloat();
 		img_caster->Update();
 

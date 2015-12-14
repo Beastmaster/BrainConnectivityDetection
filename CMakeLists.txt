@@ -9,8 +9,16 @@ include(${ITK_USE_FILE})
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
 
-find_package(Qt4 REQUIRED)
-include(${QT_USE_FILE})
+#find_package(Qt4 REQUIRED)
+#include(${QT_USE_FILE})
+# find and use QT5 lib
+# Find includes in corresponding build directories
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+# Instruct CMake to run moc automatically when needed.
+set(CMAKE_AUTOMOC ON)
+# Find the QtWidgets library
+find_package(Qt5Widgets REQUIRED)
+
 
 include_directories(
 advance_dialog
@@ -40,10 +48,12 @@ add_subdirectory(libICA)
 SET(QT_CXX_FILES
 main.cpp
 )
-QT4_WRAP_CPP(MOCSrcs ${QT_CXX_FILES})
+
+#QT4
+#QT4_WRAP_CPP(MOCSrcs ${QT_CXX_FILES})
 #include source dir
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-add_executable(${PROJECT_NAME} ${QT_CXX_FILES} ${MOCSrcs})
+#include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+add_executable(${PROJECT_NAME} ${QT_CXX_FILES} )
 
 
 

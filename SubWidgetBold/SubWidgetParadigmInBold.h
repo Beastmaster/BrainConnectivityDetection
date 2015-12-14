@@ -124,13 +124,13 @@
 
 #ifndef QS_DEBUG_MODE
 #include "MainWindow.h"
-#include "Volume.h"
-#include "LayerCollection.h"
-#include "LayerBold.h"
-#include "LayerVolume.h"
-#include "RenderView.h"
-#include "RenderView3D.h"
-#include "RenderView2D.h"
+//#include "Volume.h"
+//#include "LayerCollection.h"
+//#include "LayerBold.h"
+//#include "LayerVolume.h"
+//#include "RenderView.h"
+//#include "RenderView3D.h"
+//#include "RenderView2D.h"
 #endif
 
 
@@ -138,6 +138,9 @@
 //pointer type : float
 typedef itk::Point< double,3 >				PointTypex;//cooridnate and spacing
 //image type: float, 3 dimensions (defined in DialogLoadImage.h)
+#ifndef DIALOGLOADIMAGE_H
+typedef itk::Image< unsigned char, 3 >             ImageType;
+#endif
 typedef itk::Image< float , 3 >             ImageTypex; //image type pixel:float;dimension:3
 //image type for atlas 
 typedef itk::Image<short, 3>					AtlasImageType;
@@ -474,6 +477,7 @@ public:
 					return 1;
 				}
 				this->Brain_Mask = caster_temp->GetOutput();
+		
 			}
 			else
 			{

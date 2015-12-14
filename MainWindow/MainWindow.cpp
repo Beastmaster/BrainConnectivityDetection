@@ -151,7 +151,11 @@ void MainWindow::on_click_load()
 		}
 		vtkSmartPointer<vtkImageCast> caster = 
 			vtkSmartPointer<vtkImageCast>::New();
+#if VTK_MAJOR_VERSION <= 5
 		caster->SetInput(img_reader->GetOutput());
+#else
+		caster->SetInputData(img_reader->GetOutput());
+#endif
 		caster->SetOutputScalarTypeToFloat();
 		caster->Update();
 		temp_img.second->DeepCopy( caster->GetOutput());
@@ -329,7 +333,11 @@ void MainWindow::on_click_add_mask_file()
 	//reslice mask image to adjust 
 	vtkSmartPointer<vtkImageReslice> resample =
 		vtkSmartPointer<vtkImageReslice>::New();
+#if VTK_MAJOR_VERSION <= 5
 	resample->SetInput(temp_img.second);
+#else
+	resample->SetInputData(temp_img.second);
+#endif
 	if (this->img_to_view.first.size() == 0)
 	{
 		goto skip_resample;
@@ -652,7 +660,12 @@ double* MainWindow::calculate_img_center(vtkSmartPointer<vtkImageData> img)
 	double origin[3];
 	int extent[6];
 
+	
+#if VTK_MAJOR_VERSION <= 5
 	img->GetWholeExtent(extent);
+#else
+	img->GetExtent(extent);
+#endif
 	img->GetSpacing(spacing);
 	img->GetOrigin(origin);
 

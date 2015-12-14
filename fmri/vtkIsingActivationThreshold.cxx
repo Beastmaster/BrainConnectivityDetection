@@ -128,10 +128,14 @@ void vtkIsingActivationThreshold::SimpleExecute(vtkImageData *input, vtkImageDat
   }
   
   output->SetDimensions(dims);
-  output->SetScalarType(VTK_INT);
   output->SetSpacing(1.0,1.0,1.0);
   output->SetOrigin(0.0,0.0,0.0);
+#if VTK_MAJOR_VERSION <= 5
+  output->SetScalarType(VTK_INT);
   output->AllocateScalars();
+#else
+  output->AllocateScalars(VTK_INT,1);
+#endif
   
   // get the data array from input image 
   vtkFloatArray *inputArray = (vtkFloatArray *)this->GetInput(0)->GetPointData()->GetScalars();
@@ -216,8 +220,12 @@ void vtkIsingActivationThreshold::SimpleExecute(vtkImageData *input, vtkImageDat
 void vtkIsingActivationThreshold::ExecuteInformation(vtkImageData *input, vtkImageData *output)
 {
   output->SetDimensions(dims);
-  output->SetScalarType(VTK_INT);
   output->SetSpacing(1.0,1.0,1.0);
   output->SetOrigin(0.0,0.0,0.0);
+#if VTK_MAJOR_VERSION <= 5
+  output->SetScalarType(VTK_INT);
   output->AllocateScalars();
+#else
+  output->AllocateScalars(VTK_INT,1);
+#endif
 }

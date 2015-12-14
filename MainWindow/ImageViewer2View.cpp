@@ -134,7 +134,11 @@ void vtkimageview2_base::Set_Direction(char x)
 void vtkimageview2_base::Set_View_Img(vtkSmartPointer<vtkImageData> img)
 {
 	this->img_to_view = img;
+#if VTK_MAJOR_VERSION <= 5
 	this->img_viewer2->SetInput(img_to_view);
+#else
+	this->img_viewer2->SetInputData(img_to_view);
+#endif
 	this->dimensions = new int[3];
 	this->img_to_view->GetDimensions(this->dimensions);
 	std::cout<<"dimension is :"<<dimensions[0]<<dimensions[1]<<dimensions[2]<<std::endl;
@@ -151,8 +155,11 @@ double* vtkimageview2_base::calculate_img_center(vtkSmartPointer<vtkImageData> i
 	double spacing[3];
 	double origin[3];
 	int extent[6];
-
+#if VTK_MAJOR_VERSION <= 5
 	img->GetWholeExtent(extent);
+#else
+	img->GetExtent(extent);
+#endif
 	img->GetSpacing(spacing);
 	img->GetOrigin(origin);
 

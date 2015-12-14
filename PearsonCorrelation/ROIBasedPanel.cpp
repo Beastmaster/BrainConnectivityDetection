@@ -229,12 +229,19 @@ void ROIBasedPanel::on_run_Seedbased()
 	vtkSmartPointer<vtkImageData> input = data_container[0].second;
 	int dims[3] = {0};
 	input->GetDimensions(dims);
+#if VTK_MAJOR_VERSION <=5
 	output->SetScalarType(VTK_FLOAT);
 	output->SetOrigin(input->GetOrigin());
 	output->SetSpacing(input->GetSpacing());
 	output->SetNumberOfScalarComponents(1);
 	output->SetDimensions(dims[0], dims[1], dims[2]);
 	output->AllocateScalars();
+#else
+	output->SetOrigin(input->GetOrigin());
+	output->SetSpacing(input->GetSpacing());
+	output->SetDimensions(dims[0], dims[1], dims[2]);
+	output->AllocateScalars(VTK_FLOAT, 1);
+#endif
 
 	vtkDataArray *scalarsOutput = output->GetPointData()->GetScalars();
 
@@ -713,13 +720,16 @@ void ROIBasedPanel::fastICA_Analysis()
 		//allocate memory for one component
 		vtkSmartPointer<vtkImageData> output = vtkSmartPointer<vtkImageData>::New();
 		vtkSmartPointer<vtkImageData> input = data_container[0].second;
-		output->SetScalarType(VTK_FLOAT);
 		output->SetOrigin(input->GetOrigin());
 		output->SetSpacing(input->GetSpacing());
-		output->SetNumberOfScalarComponents(1);
 		output->SetDimensions(dims[0], dims[1], dims[2]);
+#if VTK_MAJOR_VERSION <= 5
+		output->SetScalarType(VTK_FLOAT);
+		output->SetNumberOfScalarComponents(1);
 		output->AllocateScalars();
-		
+#else
+		output->AllocateScalars(VTK_FLOAT,1);
+#endif
 		vtkDataArray *scalarsOutput = output->GetPointData()->GetScalars();
 		//vtkDataArray *scalarsInput = input->GetPointData()->GetScalars();
 

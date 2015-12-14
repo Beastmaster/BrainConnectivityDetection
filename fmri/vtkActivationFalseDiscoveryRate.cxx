@@ -18,8 +18,12 @@
 #include "vtkFloatArray.h"
 #include "vtkPointData.h"
 #include <itkTDistribution.h>
-
+#if VTK_MAJOR_VERSION <= 5
 #include <vtkstd/algorithm>
+#else
+#include <algorithm>   //std::sort
+#endif
+
 
 vtkStandardNewMacro(vtkActivationFalseDiscoveryRate);
 
@@ -79,7 +83,12 @@ void vtkActivationFalseDiscoveryRate::SimpleExecute(vtkImageData *input, vtkImag
     // use vtkstd::sort sort p values from min to max
     float *ps = new float [count];
     memcpy(ps, data, count);
-    vtkstd::sort(ps, ps + count);
+#if VTK_MAJOR_VERSION <=5
+	vtkstd::sort(ps, ps + count);
+#else
+	std::sort(ps, ps + count);
+#endif
+
 
     // compute c(N) according to option 
     float cn = 1.0;

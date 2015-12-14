@@ -250,13 +250,18 @@ void vtkGLMVolumeGenerator::SimpleExecute(vtkImageData *input, vtkImageData* out
 
     // Sets up properties for output vtkImageData
     int imgDim[3];  
-    input->GetDimensions(imgDim);
-    output->SetScalarType(VTK_FLOAT);
+	input->GetDimensions(imgDim);
     output->SetOrigin(input->GetOrigin());
     output->SetSpacing(input->GetSpacing());
-    output->SetNumberOfScalarComponents(1);
-    output->SetDimensions(imgDim[0], imgDim[1], imgDim[2]);
-    output->AllocateScalars();
+#if VTK_MAJOR_VERSION <= 5
+	output->SetScalarType(VTK_FLOAT);
+	output->SetNumberOfScalarComponents(1);
+	output->SetDimensions(imgDim[0], imgDim[1], imgDim[2]);
+	output->AllocateScalars();
+#else
+	output->SetDimensions(imgDim[0], imgDim[1], imgDim[2]);
+	output->AllocateScalars( VTK_FLOAT , 1 );
+#endif
   
     target = (unsigned long)(imgDim[0]*imgDim[1]*imgDim[2] / 50.0);
     target++;
@@ -315,7 +320,11 @@ void vtkGLMVolumeGenerator::SimpleExecute(vtkImageData *input, vtkImageData* out
     delete [] this->beta;
 
     // Scales the scalar values in the activation volume between 0 - 100
+#ifdef vtkFloatingPointType
     vtkFloatingPointType range[2];
+#else
+	double range[2];
+#endif
     output->GetScalarRange(range);
     this->LowRange = range[0];
     this->HighRange = range[1];

@@ -95,10 +95,14 @@ void vtkParzenDensityEstimation::SimpleExecute(vtkImageData *input, vtkImageData
   avLoglikeVal = new float[numSearchSteps];                                          
 
   output->SetDimensions(dims);
-  output->SetScalarType(VTK_FLOAT);
   output->SetSpacing(1.0,1.0,1.0);
   output->SetOrigin(0.0,0.0,0.0);
+#if VTK_MAJOR_VERSION <= 5
+  output->SetScalarType(VTK_FLOAT);
   output->AllocateScalars();    
+#else
+  output->AllocateScalars(VTK_FLOAT,1);
+#endif
 
   // calculation of range of Parzen window
   for (int i=0; i<numTraining; i++){
